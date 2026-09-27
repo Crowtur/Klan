@@ -134,6 +134,8 @@ model MembershipPlan {
 
   requiresDocumentation Boolean @default(false)
 
+  benefits Json?
+
   isActive Boolean @default(true)
 
   createdAt DateTime @default(now())
@@ -141,10 +143,10 @@ model MembershipPlan {
 
   club Club @relation(fields: [clubId], references: [id], onDelete: Cascade)
 
-  benefits             PlanBenefit[]
   documentRequirements PlanDocumentRequirement[]
   applications         MembershipApplication[]
   subscriptions        Subscription[]
+  PlanBenefit          PlanBenefit[]
 
   @@index([clubId])
   @@index([clubId, isActive])

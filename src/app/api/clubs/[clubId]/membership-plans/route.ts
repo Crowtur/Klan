@@ -4,7 +4,6 @@ import { requireClubAdmin } from "@/lib/auth/authorization";
 import { NextResponse } from "next/server";
 
 // POST: Crear un plan de membresía
-// Solo CLUB_ADMIN puede crear planes dentro del club
 export async function POST(
   request: Request,
   context: { params: Promise<{ clubId: string }> }
@@ -25,6 +24,7 @@ export async function POST(
       durationValue,
       durationUnit,
       requiresDocumentation,
+      benefits,
     } = body;
 
     // Validación de nombre
@@ -139,6 +139,7 @@ export async function POST(
         durationValue,
         durationUnit,
         requiresDocumentation: requiresDocumentation ?? false,
+        ...(benefits !== undefined && { benefits }),
       },
     });
 
@@ -186,7 +187,6 @@ export async function POST(
 }
 
 // GET: Obtener todos los planes del club
-// Solo CLUB_ADMIN puede acceder al catálogo administrativo
 export async function GET(
   request: Request,
   context: { params: Promise<{ clubId: string }> }
@@ -202,11 +202,6 @@ export async function GET(
         clubId,
       },
       include: {
-        benefits: {
-          include: {
-            benefit: true,
-          },
-        },
         documentRequirements: {
           where: {
             isActive: true,
