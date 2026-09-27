@@ -2,6 +2,68 @@ import { prisma } from "@/lib/prisma";
 import { requireAuth } from "@/lib/auth/auth";
 import { NextResponse } from "next/server";
 
+// GET: Obtener todos los clubes a los que pertenece el usuario autenticado
+export async function GET(request: Request) {
+  try {
+    const user = await requireAuth(request);
+
+    const memberships = await prisma.clubMembership.findMany({
+      where: {
+        userId: user.id,
+        status: "ACTIVE",
+        club: {
+          status: "ACTIVE",
+        },
+      },
+      include: {
+        club: true,
+      },
+      orderBy: {
+        joinedAt: "asc",
+      },
+    });
+
+    const clubs = memberships.map((membership) => ({
+      id: membership.club.id,
+      name: membership.club.name,
+      slug: membership.club.slug,
+      description: membership.club.description,
+      status: membership.club.status,
+      role: membership.role,
+      membershipStatus: membership.status,
+      joinedAt: membership.joinedAt,
+    }));
+
+    return NextResponse.json({
+      success: true,
+      clubs,
+    });
+  } catch (error) {
+    console.error("Get clubs error:", error);
+
+    if (error instanceof Error) {
+      if (error.message === "UNAUTHORIZED") {
+        return NextResponse.json(
+          {
+            success: false,
+            message: "No autenticado",
+          },
+          { status: 401 }
+        );
+      }
+    }
+
+    return NextResponse.json(
+      {
+        success: false,
+        message: "Error interno del servidor",
+      },
+      { status: 500 }
+    );
+  }
+}
+
+// POST: Crear un nuevo club y asignar al creador como CLUB_ADMIN
 export async function POST(request: Request) {
   try {
     const user = await requireAuth(request);
