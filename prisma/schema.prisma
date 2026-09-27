@@ -1,0 +1,83 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum GlobalRole {
+  SUPER_ADMIN
+  USER
+}
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+}
+
+enum ClubRole {
+  CLUB_ADMIN
+  MEMBER
+}
+
+enum MembershipStatus {
+  ACTIVE
+  SUSPENDED
+}
+
+enum ClubStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+}
+
+model User {
+  id           String     @id @default(uuid())
+  firstName    String
+  lastName     String
+  email        String     @unique
+  passwordHash String
+  globalRole   GlobalRole @default(USER)
+  status       UserStatus @default(ACTIVE)
+
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  memberships  ClubMembership[]
+}
+
+model Club {
+  id          String       @id @default(uuid())
+  name        String
+  slug        String       @unique
+  description String?
+  status      ClubStatus   @default(ACTIVE)
+
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  memberships ClubMembership[]
+}
+
+model ClubMembership {
+  id       String            @id @default(uuid())
+
+  userId   String
+  clubId   String
+
+  role     ClubRole          @default(MEMBER)
+  status   MembershipStatus  @default(ACTIVE)
+
+  joinedAt DateTime          @default(now())
+
+  user     User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  club     Club              @relation(fields: [clubId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, clubId])
+  @@index([userId])
+  @@index([clubId])
+}

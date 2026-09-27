@@ -1,0 +1,78 @@
+import { prisma } from "@/lib/prisma";
+import { ClubRole } from "@prisma/client";
+
+export async function getClubMembership(
+  userId: string,
+  clubId: string
+) {
+  return prisma.clubMembership.findUnique({
+    where: {
+      userId_clubId: {
+        userId,
+        clubId,
+      },
+    },
+    include: {
+      club: true,
+    },
+  });
+}
+
+export async function requireClubMembership(
+  userId: string,
+  clubId: string
+) {
+  const membership = await getClubMembership(userId, clubId);
+
+  if (!membership) {
+    throw new Error("FORBIDDEN");
+  }
+
+  if (membership.status !== "ACTIVE") {
+    throw new Error("FORBIDDEN");
+  }
+
+  if (membership.club.status !== "ACTIVE") {
+    throw new Error("FORBIDDEN");
+  }
+
+  return membership;
+}
+
+export async function requireClubAdmin(
+  userId: string,
+  clubId: string
+) {
+  const membership = await requireClubMembership(
+    userId,
+    clubId
+  );
+
+  if (membership.role !== ClubRole.CLUB_ADMIN) {
+    throw new Error("FORBIDDEN");
+  }
+
+  return membership;
+}
+
+export async function requireSuperAdmin(userId: string) {
+  const user = await prisma.user.findUnique({
+    where: {
+      id: userId,
+    },
+  });
+
+  if (!user) {
+    throw new Error("UNAUTHORIZED");
+  }
+
+  if (user.status !== "ACTIVE") {
+    throw new Error("FORBIDDEN");
+  }
+
+  if (user.globalRole !== "SUPER_ADMIN") {
+    throw new Error("FORBIDDEN");
+  }
+
+  return user;
+}
