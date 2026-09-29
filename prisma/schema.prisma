@@ -239,7 +239,7 @@ model MembershipDocument {
 
   status DocumentStatus @default(PENDING)
 
-  reviewedAt   DateTime?
+  reviewedAt    DateTime?
   reviewedById String?
 
   rejectionReason String?
