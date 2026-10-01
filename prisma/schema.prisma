@@ -67,6 +67,22 @@ enum SubscriptionStatus {
   SUSPENDED
 }
 
+enum PaymentStatus {
+  PENDING
+  PROCESSING
+  PAID
+  FAILED
+  CANCELLED
+  REFUNDED
+}
+
+enum SettlementStatus {
+  PENDING
+  PROCESSING
+  PAID
+  CANCELLED
+}
+
 model User {
   id           String     @id @default(uuid())
   firstName    String
@@ -81,6 +97,7 @@ model User {
 
   memberships            ClubMembership[]
   membershipApplications MembershipApplication[]
+  payments               Payment[]
 }
 
 model Club {
@@ -95,6 +112,8 @@ model Club {
 
   memberships     ClubMembership[]
   membershipPlans MembershipPlan[]
+  payments        Payment[]
+  settlements     ClubSettlement[]
 }
 
 model ClubMembership {
@@ -217,7 +236,7 @@ model MembershipApplication {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  user User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User         @relation(fields: [userId], references: [id], onDelete: Cascade)
   plan MembershipPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
 
   documents MembershipDocument[]
@@ -258,8 +277,9 @@ model MembershipDocument {
 model Subscription {
   id String @id @default(uuid())
 
-  clubMembershipId String
-  planId           String
+  clubMembershipId     String
+  planId               String
+  stripeSubscriptionId String? @unique
 
   status SubscriptionStatus @default(PENDING_PAYMENT)
 
@@ -269,11 +289,79 @@ model Subscription {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  clubMembership ClubMembership @relation(fields: [clubMembershipId], references: [id], onDelete: Cascade)
+  clubMembership ClubMembership @relation(fields: [clubMembershipId], references: [id], onDelete: Restrict)
   plan           MembershipPlan @relation(fields: [planId], references: [id], onDelete: Restrict)
+  payments       Payment[]
 
   @@index([clubMembershipId])
   @@index([planId])
   @@index([status])
   @@index([expiresAt])
+}
+
+model Payment {
+  id String @id @default(uuid())
+
+  clubId         String
+  userId         String
+  subscriptionId String
+
+  amount   Decimal @db.Decimal(10, 2)
+  currency String  @default("usd")
+
+  status PaymentStatus @default(PENDING)
+
+  stripeCheckoutSessionId String? @unique
+  stripePaymentIntentId   String? @unique
+  stripeSubscriptionId    String?
+  stripeInvoiceId         String? @unique
+
+  paidAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  club         Club         @relation(fields: [clubId], references: [id], onDelete: Restrict)
+  user         User         @relation(fields: [userId], references: [id], onDelete: Restrict)
+  subscription Subscription @relation(fields: [subscriptionId], references: [id], onDelete: Restrict)
+
+  @@index([clubId])
+  @@index([userId])
+  @@index([subscriptionId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model ClubSettlement {
+  id String @id @default(uuid())
+
+  clubId String
+
+  year  Int
+  month Int
+
+  grossAmount Decimal @db.Decimal(10, 2)
+
+  stripeFee   Decimal @db.Decimal(10, 2)
+  transferFee Decimal @db.Decimal(10, 2)
+  platformFee Decimal @db.Decimal(10, 2)
+
+  totalFees Decimal @db.Decimal(10, 2)
+  netAmount Decimal @db.Decimal(10, 2)
+
+  status SettlementStatus @default(PENDING)
+
+  paidAt           DateTime?
+  paymentReference String?
+  notes            String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  club Club @relation(fields: [clubId], references: [id], onDelete: Restrict)
+
+  @@unique([clubId, year, month])
+  @@index([clubId])
+  @@index([status])
+  @@index([year, month])
 }

@@ -64,6 +64,7 @@ export async function PATCH(
             id: true,
             name: true,
             requiresDocumentation: true,
+            type: true, // Importante para saber si es PAID o FREE
           },
         },
         documents: {
@@ -142,37 +143,89 @@ export async function PATCH(
       }
     }
 
-    // Actualizar solicitud
-    const updatedApplication = await prisma.membershipApplication.update({
-      where: {
-        id: applicationId,
-      },
-      data: {
-        status,
-        reviewedAt: new Date(),
-        reviewedById: user.id,
-        rejectionReason: status === "REJECTED" ? rejectionReason.trim() : null,
-      },
-      include: {
-        user: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-            email: true,
+    // Ejecutamos todo dentro de una transacción para asegurar consistencia
+    const updatedApplication = await prisma.$transaction(async (tx) => {
+      // 1. Actualizar solicitud
+      const updatedApp = await tx.membershipApplication.update({
+        where: {
+          id: applicationId,
+        },
+        data: {
+          status,
+          reviewedAt: new Date(),
+          reviewedById: user.id,
+          rejectionReason: status === "REJECTED" ? rejectionReason.trim() : null,
+        },
+        include: {
+          user: {
+            select: {
+              id: true,
+              firstName: true,
+              lastName: true,
+              email: true,
+            },
+          },
+          plan: {
+            select: {
+              id: true,
+              name: true,
+              type: true,
+              price: true,
+              durationValue: true,
+              durationUnit: true,
+            },
           },
         },
-        plan: {
-          select: {
-            id: true,
-            name: true,
-            type: true,
-            price: true,
-            durationValue: true,
-            durationUnit: true,
+      });
+
+      // 2. Si la solicitud fue APROBADA, gestionamos membresía y suscripción
+      if (status === "APPROVED") {
+        // Buscar o crear la membresía del usuario en el club
+        let clubMembership = await tx.clubMembership.findUnique({
+          where: {
+            userId_clubId: {
+              userId: updatedApp.userId,
+              clubId: clubId,
+            },
           },
-        },
-      },
+        });
+
+        if (!clubMembership) {
+          clubMembership = await tx.clubMembership.create({
+            data: {
+              userId: updatedApp.userId,
+              clubId: clubId,
+              role: "MEMBER",
+              status: "ACTIVE",
+            },
+          });
+        }
+
+        // Si el plan es PAID, creamos automáticamente la suscripción en PENDING_PAYMENT
+        if (updatedApp.plan.type === "PAID") {
+          const existingSubscription = await tx.subscription.findFirst({
+            where: {
+              clubMembershipId: clubMembership.id,
+              planId: updatedApp.planId,
+              status: {
+                in: ["PENDING_PAYMENT", "ACTIVE"],
+              },
+            },
+          });
+
+          if (!existingSubscription) {
+            await tx.subscription.create({
+              data: {
+                clubMembershipId: clubMembership.id,
+                planId: updatedApp.planId,
+                status: "PENDING_PAYMENT",
+              },
+            });
+          }
+        }
+      }
+
+      return updatedApp;
     });
 
     return NextResponse.json({
