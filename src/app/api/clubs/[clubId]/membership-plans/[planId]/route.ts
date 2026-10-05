@@ -26,11 +26,6 @@ export async function GET(
         clubId,
       },
       include: {
-        benefits: {
-          include: {
-            benefit: true,
-          },
-        },
         documentRequirements: {
           where: {
             isActive: true,

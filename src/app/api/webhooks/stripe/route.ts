@@ -1,7 +1,127 @@
 import { prisma } from "@/lib/prisma";
 import { stripe } from "@/lib/stripe";
+import { DurationUnit } from "@prisma/client";
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
+
+/**
+ * Extensiones de tipo para compatibilidad estricta con los payloads de Webhook de Stripe.
+ */
+type StripeInvoicePayload = Stripe.Invoice & {
+  subscription?: string | Stripe.Subscription | null;
+  subscription_details?: {
+    subscription?: string | Stripe.Subscription | null;
+  } | null;
+  parent?: {
+    subscription_details?: {
+      subscription?: string | Stripe.Subscription | null;
+    } | null;
+  } | null;
+  payment_intent?: string | Stripe.PaymentIntent | null;
+};
+
+type StripeSubscriptionPayload = Stripe.Subscription & {
+  current_period_start?: number;
+  current_period_end?: number;
+  start_date?: number;
+  latest_invoice?: string | StripeInvoicePayload | null;
+};
+
+/**
+ * Extrae el ID en texto plano sin importar si Stripe devuelve un string o un objeto expandido.
+ */
+function extractId(
+  val: string | { id: string } | null | undefined
+): string | null {
+  if (!val) return null;
+  if (typeof val === "string") return val;
+  if (
+    typeof val === "object" &&
+    val !== null &&
+    "id" in val &&
+    typeof val.id === "string"
+  ) {
+    return val.id;
+  }
+  return null;
+}
+
+/**
+ * Extrae el ID de la suscripción de una factura buscando en la raíz o en los objetos anidados
+ * que Stripe utiliza en versiones recientes de la API o facturas creadas por CLI.
+ */
+function extractSubscriptionIdFromInvoice(
+  invoice: StripeInvoicePayload
+): string | null {
+  const directSubId = extractId(invoice.subscription);
+  if (directSubId) return directSubId;
+
+  const subDetailsId = extractId(invoice.subscription_details?.subscription);
+  if (subDetailsId) return subDetailsId;
+
+  const parentSubDetailsId = extractId(
+    invoice.parent?.subscription_details?.subscription
+  );
+  if (parentSubDetailsId) return parentSubDetailsId;
+
+  return null;
+}
+
+/**
+ * Convierte timestamps de Stripe a objetos Date de forma segura.
+ */
+function safeStripeDate(
+  timestamp: number | null | undefined,
+  fallbackDate: Date
+): Date {
+  if (!timestamp || typeof timestamp !== "number") {
+    return fallbackDate;
+  }
+  const date = new Date(timestamp * 1000);
+  return isNaN(date.getTime()) ? fallbackDate : date;
+}
+
+/**
+ * Calcula la fecha de expiración sumando meses o años exactos según el calendario.
+ */
+function calculateExpirationFromPlan(
+  startDate: Date,
+  durationValue: number,
+  durationUnit: DurationUnit
+): Date {
+  const expiresAt = new Date(startDate);
+
+  if (durationUnit === "YEAR") {
+    expiresAt.setFullYear(expiresAt.getFullYear() + durationValue);
+  } else if (durationUnit === "MONTH") {
+    expiresAt.setMonth(expiresAt.getMonth() + durationValue);
+  }
+
+  return expiresAt;
+}
+
+/**
+ * Determina la fecha de expiración priorizando el cálculo exacto de Stripe
+ * y usando las propiedades del MembershipPlan como fallback dinámico.
+ */
+function resolveExpirationDate(
+  stripePeriodEndTimestamp: number | null | undefined,
+  startDate: Date,
+  plan: { durationValue: number; durationUnit: DurationUnit }
+): Date {
+  if (stripePeriodEndTimestamp && typeof stripePeriodEndTimestamp === "number") {
+    const stripeDate = new Date(stripePeriodEndTimestamp * 1000);
+    if (!isNaN(stripeDate.getTime())) {
+      return stripeDate;
+    }
+  }
+
+  return calculateExpirationFromPlan(
+    startDate,
+    plan.durationValue,
+    plan.durationUnit
+  );
+}
 
 export async function POST(request: Request) {
   const signature = request.headers.get("stripe-signature");
@@ -113,27 +233,48 @@ export async function POST(request: Request) {
           );
         }
 
-        if (payment.status === "PAID") {
+        if (payment.status === "PAID" && payment.stripePaymentIntentId) {
           return NextResponse.json({
             success: true,
-            message: "El pago ya había sido procesado",
+            message: "El pago ya había sido procesado completamente",
           });
         }
 
-        const stripeSubscriptionId =
-          typeof session.subscription === "string"
-            ? session.subscription
-            : null;
+        const stripeSubscriptionId = extractId(session.subscription);
+        const stripeInvoiceId = extractId(session.invoice);
+        let paymentIntentId = extractId(session.payment_intent);
 
-        const paymentIntentId =
-          typeof session.payment_intent === "string"
-            ? session.payment_intent
-            : null;
+        if (!paymentIntentId && session.id) {
+          try {
+            const sessionExpanded = await stripe.checkout.sessions.retrieve(
+              session.id,
+              {
+                expand: [
+                  "invoice.payment_intent",
+                  "subscription.latest_invoice.payment_intent",
+                ],
+              }
+            );
 
-        const stripeInvoiceId =
-          typeof session.invoice === "string"
-            ? session.invoice
-            : null;
+            const inv = sessionExpanded.invoice as unknown as StripeInvoicePayload;
+            if (inv) {
+              paymentIntentId = extractId(inv.payment_intent);
+            }
+
+            if (!paymentIntentId && sessionExpanded.subscription) {
+              const sub = sessionExpanded.subscription as unknown as StripeSubscriptionPayload;
+              if (sub.latest_invoice) {
+                const latestInv = sub.latest_invoice as unknown as StripeInvoicePayload;
+                paymentIntentId = extractId(latestInv.payment_intent);
+              }
+            }
+          } catch (error) {
+            console.error(
+              "Error al recuperar PaymentIntent expandido desde Stripe:",
+              error
+            );
+          }
+        }
 
         if (!stripeSubscriptionId) {
           console.error(
@@ -151,16 +292,24 @@ export async function POST(request: Request) {
 
         const stripeSubscription = (await stripe.subscriptions.retrieve(
           stripeSubscriptionId
-        )) as any;
+        )) as unknown as StripeSubscriptionPayload;
 
         const now = new Date();
+        const plan = payment.subscription.plan;
 
-        const expiresAt = new Date(
-          stripeSubscription.current_period_end * 1000
+        const startedAt = safeStripeDate(
+          stripeSubscription?.current_period_start ??
+            stripeSubscription?.start_date,
+          now
         );
 
-        const startedAt = new Date(
-          stripeSubscription.current_period_start * 1000
+        const expiresAt = resolveExpirationDate(
+          stripeSubscription?.current_period_end,
+          startedAt,
+          {
+            durationValue: plan.durationValue,
+            durationUnit: plan.durationUnit,
+          }
         );
 
         await prisma.$transaction(async (tx) => {
@@ -200,7 +349,7 @@ export async function POST(request: Request) {
         });
 
         console.log(
-          `Pago inicial ${payment.id} procesado correctamente`
+          `Pago inicial ${payment.id} procesado correctamente. PaymentIntent: ${paymentIntentId}`
         );
 
         break;
@@ -212,12 +361,9 @@ export async function POST(request: Request) {
        * =========================================================
        */
       case "invoice.payment_succeeded": {
-        const invoice = event.data.object as any;
+        const invoice = event.data.object as unknown as StripeInvoicePayload;
 
-        const stripeSubscriptionId =
-          typeof invoice.subscription === "string"
-            ? invoice.subscription
-            : null;
+        const stripeSubscriptionId = extractSubscriptionIdFromInvoice(invoice);
 
         if (!stripeSubscriptionId) {
           console.log(
@@ -227,42 +373,34 @@ export async function POST(request: Request) {
           break;
         }
 
-        const subscription = await prisma.subscription.findUnique({
-          where: {
-            stripeSubscriptionId,
-          },
-          include: {
-            plan: true,
-            clubMembership: true,
-          },
-        });
-
-        if (!subscription) {
-          console.error(
-            `Subscription local no encontrada para Stripe Subscription ${stripeSubscriptionId}`
-          );
-
-          break;
-        }
-
-        const paymentIntentId =
-          typeof invoice.payment_intent === "string"
-            ? invoice.payment_intent
-            : null;
+        const paymentIntentId = extractId(invoice.payment_intent);
 
         /**
          * Idempotencia Barrera 1: Comprobación por stripeInvoiceId
          */
-        const existingInvoicePayment = await prisma.payment.findUnique({
+        const existingInvoicePayment = await prisma.payment.findFirst({
           where: {
             stripeInvoiceId: invoice.id,
           },
         });
 
         if (existingInvoicePayment) {
-          console.log(
-            `Payment ${existingInvoicePayment.id} ya existe para esta Invoice`
-          );
+          if (
+            !existingInvoicePayment.stripePaymentIntentId &&
+            paymentIntentId
+          ) {
+            await prisma.payment.update({
+              where: { id: existingInvoicePayment.id },
+              data: { stripePaymentIntentId: paymentIntentId },
+            });
+            console.log(
+              `PaymentIntent ${paymentIntentId} actualizado en Payment ${existingInvoicePayment.id}`
+            );
+          } else {
+            console.log(
+              `Payment ${existingInvoicePayment.id} ya existe para esta Invoice`
+            );
+          }
 
           break;
         }
@@ -286,12 +424,42 @@ export async function POST(request: Request) {
           }
         }
 
+        const subscription = await prisma.subscription.findUnique({
+          where: {
+            stripeSubscriptionId,
+          },
+          include: {
+            plan: true,
+            clubMembership: true,
+          },
+        });
+
+        if (!subscription) {
+          console.error(
+            `Subscription local no encontrada para Stripe Subscription ${stripeSubscriptionId}`
+          );
+
+          break;
+        }
+
         const stripeSubscription = (await stripe.subscriptions.retrieve(
           stripeSubscriptionId
-        )) as any;
+        )) as unknown as StripeSubscriptionPayload;
 
-        const expiresAt = new Date(
-          stripeSubscription.current_period_end * 1000
+        const now = new Date();
+
+        const startedAt = safeStripeDate(
+          stripeSubscription?.current_period_start,
+          now
+        );
+
+        const expiresAt = resolveExpirationDate(
+          stripeSubscription?.current_period_end,
+          startedAt,
+          {
+            durationValue: subscription.plan.durationValue,
+            durationUnit: subscription.plan.durationUnit,
+          }
         );
 
         const amount =
@@ -300,8 +468,6 @@ export async function POST(request: Request) {
             : 0;
 
         const currency = invoice.currency || "usd";
-
-        const now = new Date();
 
         await prisma.$transaction(async (tx) => {
           await tx.payment.create({
@@ -355,12 +521,9 @@ export async function POST(request: Request) {
        * =========================================================
        */
       case "invoice.payment_failed": {
-        const invoice = event.data.object as any;
+        const invoice = event.data.object as unknown as StripeInvoicePayload;
 
-        const stripeSubscriptionId =
-          typeof invoice.subscription === "string"
-            ? invoice.subscription
-            : null;
+        const stripeSubscriptionId = extractSubscriptionIdFromInvoice(invoice);
 
         if (!stripeSubscriptionId) {
           console.log(
@@ -387,10 +550,7 @@ export async function POST(request: Request) {
           break;
         }
 
-        const paymentIntentId =
-          typeof invoice.payment_intent === "string"
-            ? invoice.payment_intent
-            : null;
+        const paymentIntentId = extractId(invoice.payment_intent);
 
         const amount =
           typeof invoice.amount_due === "number"
@@ -399,7 +559,7 @@ export async function POST(request: Request) {
 
         const currency = invoice.currency || "usd";
 
-        let existingPayment = await prisma.payment.findUnique({
+        let existingPayment = await prisma.payment.findFirst({
           where: {
             stripeInvoiceId: invoice.id,
           },
@@ -455,7 +615,8 @@ export async function POST(request: Request) {
        * =========================================================
        */
       case "customer.subscription.updated": {
-        const stripeSubscription = event.data.object as any;
+        const stripeSubscription =
+          event.data.object as unknown as StripeSubscriptionPayload;
 
         const localSubscription =
           await prisma.subscription.findUnique({
@@ -463,6 +624,7 @@ export async function POST(request: Request) {
               stripeSubscriptionId: stripeSubscription.id,
             },
             include: {
+              plan: true,
               clubMembership: true,
             },
           });
@@ -475,8 +637,20 @@ export async function POST(request: Request) {
           break;
         }
 
-        const expiresAt = new Date(
-          stripeSubscription.current_period_end * 1000
+        const now = new Date();
+
+        const startedAt = safeStripeDate(
+          stripeSubscription?.current_period_start,
+          now
+        );
+
+        const expiresAt = resolveExpirationDate(
+          stripeSubscription?.current_period_end,
+          startedAt,
+          {
+            durationValue: localSubscription.plan.durationValue,
+            durationUnit: localSubscription.plan.durationUnit,
+          }
         );
 
         let localStatus:
@@ -525,7 +699,8 @@ export async function POST(request: Request) {
        * =========================================================
        */
       case "customer.subscription.deleted": {
-        const stripeSubscription = event.data.object as any;
+        const stripeSubscription =
+          event.data.object as unknown as StripeSubscriptionPayload;
 
         const localSubscription =
           await prisma.subscription.findUnique({
