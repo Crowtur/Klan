@@ -82,6 +82,14 @@ export async function PUT(
       );
     }
 
+    const schedulesByDay = new Map<
+      DayOfWeek,
+      {
+        openingTime: string;
+        closingTime: string;
+      }[]
+    >();
+
     for (const item of body.schedule) {
       if (!validDays.includes(item.dayOfWeek as DayOfWeek)) {
         return NextResponse.json(
@@ -93,35 +101,55 @@ export async function PUT(
         );
       }
 
-      if (typeof item.isClosed !== "boolean") {
+      if (
+        !isValidTime(item.openingTime) ||
+        !isValidTime(item.closingTime)
+      ) {
         return NextResponse.json(
           {
             success: false,
-            message: `isClosed debe ser booleano para ${item.dayOfWeek}`,
+            message: `Horario inválido para ${item.dayOfWeek}. Usa el formato HH:mm`,
           },
           { status: 400 }
         );
       }
 
-      if (!item.isClosed) {
-        if (
-          !isValidTime(item.openingTime) ||
-          !isValidTime(item.closingTime)
-        ) {
-          return NextResponse.json(
-            {
-              success: false,
-              message: `Horario inválido para ${item.dayOfWeek}. Usa el formato HH:mm`,
-            },
-            { status: 400 }
-          );
-        }
+      if (item.openingTime >= item.closingTime) {
+        return NextResponse.json(
+          {
+            success: false,
+            message: `La hora de apertura debe ser anterior a la hora de cierre para ${item.dayOfWeek}`,
+          },
+          { status: 400 }
+        );
+      }
 
-        if (item.openingTime >= item.closingTime) {
+      const day = item.dayOfWeek as DayOfWeek;
+
+      if (!schedulesByDay.has(day)) {
+        schedulesByDay.set(day, []);
+      }
+
+      schedulesByDay.get(day)!.push({
+        openingTime: item.openingTime,
+        closingTime: item.closingTime,
+      });
+    }
+
+    for (const [day, intervals] of schedulesByDay.entries()) {
+      intervals.sort((a, b) =>
+        a.openingTime.localeCompare(b.openingTime)
+      );
+
+      for (let i = 1; i < intervals.length; i++) {
+        const previous = intervals[i - 1];
+        const current = intervals[i];
+
+        if (current.openingTime < previous.closingTime) {
           return NextResponse.json(
             {
               success: false,
-              message: `La hora de apertura debe ser anterior a la hora de cierre para ${item.dayOfWeek}`,
+              message: `Los horarios de ${day} se superponen`,
             },
             { status: 400 }
           );
@@ -129,48 +157,58 @@ export async function PUT(
       }
     }
 
-    const uniqueDays = new Set(
-      body.schedule.map((item: { dayOfWeek: string }) => item.dayOfWeek)
-    );
+    const scheduleData: {
+      facilityId: string;
+      dayOfWeek: DayOfWeek;
+      openingTime: string;
+      closingTime: string;
+      intervalOrder: number;
+      isClosed: boolean;
+    }[] = [];
 
-    if (uniqueDays.size !== body.schedule.length) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "No puedes repetir un día de la semana",
-        },
-        { status: 400 }
+    for (const [day, intervals] of schedulesByDay.entries()) {
+      intervals.sort((a, b) =>
+        a.openingTime.localeCompare(b.openingTime)
       );
+
+      intervals.forEach((interval, index) => {
+        scheduleData.push({
+          facilityId,
+          dayOfWeek: day,
+          openingTime: interval.openingTime,
+          closingTime: interval.closingTime,
+          intervalOrder: index + 1,
+          isClosed: false,
+        });
+      });
     }
 
     await prisma.$transaction(async (tx) => {
       await tx.facilitySchedule.deleteMany({
-        where: { facilityId },
+        where: {
+          facilityId,
+        },
       });
 
-      if (body.schedule.length > 0) {
+      if (scheduleData.length > 0) {
         await tx.facilitySchedule.createMany({
-          data: body.schedule.map(
-            (item: {
-              dayOfWeek: DayOfWeek;
-              openingTime?: string;
-              closingTime?: string;
-              isClosed: boolean;
-            }) => ({
-              facilityId,
-              dayOfWeek: item.dayOfWeek,
-              openingTime: item.isClosed ? "" : (item.openingTime ?? ""),
-              closingTime: item.isClosed ? "" : (item.closingTime ?? ""),
-              isClosed: item.isClosed,
-            })
-          ),
+          data: scheduleData,
         });
       }
     });
 
     const schedules = await prisma.facilitySchedule.findMany({
-      where: { facilityId },
-      orderBy: { dayOfWeek: "asc" },
+      where: {
+        facilityId,
+      },
+      orderBy: [
+        {
+          dayOfWeek: "asc",
+        },
+        {
+          intervalOrder: "asc",
+        },
+      ],
     });
 
     return NextResponse.json({
@@ -182,7 +220,10 @@ export async function PUT(
   } catch (error) {
     console.error("Configure facility schedule error:", error);
 
-    if (error instanceof Error && error.message === "UNAUTHORIZED") {
+    if (
+      error instanceof Error &&
+      error.message === "UNAUTHORIZED"
+    ) {
       return NextResponse.json(
         {
           success: false,
@@ -261,9 +302,14 @@ export async function GET(
       where: {
         facilityId,
       },
-      orderBy: {
-        dayOfWeek: "asc",
-      },
+      orderBy: [
+        {
+          dayOfWeek: "asc",
+        },
+        {
+          intervalOrder: "asc",
+        },
+      ],
     });
 
     return NextResponse.json({
