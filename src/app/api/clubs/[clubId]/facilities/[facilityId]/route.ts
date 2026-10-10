@@ -80,7 +80,6 @@ export async function GET(
   }
 }
 
-
 export async function PATCH(
   request: Request,
   context: {
@@ -139,6 +138,7 @@ export async function PATCH(
       description,
       location,
       capacity,
+      status,
     } = body;
 
     if (
@@ -168,6 +168,20 @@ export async function PATCH(
       );
     }
 
+    if (
+      status !== undefined &&
+      status !== "ACTIVE" &&
+      status !== "INACTIVE"
+    ) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "El estado debe ser ACTIVE o INACTIVE",
+        },
+        { status: 400 }
+      );
+    }
+
     const updatedFacility = await prisma.facility.update({
       where: {
         id: facilityId,
@@ -190,6 +204,9 @@ export async function PATCH(
         }),
         ...(capacity !== undefined && {
           capacity,
+        }),
+        ...(status !== undefined && {
+          status,
         }),
       },
     });
@@ -222,7 +239,6 @@ export async function PATCH(
     );
   }
 }
-
 
 export async function DELETE(
   request: Request,
