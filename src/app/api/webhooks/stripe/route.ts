@@ -335,6 +335,7 @@ export async function POST(request: Request) {
               startedAt,
               expiresAt,
               stripeSubscriptionId,
+              gracePeriodEndsAt: null,
             },
           });
 
@@ -366,68 +367,12 @@ export async function POST(request: Request) {
         const stripeSubscriptionId = extractSubscriptionIdFromInvoice(invoice);
 
         if (!stripeSubscriptionId) {
-          console.log(
-            "Invoice pagada sin Stripe Subscription asociada"
-          );
-
+          console.log("Invoice pagada sin Stripe Subscription asociada");
           break;
-        }
-
-        const paymentIntentId = extractId(invoice.payment_intent);
-
-        /**
-         * Idempotencia Barrera 1: Comprobación por stripeInvoiceId
-         */
-        const existingInvoicePayment = await prisma.payment.findFirst({
-          where: {
-            stripeInvoiceId: invoice.id,
-          },
-        });
-
-        if (existingInvoicePayment) {
-          if (
-            !existingInvoicePayment.stripePaymentIntentId &&
-            paymentIntentId
-          ) {
-            await prisma.payment.update({
-              where: { id: existingInvoicePayment.id },
-              data: { stripePaymentIntentId: paymentIntentId },
-            });
-            console.log(
-              `PaymentIntent ${paymentIntentId} actualizado en Payment ${existingInvoicePayment.id}`
-            );
-          } else {
-            console.log(
-              `Payment ${existingInvoicePayment.id} ya existe para esta Invoice`
-            );
-          }
-
-          break;
-        }
-
-        /**
-         * Idempotencia Barrera 2: Comprobación por stripePaymentIntentId
-         */
-        if (paymentIntentId) {
-          const existingPayment = await prisma.payment.findUnique({
-            where: {
-              stripePaymentIntentId: paymentIntentId,
-            },
-          });
-
-          if (existingPayment) {
-            console.log(
-              `Payment ${existingPayment.id} ya existe para este PaymentIntent`
-            );
-
-            break;
-          }
         }
 
         const subscription = await prisma.subscription.findUnique({
-          where: {
-            stripeSubscriptionId,
-          },
+          where: { stripeSubscriptionId },
           include: {
             plan: true,
             clubMembership: true,
@@ -438,23 +383,24 @@ export async function POST(request: Request) {
           console.error(
             `Subscription local no encontrada para Stripe Subscription ${stripeSubscriptionId}`
           );
-
           break;
         }
+
+        const paymentIntentId = extractId(invoice.payment_intent);
+        const now = new Date();
 
         const stripeSubscription = (await stripe.subscriptions.retrieve(
           stripeSubscriptionId
         )) as unknown as StripeSubscriptionPayload;
 
-        const now = new Date();
-
         const startedAt = safeStripeDate(
-          stripeSubscription?.current_period_start,
+          stripeSubscription.current_period_start ??
+            stripeSubscription.start_date,
           now
         );
 
         const expiresAt = resolveExpirationDate(
-          stripeSubscription?.current_period_end,
+          stripeSubscription.current_period_end,
           startedAt,
           {
             durationValue: subscription.plan.durationValue,
@@ -469,47 +415,106 @@ export async function POST(request: Request) {
 
         const currency = invoice.currency || "usd";
 
+        // Buscar primero por factura y después por PaymentIntent.
+        let existingPayment = await prisma.payment.findFirst({
+          where: { stripeInvoiceId: invoice.id },
+        });
+
+        if (!existingPayment && paymentIntentId) {
+          existingPayment = await prisma.payment.findUnique({
+            where: { stripePaymentIntentId: paymentIntentId },
+          });
+        }
+
+        const gracePeriodStillValid =
+          subscription.gracePeriodEndsAt !== null &&
+          subscription.gracePeriodEndsAt > now;
+
+        const graceAlreadyExpired =
+          subscription.status === "EXPIRED" ||
+          subscription.status === "CANCELLED" ||
+          (
+            subscription.gracePeriodEndsAt !== null &&
+            subscription.gracePeriodEndsAt <= now
+          );
+
+        const canReactivateMembership =
+          !graceAlreadyExpired &&
+          (
+            subscription.clubMembership.status === "ACTIVE" ||
+            (
+              subscription.status === "PENDING_PAYMENT" &&
+              gracePeriodStillValid
+            )
+          );
+
         await prisma.$transaction(async (tx) => {
-          await tx.payment.create({
-            data: {
-              clubId: subscription.clubMembership.clubId,
-              userId: subscription.clubMembership.userId,
-              subscriptionId: subscription.id,
+          if (existingPayment) {
+            // Recuperar el registro existente, incluso si estaba FAILED.
+            await tx.payment.update({
+              where: { id: existingPayment.id },
+              data: {
+                status: "PAID",
+                paidAt: now,
+                amount,
+                currency,
+                stripeSubscriptionId,
+                stripeInvoiceId: invoice.id,
+                ...(paymentIntentId
+                  ? { stripePaymentIntentId: paymentIntentId }
+                  : {}),
+              },
+            });
+          } else {
+            // Crear el registro solo cuando todavía no existe.
+            await tx.payment.create({
+              data: {
+                clubId: subscription.clubMembership.clubId,
+                userId: subscription.clubMembership.userId,
+                subscriptionId: subscription.id,
+                amount,
+                currency,
+                status: "PAID",
+                paidAt: now,
+                stripeSubscriptionId,
+                stripeInvoiceId: invoice.id,
+                stripePaymentIntentId: paymentIntentId,
+              },
+            });
+          }
 
-              amount,
-              currency,
+          // Solo reactivar la suscripción si la gracia no ha vencido previamente
+          if (!graceAlreadyExpired) {
+            await tx.subscription.updateMany({
+              where: {
+                id: subscription.id,
+                status: {
+                  notIn: ["EXPIRED", "CANCELLED"],
+                },
+                OR: [
+                  { gracePeriodEndsAt: null },
+                  { gracePeriodEndsAt: { gt: now } },
+                ],
+              },
+              data: {
+                status: "ACTIVE",
+                expiresAt,
+                gracePeriodEndsAt: null,
+              },
+            });
+          }
 
-              status: "PAID",
-              paidAt: now,
-
-              stripePaymentIntentId: paymentIntentId,
-              stripeSubscriptionId,
-              stripeInvoiceId: invoice.id,
-            },
-          });
-
-          await tx.subscription.update({
-            where: {
-              id: subscription.id,
-            },
-            data: {
-              status: "ACTIVE",
-              expiresAt,
-            },
-          });
-
-          await tx.clubMembership.update({
-            where: {
-              id: subscription.clubMembershipId,
-            },
-            data: {
-              status: "ACTIVE",
-            },
-          });
+          // Solo recuperar la membresía si no perdió ya el acceso por haber terminado su periodo de gracia.
+          if (canReactivateMembership && !graceAlreadyExpired) {
+            await tx.clubMembership.update({
+              where: { id: subscription.clubMembershipId },
+              data: { status: "ACTIVE" },
+            });
+          }
         });
 
         console.log(
-          `Renovación de Subscription ${subscription.id} procesada correctamente`
+          `Factura ${invoice.id} procesada como PAID para Subscription ${subscription.id}`
         );
 
         break;
@@ -517,26 +522,24 @@ export async function POST(request: Request) {
 
       /**
        * =========================================================
-       * 3. RENOVACIÓN FALLIDA
+       * 3. RENOVACIÓN FALLIDA (Periodo de gracia)
        * =========================================================
        */
       case "invoice.payment_failed": {
         const invoice = event.data.object as unknown as StripeInvoicePayload;
 
-        const stripeSubscriptionId = extractSubscriptionIdFromInvoice(invoice);
+        const stripeSubscriptionId =
+          extractSubscriptionIdFromInvoice(invoice);
 
         if (!stripeSubscriptionId) {
           console.log(
             "Invoice fallida sin Stripe Subscription asociada"
           );
-
           break;
         }
 
         const subscription = await prisma.subscription.findUnique({
-          where: {
-            stripeSubscriptionId,
-          },
+          where: { stripeSubscriptionId },
           include: {
             clubMembership: true,
           },
@@ -546,7 +549,16 @@ export async function POST(request: Request) {
           console.error(
             `Subscription local no encontrada para Stripe Subscription ${stripeSubscriptionId}`
           );
+          break;
+        }
 
+        // Protección adicional: la gracia aplica exclusivamente a renovaciones
+        // de suscripciones que ya hayan iniciado (startedAt existe).
+        if (!subscription.startedAt) {
+          console.log(
+            `Subscription ${subscription.id} todavía no ha comenzado. ` +
+            "El fallo inicial no inicia el periodo de gracia."
+          );
           break;
         }
 
@@ -559,10 +571,10 @@ export async function POST(request: Request) {
 
         const currency = invoice.currency || "usd";
 
+        const now = new Date();
+
         let existingPayment = await prisma.payment.findFirst({
-          where: {
-            stripeInvoiceId: invoice.id,
-          },
+          where: { stripeInvoiceId: invoice.id },
         });
 
         if (!existingPayment && paymentIntentId) {
@@ -573,37 +585,104 @@ export async function POST(request: Request) {
           });
         }
 
-        if (existingPayment) {
-          await prisma.payment.update({
-            where: {
-              id: existingPayment.id,
-            },
-            data: {
-              status: "FAILED",
-              stripeInvoiceId: invoice.id,
-            },
-          });
-        } else {
-          await prisma.payment.create({
-            data: {
-              clubId: subscription.clubMembership.clubId,
-              userId: subscription.clubMembership.userId,
-              subscriptionId: subscription.id,
-
-              amount,
-              currency,
-
-              status: "FAILED",
-
-              stripePaymentIntentId: paymentIntentId,
-              stripeSubscriptionId,
-              stripeInvoiceId: invoice.id,
-            },
-          });
+        // Evita que un evento de fallo retrasado revierta
+        // un pago que ya fue confirmed.
+        if (existingPayment?.status === "PAID") {
+          console.log(
+            `Invoice ${invoice.id} ya fue pagada. Se ignora el fallo.`
+          );
+          break;
         }
 
+        // Comprobar directamente en Stripe si la factura ya está pagada.
+        try {
+          const currentInvoice = await stripe.invoices.retrieve(invoice.id);
+          if (currentInvoice.status === "paid") {
+            console.log(
+              `Invoice ${invoice.id} ya está pagada. Se ignora el fallo retrasado.`
+            );
+            break;
+          }
+        } catch (error) {
+          console.error(
+            `Error al consultar Invoice ${invoice.id} en Stripe:`,
+            error
+          );
+
+          throw error;
+        }
+
+        // No reabrir suscripciones que ya terminaron.
+        if (
+          subscription.status === "CANCELLED" ||
+          subscription.status === "EXPIRED"
+        ) {
+          console.log(
+            `Subscription ${subscription.id} ya terminó. Se ignora el fallo.`
+          );
+          break;
+        }
+
+        const SEVEN_DAYS_IN_MS = 7 * 24 * 60 * 60 * 1000;
+
+        const failureDate = new Date(event.created * 1000);
+
+        // Si ya está en periodo de gracia, conservar la fecha
+        // original para que los reintentos no la extiendan.
+        const gracePeriodEndsAt =
+          subscription.gracePeriodEndsAt ??
+          new Date(
+            failureDate.getTime() + SEVEN_DAYS_IN_MS
+          );
+
+        await prisma.$transaction(async (tx) => {
+          if (existingPayment) {
+            await tx.payment.update({
+              where: {
+                id: existingPayment.id,
+              },
+              data: {
+                status: "FAILED",
+                stripeInvoiceId: invoice.id,
+                stripeSubscriptionId,
+                ...(paymentIntentId
+                  ? { stripePaymentIntentId: paymentIntentId }
+                  : {}),
+              },
+            });
+          } else {
+            await tx.payment.create({
+              data: {
+                clubId: subscription.clubMembership.clubId,
+                userId: subscription.clubMembership.userId,
+                subscriptionId: subscription.id,
+
+                amount,
+                currency,
+                status: "FAILED",
+
+                stripePaymentIntentId: paymentIntentId,
+                stripeSubscriptionId,
+                stripeInvoiceId: invoice.id,
+              },
+            });
+          }
+
+          // Iniciar o mantener el periodo de gracia.
+          await tx.subscription.update({
+            where: {
+              id: subscription.id,
+            },
+            data: {
+              status: "PENDING_PAYMENT",
+              gracePeriodEndsAt,
+            },
+          });
+        });
+
         console.log(
-          `Pago fallido registrado para Subscription ${subscription.id}`
+          `Pago fallido para Subscription ${subscription.id}. ` +
+            `Periodo de gracia hasta ${gracePeriodEndsAt.toISOString()}`
         );
 
         break;
@@ -615,37 +694,42 @@ export async function POST(request: Request) {
        * =========================================================
        */
       case "customer.subscription.updated": {
-        const stripeSubscription =
+        const eventSubscription =
           event.data.object as unknown as StripeSubscriptionPayload;
 
-        const localSubscription =
-          await prisma.subscription.findUnique({
-            where: {
-              stripeSubscriptionId: stripeSubscription.id,
-            },
-            include: {
-              plan: true,
-              clubMembership: true,
-            },
-          });
+        const localSubscription = await prisma.subscription.findUnique({
+          where: {
+            stripeSubscriptionId: eventSubscription.id,
+          },
+          include: {
+            plan: true,
+          },
+        });
 
         if (!localSubscription) {
           console.log(
-            `Subscription local no encontrada para ${stripeSubscription.id}`
+            `Subscription local no encontrada para ${eventSubscription.id}`
           );
-
           break;
         }
+
+        // Consultar el estado actual en Stripe.
+        // Esto evita que un webhook antiguo sobrescriba un
+        // estado más reciente, como un pago ya recuperado.
+        const stripeSubscription = (await stripe.subscriptions.retrieve(
+          eventSubscription.id
+        )) as unknown as StripeSubscriptionPayload;
 
         const now = new Date();
 
         const startedAt = safeStripeDate(
-          stripeSubscription?.current_period_start,
-          now
+          stripeSubscription.current_period_start ??
+            stripeSubscription.start_date,
+          localSubscription.startedAt ?? now
         );
 
         const expiresAt = resolveExpirationDate(
-          stripeSubscription?.current_period_end,
+          stripeSubscription.current_period_end,
           startedAt,
           {
             durationValue: localSubscription.plan.durationValue,
@@ -653,41 +737,164 @@ export async function POST(request: Request) {
           }
         );
 
-        let localStatus:
-          | "ACTIVE"
-          | "SUSPENDED"
-          | "CANCELLED";
-
         switch (stripeSubscription.status) {
           case "active":
-            localStatus = "ACTIVE";
+          case "trialing": {
+            // Si hay un fallo de pago pendiente, este webhook
+            // no debe cancelar el periodo de gracia.
+            // Esperamos la confirmación en invoice.payment_succeeded.
+            if (localSubscription.status === "PENDING_PAYMENT") {
+              console.log(
+                `Subscription ${localSubscription.id} sigue esperando confirmación del pago.`
+              );
+              break;
+            }
+
+            // Evitar reactivar una suscripción que terminó localmente.
+            if (
+              localSubscription.status === "CANCELLED" ||
+              localSubscription.status === "EXPIRED"
+            ) {
+              console.log(
+                `Subscription ${localSubscription.id} está terminada localmente.`
+              );
+              break;
+            }
+
+            await prisma.subscription.update({
+              where: { id: localSubscription.id },
+              data: {
+                status: "ACTIVE",
+                expiresAt,
+                gracePeriodEndsAt: null,
+              },
+            });
+
             break;
+          }
+
+          case "past_due": {
+            // Protección adicional: el periodo de gracia aplica solo si la suscripción ya fue pagada e inició.
+            if (!localSubscription.startedAt) {
+              console.log(
+                `Subscription ${localSubscription.id} sin periodo pagado inicial.`
+              );
+              break;
+            }
+
+            // Unificar fecha con event.created
+            const failureDate = new Date(event.created * 1000);
+
+            // No reiniciar el periodo de gracia si ya comenzó.
+            const gracePeriodEndsAt =
+              localSubscription.gracePeriodEndsAt ??
+              new Date(failureDate.getTime() + 7 * 24 * 60 * 60 * 1000);
+
+            // No reabrir una suscripción local ya terminada.
+            if (
+              localSubscription.status === "CANCELLED" ||
+              localSubscription.status === "EXPIRED"
+            ) {
+              break;
+            }
+
+            await prisma.subscription.update({
+              where: { id: localSubscription.id },
+              data: {
+                status: "PENDING_PAYMENT",
+                gracePeriodEndsAt,
+              },
+            });
+
+            console.log(
+              `Subscription ${localSubscription.id} en periodo de gracia hasta ${gracePeriodEndsAt.toISOString()}`
+            );
+
+            break;
+          }
 
           case "canceled":
-          case "unpaid":
-            localStatus = "CANCELLED";
-            break;
+          case "unpaid": {
+            if (
+              localSubscription.status === "PENDING_PAYMENT" &&
+              localSubscription.gracePeriodEndsAt !== null
+            ) {
+              console.warn(
+                `Subscription ${localSubscription.id}: Stripe indica ` +
+                `${stripeSubscription.status}, pero la gracia local ` +
+                `termina el ${localSubscription.gracePeriodEndsAt.toISOString()}.`
+              );
+              break;
+            }
 
-          case "past_due":
-          case "incomplete":
-          case "incomplete_expired":
-          default:
-            localStatus = "SUSPENDED";
+            await prisma.subscription.updateMany({
+              where: {
+                id: localSubscription.id,
+                status: {
+                  notIn: ["CANCELLED", "EXPIRED"],
+                },
+              },
+              data: {
+                status: "CANCELLED",
+                gracePeriodEndsAt: null,
+              },
+            });
+
             break;
+          }
+
+          case "incomplete_expired": {
+            await prisma.subscription.updateMany({
+              where: {
+                id: localSubscription.id,
+                status: {
+                  notIn: ["CANCELLED", "EXPIRED"],
+                },
+              },
+              data: {
+                status: "CANCELLED",
+                gracePeriodEndsAt: null,
+              },
+            });
+
+            break;
+          }
+
+          case "incomplete":
+          case "paused":
+          default: {
+            if (
+              localSubscription.status === "PENDING_PAYMENT" &&
+              localSubscription.gracePeriodEndsAt !== null
+            ) {
+              console.warn(
+                `Subscription ${localSubscription.id} está en periodo de gracia (PENDING_PAYMENT). ` +
+                `Se preserva el periodo de gracia frente al estado '${stripeSubscription.status}' de Stripe.`
+              );
+              break;
+            }
+
+            if (
+              localSubscription.status === "CANCELLED" ||
+              localSubscription.status === "EXPIRED"
+            ) {
+              break;
+            }
+
+            await prisma.subscription.update({
+              where: { id: localSubscription.id },
+              data: {
+                status: "SUSPENDED",
+                gracePeriodEndsAt: null,
+              },
+            });
+
+            break;
+          }
         }
 
-        await prisma.subscription.update({
-          where: {
-            id: localSubscription.id,
-          },
-          data: {
-            status: localStatus,
-            expiresAt,
-          },
-        });
-
         console.log(
-          `Subscription ${localSubscription.id} sincronizada: ${localStatus}`
+          `Subscription ${localSubscription.id} sincronizada con Stripe: ${stripeSubscription.status}`
         );
 
         break;
@@ -699,46 +906,94 @@ export async function POST(request: Request) {
        * =========================================================
        */
       case "customer.subscription.deleted": {
-        const stripeSubscription =
+        const eventSubscription =
           event.data.object as unknown as StripeSubscriptionPayload;
 
-        const localSubscription =
-          await prisma.subscription.findUnique({
-            where: {
-              stripeSubscriptionId: stripeSubscription.id,
-            },
-          });
+        const localSubscription = await prisma.subscription.findUnique({
+          where: {
+            stripeSubscriptionId: eventSubscription.id,
+          },
+        });
 
         if (!localSubscription) {
           console.log(
-            `Subscription local no encontrada para ${stripeSubscription.id}`
+            `Subscription local no encontrada para ${eventSubscription.id}`
+          );
+          break;
+        }
+
+        // Verificar el estado actual cuando la suscripción todavía
+        // existe en Stripe, para evitar procesar un evento retrasado.
+        let currentStripeStatus: string = eventSubscription.status;
+
+        try {
+          const currentStripeSubscription =
+            await stripe.subscriptions.retrieve(eventSubscription.id);
+
+          currentStripeStatus = currentStripeSubscription.status;
+        } catch (error) {
+          // Una suscripción eliminada puede no estar disponible
+          // para consulta. En ese caso usamos el evento firmado.
+          if (
+            error instanceof Stripe.errors.StripeError &&
+            error.statusCode === 404
+          ) {
+            console.log(
+              `Subscription ${eventSubscription.id} no disponible en Stripe; se procesa el evento de eliminación.`
+            );
+          } else {
+            throw error;
+          }
+        }
+
+        // Si Stripe todavía considera activa la suscripción,
+        // no debemos cancelarla por un evento desactualizado.
+        if (
+          currentStripeStatus === "active" ||
+          currentStripeStatus === "trialing"
+        ) {
+          console.log(
+            `Subscription ${localSubscription.id} continúa activa en Stripe.`
+          );
+          break;
+        }
+
+        // Si existe un periodo de gracia pendiente,
+        // no permitir que la eliminación en Stripe borre
+        // la fecha que necesita nuestro cron.
+        if (
+          localSubscription.status === "PENDING_PAYMENT" &&
+          localSubscription.gracePeriodEndsAt !== null
+        ) {
+          console.warn(
+            `Subscription ${localSubscription.id} eliminada en Stripe, ` +
+            `pero mantiene su gracia local hasta ` +
+            `${localSubscription.gracePeriodEndsAt.toISOString()}.`
           );
 
           break;
         }
 
-        await prisma.$transaction(async (tx) => {
-          await tx.subscription.update({
-            where: {
-              id: localSubscription.id,
+        // Cancelación efectiva sin periodo de gracia pendiente.
+        await prisma.subscription.updateMany({
+          where: {
+            id: localSubscription.id,
+            status: {
+              notIn: ["CANCELLED", "EXPIRED"],
             },
-            data: {
-              status: "CANCELLED",
-            },
-          });
-
-          await tx.clubMembership.update({
-            where: {
-              id: localSubscription.clubMembershipId,
-            },
-            data: {
-              status: "SUSPENDED",
-            },
-          });
+          },
+          data: {
+            status: "CANCELLED",
+            gracePeriodEndsAt: null,
+          },
         });
 
+        // IMPORTANTE:
+        // No modificar ClubMembership.
+        // La membresía y la suscripción son conceptos distintos.
+
         console.log(
-          `Subscription ${localSubscription.id} terminada`
+          `Subscription ${localSubscription.id} terminada correctamente.`
         );
 
         break;

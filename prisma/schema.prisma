@@ -300,8 +300,9 @@ model Subscription {
 
   status SubscriptionStatus @default(PENDING_PAYMENT)
 
-  startedAt DateTime?
-  expiresAt DateTime?
+  startedAt         DateTime?
+  expiresAt         DateTime?
+  gracePeriodEndsAt DateTime?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -423,7 +424,7 @@ model FacilitySchedule {
 }
 
 model FacilityPlanAccess {
-  id                          String         @id @default(uuid())
+  id                          String @id @default(uuid())
   facilityId                  String
   membershipPlanId            String
   maxReservationMinutesPerDay Int

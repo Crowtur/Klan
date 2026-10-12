@@ -3,6 +3,50 @@ import { requireAuth } from "@/lib/auth/auth";
 import { requireClubAdmin } from "@/lib/auth/authorization";
 import { NextResponse } from "next/server";
 
+/**
+ * Calcula la fecha de expiración sumando meses o años exactos según el calendario UTC,
+ * ajustando automáticamente al último día del mes en caso de desfase (ej. 31 Ene -> 28/29 Feb).
+ */
+function calculateExpirationDate(
+  startDate: Date,
+  durationValue: number,
+  durationUnit: "MONTH" | "YEAR"
+): Date {
+  const year = startDate.getUTCFullYear();
+  const month = startDate.getUTCMonth();
+  const day = startDate.getUTCDate();
+
+  const monthsToAdd =
+    durationUnit === "YEAR"
+      ? durationValue * 12
+      : durationValue;
+
+  const targetFirstDay = new Date(
+    Date.UTC(year, month + monthsToAdd, 1)
+  );
+
+  const targetYear = targetFirstDay.getUTCFullYear();
+  const targetMonth = targetFirstDay.getUTCMonth();
+
+  const lastDayOfTargetMonth = new Date(
+    Date.UTC(targetYear, targetMonth + 1, 0)
+  ).getUTCDate();
+
+  const targetDay = Math.min(
+    day,
+    lastDayOfTargetMonth
+  );
+
+  const result = new Date(startDate);
+  result.setUTCFullYear(
+    targetYear,
+    targetMonth,
+    targetDay
+  );
+
+  return result;
+}
+
 // PATCH: Revisar solicitud de membresía (Aprobar / Rechazar por CLUB_ADMIN)
 export async function PATCH(
   request: Request,
@@ -64,7 +108,11 @@ export async function PATCH(
             id: true,
             name: true,
             requiresDocumentation: true,
-            type: true, // Importante para saber si es PAID o FREE
+            type: true,
+            price: true,
+            durationValue: true,
+            durationUnit: true,
+            isActive: true,
           },
         },
         documents: {
@@ -106,6 +154,45 @@ export async function PATCH(
       );
     }
 
+    // Validaciones del plan al intentar aprobar
+    if (status === "APPROVED") {
+      if (!application.plan.isActive) {
+        return NextResponse.json(
+          {
+            success: false,
+            message: "El plan ya no está activo",
+          },
+          { status: 400 }
+        );
+      }
+
+      if (
+        !Number.isInteger(application.plan.durationValue) ||
+        application.plan.durationValue <= 0
+      ) {
+        return NextResponse.json(
+          {
+            success: false,
+            message: "La duración del plan no es válida",
+          },
+          { status: 400 }
+        );
+      }
+
+      if (
+        application.plan.type === "PAID" &&
+        Number(application.plan.price) <= 0
+      ) {
+        return NextResponse.json(
+          {
+            success: false,
+            message: "El precio del plan no es válido",
+          },
+          { status: 400 }
+        );
+      }
+    }
+
     // Si se aprueba y el plan requiere documentos, verificar que estén todos los obligatorios aprobados
     if (status === "APPROVED" && application.plan.requiresDocumentation) {
       const requiredRequirements =
@@ -144,97 +231,211 @@ export async function PATCH(
     }
 
     // Ejecutamos todo dentro de una transacción para asegurar consistencia
-    const updatedApplication = await prisma.$transaction(async (tx) => {
-      // 1. Actualizar solicitud
-      const updatedApp = await tx.membershipApplication.update({
-        where: {
-          id: applicationId,
-        },
-        data: {
-          status,
-          reviewedAt: new Date(),
-          reviewedById: user.id,
-          rejectionReason: status === "REJECTED" ? rejectionReason.trim() : null,
-        },
-        include: {
-          user: {
-            select: {
-              id: true,
-              firstName: true,
-              lastName: true,
-              email: true,
-            },
-          },
-          plan: {
-            select: {
-              id: true,
-              name: true,
-              type: true,
-              price: true,
-              durationValue: true,
-              durationUnit: true,
-            },
-          },
-        },
-      });
-
-      // 2. Si la solicitud fue APROBADA, gestionamos membresía y suscripción
-      if (status === "APPROVED") {
-        // Buscar o crear la membresía del usuario en el club
-        let clubMembership = await tx.clubMembership.findUnique({
+    const result = await prisma.$transaction(async (tx) => {
+      // Evitar que dos administradores revisen la misma solicitud simultáneamente
+      const updatedCount =
+        await tx.membershipApplication.updateMany({
           where: {
-            userId_clubId: {
-              userId: updatedApp.userId,
-              clubId: clubId,
+            id: applicationId,
+            status: {
+              in: ["PENDING", "DOCUMENTATION_REVIEW"],
+            },
+          },
+          data: {
+            status,
+            reviewedAt: new Date(),
+            reviewedById: user.id,
+            rejectionReason:
+              status === "REJECTED"
+                ? rejectionReason.trim()
+                : null,
+          },
+        });
+
+      if (updatedCount.count !== 1) {
+        throw new Error("APPLICATION_ALREADY_REVIEWED");
+      }
+
+      const updatedApp =
+        await tx.membershipApplication.findUniqueOrThrow({
+          where: { id: applicationId },
+          include: {
+            user: {
+              select: {
+                id: true,
+                firstName: true,
+                lastName: true,
+                email: true,
+              },
+            },
+            plan: {
+              select: {
+                id: true,
+                name: true,
+                type: true,
+                price: true,
+                durationValue: true,
+                durationUnit: true,
+              },
             },
           },
         });
 
-        if (!clubMembership) {
-          clubMembership = await tx.clubMembership.create({
+      let subscriptionId: string | null = null;
+
+      if (status === "APPROVED") {
+        const now = new Date();
+
+        // Reutilizar ClubMembership si el usuario perteneció anteriormente al club
+        let membership = await tx.clubMembership.findUnique({
+          where: {
+            userId_clubId: {
+              userId: updatedApp.userId,
+              clubId,
+            },
+          },
+        });
+
+        // No preparar otra alta mientras exista una suscripción activa y vigente o en periodo de gracia
+        if (membership) {
+          const activeSubscription =
+            await tx.subscription.findFirst({
+              where: {
+                clubMembershipId: membership.id,
+                status: "ACTIVE",
+                startedAt: { lte: now },
+                expiresAt: { gt: now },
+              },
+              select: { id: true },
+            });
+
+          if (activeSubscription) {
+            throw new Error("ACTIVE_SUBSCRIPTION_EXISTS");
+          }
+
+          const pendingGrace = await tx.subscription.findFirst({
+            where: {
+              clubMembershipId: membership.id,
+              status: "PENDING_PAYMENT",
+              gracePeriodEndsAt: {
+                gt: now,
+              },
+            },
+            select: {
+              id: true,
+            },
+          });
+
+          if (pendingGrace) {
+            throw new Error("PENDING_GRACE_EXISTS");
+          }
+        }
+
+        if (!membership) {
+          membership = await tx.clubMembership.create({
             data: {
               userId: updatedApp.userId,
-              clubId: clubId,
+              clubId,
               role: "MEMBER",
-              status: "ACTIVE",
+              // FREE se activa enseguida; PAID permanece suspendida hasta pagar
+              status:
+                updatedApp.plan.type === "FREE"
+                  ? "ACTIVE"
+                  : "SUSPENDED",
             },
           });
         }
 
-        // Si el plan es PAID, creamos automáticamente la suscripción en PENDING_PAYMENT
-        if (updatedApp.plan.type === "PAID") {
-          const existingSubscription = await tx.subscription.findFirst({
-            where: {
-              clubMembershipId: clubMembership.id,
+        if (updatedApp.plan.type === "FREE") {
+          const startedAt = now;
+
+          const expiresAt = calculateExpirationDate(
+            startedAt,
+            updatedApp.plan.durationValue,
+            updatedApp.plan.durationUnit
+          );
+
+          const subscription = await tx.subscription.create({
+            data: {
+              clubMembershipId: membership.id,
               planId: updatedApp.planId,
-              status: {
-                in: ["PENDING_PAYMENT", "ACTIVE"],
-              },
+              status: "ACTIVE",
+              startedAt,
+              expiresAt,
+              gracePeriodEndsAt: null,
             },
           });
 
-          if (!existingSubscription) {
-            await tx.subscription.create({
+          await tx.clubMembership.update({
+            where: { id: membership.id },
+            data: { status: "ACTIVE" },
+          });
+
+          subscriptionId = subscription.id;
+        }
+
+        if (updatedApp.plan.type === "PAID") {
+          // Solo reutilizar un alta inicial pendiente
+          let subscription = await tx.subscription.findFirst({
+            where: {
+              clubMembershipId: membership.id,
+              planId: updatedApp.planId,
+              status: "PENDING_PAYMENT",
+              startedAt: null,
+              stripeSubscriptionId: null,
+              gracePeriodEndsAt: null,
+            },
+            orderBy: { createdAt: "desc" },
+          });
+
+          if (!subscription) {
+            subscription = await tx.subscription.create({
               data: {
-                clubMembershipId: clubMembership.id,
+                clubMembershipId: membership.id,
                 planId: updatedApp.planId,
                 status: "PENDING_PAYMENT",
+                startedAt: null,
+                expiresAt: null,
+                gracePeriodEndsAt: null,
               },
             });
           }
+
+          // La aprobación no activa una membresía pagada.
+          // El webhook la activará cuando Stripe confirme el pago.
+          await tx.clubMembership.updateMany({
+            where: {
+              id: membership.id,
+              status: "ACTIVE",
+            },
+            data: {
+              status: "SUSPENDED",
+            },
+          });
+
+          subscriptionId = subscription.id;
         }
       }
 
-      return updatedApp;
+      return {
+        application: updatedApp,
+        subscriptionId,
+      };
     });
 
     return NextResponse.json({
       success: true,
       message:
-        status === "APPROVED"
-          ? "Solicitud aprobada correctamente"
-          : "Solicitud rechazada correctamente",
-      application: updatedApplication,
+        status === "REJECTED"
+          ? "Solicitud rechazada correctamente"
+          : result.application.plan.type === "FREE"
+            ? "Solicitud aprobada y membresía gratuita activada"
+            : "Solicitud aprobada. El usuario puede iniciar el pago",
+      application: result.application,
+      subscriptionId: result.subscriptionId,
+      paymentRequired:
+        status === "APPROVED" &&
+        result.application.plan.type === "PAID",
     });
   } catch (error) {
     console.error("Review membership application error:", error);
@@ -258,6 +459,38 @@ export async function PATCH(
               "No tienes permisos para revisar solicitudes de este club",
           },
           { status: 403 }
+        );
+      }
+
+      if (error.message === "APPLICATION_ALREADY_REVIEWED") {
+        return NextResponse.json(
+          {
+            success: false,
+            message: "La solicitud ya fue revisada",
+          },
+          { status: 409 }
+        );
+      }
+
+      if (error.message === "ACTIVE_SUBSCRIPTION_EXISTS") {
+        return NextResponse.json(
+          {
+            success: false,
+            message:
+              "El usuario ya tiene una suscripción vigente en este club",
+          },
+          { status: 409 }
+        );
+      }
+
+      if (error.message === "PENDING_GRACE_EXISTS") {
+        return NextResponse.json(
+          {
+            success: false,
+            message:
+              "El usuario tiene una renovación pendiente dentro de su periodo de gracia",
+          },
+          { status: 409 }
         );
       }
     }

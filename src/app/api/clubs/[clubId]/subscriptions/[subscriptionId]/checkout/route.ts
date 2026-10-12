@@ -82,6 +82,22 @@ export async function POST(
       );
     }
 
+    // Bloquear que un intento de Checkout inicial procese renovaciones que fallaron
+    if (
+      subscription.startedAt !== null ||
+      subscription.gracePeriodEndsAt !== null
+    ) {
+      return NextResponse.json(
+        {
+          success: false,
+          message:
+            "Esta suscripción ya inició anteriormente. " +
+            "Las renovaciones pendientes se gestionan mediante Stripe.",
+        },
+        { status: 409 }
+      );
+    }
+
     if (!subscription.plan.isActive) {
       return NextResponse.json(
         {
@@ -92,42 +108,36 @@ export async function POST(
       );
     }
 
-    /*
-     * Si el plan requiere documentación,
-     * debe existir una solicitud aprobada.
-     *
-     * Esto solamente se verifica para la adquisición inicial.
-     * Las renovaciones futuras serán gestionadas por Stripe.
-     */
-    if (subscription.plan.requiresDocumentation) {
-      const application =
-        await prisma.membershipApplication.findFirst({
-          where: {
-            userId: user.id,
-            planId: subscription.planId,
-            status: "APPROVED",
+    // Exigir solicitud aprobada para todos los planes de pago
+    const approvedApplication =
+      await prisma.membershipApplication.findFirst({
+        where: {
+          userId: user.id,
+          planId: subscription.planId,
+          status: "APPROVED",
+          plan: {
+            clubId,
           },
-          orderBy: {
-            createdAt: "desc",
-          },
-        });
+        },
+        orderBy: {
+          reviewedAt: "desc",
+        },
+        select: {
+          id: true,
+        },
+      });
 
-      if (!application) {
-        return NextResponse.json(
-          {
-            success: false,
-            message:
-              "La documentación requerida debe ser aprobada antes de realizar el pago",
-          },
-          { status: 400 }
-        );
-      }
+    if (!approvedApplication) {
+      return NextResponse.json(
+        {
+          success: false,
+          message:
+            "La solicitud de membresía debe estar aprobada antes de iniciar el pago",
+        },
+        { status: 403 }
+      );
     }
 
-    /*
-     * Si ya existe una suscripción de Stripe asociada,
-     * no debemos crear otra.
-     */
     if (subscription.stripeSubscriptionId) {
       return NextResponse.json(
         {
@@ -139,11 +149,39 @@ export async function POST(
       );
     }
 
-    /*
-     * Buscar un Payment pendiente existente.
-     * Esto evita crear múltiples Payments locales
-     * si el usuario vuelve a solicitar el Checkout.
-     */
+    const amount = Number(subscription.plan.price);
+
+    if (!Number.isFinite(amount) || amount <= 0) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "El precio del plan debe ser mayor que cero",
+        },
+        { status: 400 }
+      );
+    }
+
+    if (
+      !Number.isInteger(subscription.plan.durationValue) ||
+      subscription.plan.durationValue <= 0 ||
+      !["MONTH", "YEAR"].includes(subscription.plan.durationUnit)
+    ) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "La duración del plan no es válida",
+        },
+        { status: 400 }
+      );
+    }
+
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL;
+
+    if (!appUrl) {
+      throw new Error("NEXT_PUBLIC_APP_URL no está configurada");
+    }
+
+    // Buscar un Payment pendiente existente
     const existingPayment = await prisma.payment.findFirst({
       where: {
         subscriptionId: subscription.id,
@@ -156,143 +194,143 @@ export async function POST(
       },
     });
 
-    if (existingPayment?.stripeCheckoutSessionId) {
-      const existingSession =
-        await stripe.checkout.sessions.retrieve(
-          existingPayment.stripeCheckoutSessionId
+    let payment = existingPayment;
+
+    if (payment?.stripeCheckoutSessionId) {
+      try {
+        const existingSession =
+          await stripe.checkout.sessions.retrieve(
+            payment.stripeCheckoutSessionId
+          );
+
+        if (existingSession.status === "open") {
+          return NextResponse.json({
+            success: true,
+            message: "Ya existe una sesión de pago activa",
+            checkoutUrl: existingSession.url,
+            paymentId: payment.id,
+            checkoutSessionId: existingSession.id,
+          });
+        }
+
+        if (existingSession.status === "complete") {
+          return NextResponse.json(
+            {
+              success: false,
+              message:
+                "El Checkout anterior ya fue completado. " +
+                "Espera la confirmación del pago.",
+              checkoutSessionId: existingSession.id,
+            },
+            { status: 409 }
+          );
+        }
+
+        // Si la sesión anterior ya expiró, marcamos el intento como FAILED
+        // para permitir la creación de un intento de pago nuevo y limpio.
+        if (existingSession.status === "expired") {
+          await prisma.payment.update({
+            where: { id: payment.id },
+            data: { status: "FAILED" },
+          });
+          payment = null;
+        }
+      } catch (stripeErr) {
+        console.error(
+          "Error al consultar la Checkout Session existente:",
+          stripeErr
         );
 
-      if (existingSession.status === "open") {
-        return NextResponse.json({
-          success: true,
-          message: "Ya existe una sesión de pago activa",
-          checkoutUrl: existingSession.url,
-          paymentId: existingPayment.id,
-        });
+        throw stripeErr;
       }
     }
 
-    const amount = Number(subscription.plan.price);
-
-    if (amount <= 0) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "El precio del plan debe ser mayor que cero",
+    // Si no existe un pago pendiente válido, creamos uno nuevo
+    if (!payment) {
+      payment = await prisma.payment.create({
+        data: {
+          clubId,
+          userId: user.id,
+          subscriptionId: subscription.id,
+          amount: subscription.plan.price,
+          currency: "usd",
+          status: "PENDING",
         },
-        { status: 400 }
-      );
+      });
     }
-
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL;
-
-    if (!appUrl) {
-      throw new Error("NEXT_PUBLIC_APP_URL no está configurada");
-    }
-
-    /*
-     * Crear el Payment local antes de contactar con Stripe.
-     */
-    const payment = await prisma.payment.create({
-      data: {
-        clubId,
-        userId: user.id,
-        subscriptionId: subscription.id,
-        amount: subscription.plan.price,
-        currency: "usd",
-        status: "PENDING",
-      },
-    });
 
     try {
-      /*
-       * Convertimos la duración del plan a un intervalo
-       * compatible con Stripe.
-       *
-       * MONTH -> month
-       * YEAR  -> year
-       */
       const interval =
         subscription.plan.durationUnit === "MONTH"
           ? "month"
           : "year";
 
+      // Clave de idempotencia única ligada al intento de pago local
+      const idempotencyKey = `checkout_session_${payment.id}`;
+
       const checkoutSession =
-        await stripe.checkout.sessions.create({
-          mode: "subscription",
+        await stripe.checkout.sessions.create(
+          {
+            mode: "subscription",
 
-          line_items: [
-            {
-              quantity: 1,
+            line_items: [
+              {
+                quantity: 1,
 
-              price_data: {
-                currency: "usd",
+                price_data: {
+                  currency: "usd",
 
-                unit_amount: Math.round(amount * 100),
+                  unit_amount: Math.round(amount * 100),
 
-                product_data: {
-                  name: subscription.plan.name,
-                  description:
-                    subscription.plan.description ||
-                    `Membresía de ${subscription.clubMembership.club.name}`,
-                },
+                  product_data: {
+                    name: subscription.plan.name,
+                    description:
+                      subscription.plan.description ||
+                      `Membresía de ${subscription.clubMembership.club.name}`,
+                  },
 
-                recurring: {
-                  interval,
-                  interval_count:
-                    subscription.plan.durationValue,
+                  recurring: {
+                    interval,
+                    interval_count:
+                      subscription.plan.durationValue,
+                  },
                 },
               },
-            },
-          ],
+            ],
 
-          customer_email: user.email,
+            customer_email: user.email,
 
-          /*
-           * Metadata de la Checkout Session.
-           */
-          metadata: {
-            paymentId: payment.id,
-            subscriptionId: subscription.id,
-            clubId,
-            userId: user.id,
-          },
-
-          /*
-           * Metadata que quedará asociada a la
-           * suscripción de Stripe.
-           *
-           * Esto será importante para identificar
-           * las renovaciones futuras.
-           */
-          subscription_data: {
             metadata: {
+              paymentId: payment.id,
               subscriptionId: subscription.id,
               clubId,
               userId: user.id,
             },
+
+            subscription_data: {
+              metadata: {
+                subscriptionId: subscription.id,
+                clubId,
+                userId: user.id,
+              },
+            },
+
+            success_url:
+              `${appUrl}/payment/success?session_id={CHECKOUT_SESSION_ID}`,
+
+            cancel_url:
+              `${appUrl}/payment/cancelled?payment_id=${payment.id}`,
           },
+          {
+            idempotencyKey,
+          }
+        );
 
-          success_url:
-            `${appUrl}/payment/success?session_id={CHECKOUT_SESSION_ID}`,
-
-          cancel_url:
-            `${appUrl}/payment/cancelled?payment_id=${payment.id}`,
-        });
-
-      /*
-       * Stripe devuelve el ID de la suscripción creada
-       * cuando el Checkout está configurado en modo subscription.
-       */
       const stripeSubscriptionId =
         typeof checkoutSession.subscription === "string"
           ? checkoutSession.subscription
           : null;
 
-      /*
-       * Guardamos la información de Stripe en nuestras
-       * dos entidades relacionadas.
-       */
       await prisma.$transaction(async (tx) => {
         await tx.payment.update({
           where: {
@@ -300,18 +338,20 @@ export async function POST(
           },
           data: {
             stripeCheckoutSessionId: checkoutSession.id,
-            stripeSubscriptionId,
+            ...(stripeSubscriptionId ? { stripeSubscriptionId } : {}),
           },
         });
 
-        await tx.subscription.update({
-          where: {
-            id: subscription.id,
-          },
-          data: {
-            stripeSubscriptionId,
-          },
-        });
+        if (stripeSubscriptionId) {
+          await tx.subscription.update({
+            where: {
+              id: subscription.id,
+            },
+            data: {
+              stripeSubscriptionId,
+            },
+          });
+        }
       });
 
       return NextResponse.json({
