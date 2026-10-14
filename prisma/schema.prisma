@@ -27,6 +27,7 @@ enum ClubRole {
 enum MembershipStatus {
   ACTIVE
   SUSPENDED
+  REMOVED
 }
 
 enum ClubStatus {
@@ -143,6 +144,10 @@ model ClubMembership {
 
   joinedAt DateTime @default(now())
 
+  removedAt     DateTime?
+  removedById   String?
+  removalReason String?
+
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
   club Club @relation(fields: [clubId], references: [id], onDelete: Cascade)
 
@@ -151,6 +156,7 @@ model ClubMembership {
   @@unique([userId, clubId])
   @@index([userId])
   @@index([clubId])
+  @@index([clubId, status])
 }
 
 model MembershipPlan {
