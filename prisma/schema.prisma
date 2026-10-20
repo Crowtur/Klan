@@ -99,6 +99,11 @@ enum DayOfWeek {
   SUNDAY
 }
 
+enum ReservationStatus {
+  CONFIRMED
+  CANCELLED
+}
+
 model User {
   id           String     @id @default(uuid())
   firstName    String
@@ -152,6 +157,7 @@ model ClubMembership {
   club Club @relation(fields: [clubId], references: [id], onDelete: Cascade)
 
   subscriptions Subscription[]
+  reservations  Reservation[]
 
   @@unique([userId, clubId])
   @@index([userId])
@@ -405,6 +411,7 @@ model Facility {
   club         Club                 @relation(fields: [clubId], references: [id], onDelete: Restrict)
   schedules    FacilitySchedule[]
   planAccesses FacilityPlanAccess[]
+  reservations Reservation[]
 
   @@index([clubId])
   @@index([status])
@@ -444,4 +451,26 @@ model FacilityPlanAccess {
   @@unique([facilityId, membershipPlanId])
   @@index([facilityId])
   @@index([membershipPlanId])
+}
+
+model Reservation {
+  id String @id @default(uuid())
+
+  facilityId       String
+  clubMembershipId String
+
+  startAt DateTime
+  endAt   DateTime
+
+  status ReservationStatus @default(CONFIRMED)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  facility       Facility       @relation(fields: [facilityId], references: [id], onDelete: Restrict)
+  clubMembership ClubMembership @relation(fields: [clubMembershipId], references: [id], onDelete: Restrict)
+
+  @@index([facilityId, startAt, endAt])
+  @@index([clubMembershipId, startAt])
+  @@index([status])
 }
