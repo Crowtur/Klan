@@ -2,7 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { requireAuth } from "@/lib/auth/auth";
 import { requireClubMembership } from "@/lib/auth/authorization";
 import { NextResponse } from "next/server";
-import { DayOfWeek } from "@prisma/client";
+import { DayOfWeek, Prisma } from "@prisma/client";
 
 // Configuración de zona horaria y mapeo de días
 const CLUB_TIME_ZONE = "America/Guayaquil";
@@ -57,7 +57,7 @@ function getLocalDateTime(date: Date) {
 }
 
 // ==========================================
-// 1. Manejador GET (Para consultar datos)
+// 1. Manejador GET (Listar reservas de una instalación)
 // ==========================================
 export async function GET(
   request: Request,
@@ -69,30 +69,158 @@ export async function GET(
   }
 ) {
   try {
+    // 1. Autenticación
+    const user = await requireAuth(request);
+
     const { clubId, facilityId } = await context.params;
 
+    // 2. Validar pertenencia al club
+    const membership = await requireClubMembership(user.id, clubId);
+
+    // 3. Comprobar que la instalación pertenece al club
     const facility = await prisma.facility.findFirst({
       where: {
         id: facilityId,
         clubId,
       },
+      select: {
+        id: true,
+        name: true,
+        status: true,
+      },
     });
 
     if (!facility) {
       return NextResponse.json(
-        { success: false, message: "Instalación no encontrada" },
+        {
+          success: false,
+          message: "Instalación no encontrada",
+        },
         { status: 404 }
       );
     }
 
+    // 4. Leer filtros opcionales
+    const { searchParams } = new URL(request.url);
+
+    const status = searchParams.get("status");
+    const from = searchParams.get("from");
+    const to = searchParams.get("to");
+
+    if (
+      status !== null &&
+      status !== "CONFIRMED" &&
+      status !== "CANCELLED"
+    ) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Estado de reserva inválido",
+        },
+        { status: 400 }
+      );
+    }
+
+    const fromDate = from ? new Date(from) : null;
+    const toDate = to ? new Date(to) : null;
+
+    if (
+      (fromDate && !Number.isFinite(fromDate.getTime())) ||
+      (toDate && !Number.isFinite(toDate.getTime()))
+    ) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Filtros de fecha inválidos",
+        },
+        { status: 400 }
+      );
+    }
+
+    if (fromDate && toDate && fromDate >= toDate) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "El filtro from debe ser anterior a to",
+        },
+        { status: 400 }
+      );
+    }
+
+    // 5. Construir filtros de consulta
+    const where: Prisma.ReservationWhereInput = {
+      facilityId,
+      ...(membership.role !== "CLUB_ADMIN"
+        ? { clubMembershipId: membership.id }
+        : {}),
+      ...(status ? { status: status as Prisma.EnumReservationStatusFilter | "CONFIRMED" | "CANCELLED" } : {}),
+      ...(fromDate || toDate
+        ? {
+            startAt: {
+              ...(toDate ? { lt: toDate } : {}),
+            },
+            endAt: {
+              ...(fromDate ? { gt: fromDate } : {}),
+            },
+          }
+        : {}),
+    };
+
+    // 6. Consultar reservas
+    const reservations = await prisma.reservation.findMany({
+      where,
+      select: {
+        id: true,
+        facilityId: true,
+        clubMembershipId: true,
+        startAt: true,
+        endAt: true,
+        status: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+      orderBy: {
+        startAt: "asc",
+      },
+    });
+
     return NextResponse.json({
       success: true,
       facility,
+      reservations,
+      total: reservations.length,
     });
   } catch (error) {
-    console.error("GET Facility error:", error);
+    console.error("Get facility reservations error:", error);
+
+    if (error instanceof Error) {
+      if (error.message === "UNAUTHORIZED") {
+        return NextResponse.json(
+          {
+            success: false,
+            message: "No autenticado",
+          },
+          { status: 401 }
+        );
+      }
+
+      if (error.message === "FORBIDDEN") {
+        return NextResponse.json(
+          {
+            success: false,
+            message:
+              "No tienes permisos para consultar reservas de este club",
+          },
+          { status: 403 }
+        );
+      }
+    }
+
     return NextResponse.json(
-      { success: false, message: "Error interno del servidor" },
+      {
+        success: false,
+        message: "Error interno del servidor",
+      },
       { status: 500 }
     );
   }
@@ -410,7 +538,6 @@ export async function POST(
             AND "status" = 'ACTIVE'
           FOR UPDATE
         `;
-
 
         if (lockedFacilities.length === 0) {
           throw new ReservationError(
