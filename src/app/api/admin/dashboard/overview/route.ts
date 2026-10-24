@@ -1,7 +1,7 @@
-
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAuth } from "@/lib/auth/auth";
+import { Prisma } from "@prisma/client";
 
 type YearMonth = {
   year: number;
@@ -9,6 +9,44 @@ type YearMonth = {
 };
 
 const TIME_ZONE = "America/Guayaquil";
+
+function getGroupCount(group: {
+  _count?: true | { _all?: number };
+}): number {
+  const count = group._count;
+
+  if (count === undefined || count === true) {
+    throw new Error(
+      "La consulta groupBy no devolvió el conteo esperado"
+    );
+  }
+
+  if (typeof count._all !== "number") {
+    throw new Error(
+      "La consulta groupBy no devolvió _count._all"
+    );
+  }
+
+  return count._all;
+}
+
+const clubStatusGroupArgs = {
+  by: ["status"],
+  orderBy: { status: "asc" },
+  _count: { _all: true },
+} satisfies Prisma.ClubGroupByArgs;
+
+const userStatusGroupArgs = {
+  by: ["status"],
+  orderBy: { status: "asc" },
+  _count: { _all: true },
+} satisfies Prisma.UserGroupByArgs;
+
+const subscriptionStatusGroupArgs = {
+  by: ["status"],
+  orderBy: { status: "asc" },
+  _count: { _all: true },
+} satisfies Prisma.SubscriptionGroupByArgs;
 
 function getLocalYearMonth(date: Date): YearMonth {
   const parts = new Intl.DateTimeFormat("en-US", {
@@ -111,16 +149,10 @@ export async function GET(request: Request) {
       historicalUsers,
     ] = await prisma.$transaction([
       // Clubes por estado
-      prisma.club.groupBy({
-        by: ["status"],
-        _count: { _all: true },
-      }),
+      prisma.club.groupBy(clubStatusGroupArgs),
 
       // Usuarios por estado
-      prisma.user.groupBy({
-        by: ["status"],
-        _count: { _all: true },
-      }),
+      prisma.user.groupBy(userStatusGroupArgs),
 
       // Membresías totales
       prisma.clubMembership.count(),
@@ -133,10 +165,7 @@ export async function GET(request: Request) {
       }),
 
       // Suscripciones por estado
-      prisma.subscription.groupBy({
-        by: ["status"],
-        _count: { _all: true },
-      }),
+      prisma.subscription.groupBy(subscriptionStatusGroupArgs),
 
       // Suscripciones realmente vigentes
       prisma.subscription.count({
@@ -165,8 +194,13 @@ export async function GET(request: Request) {
             lt: periodEnd,
           },
         },
-        _count: { _all: true },
-      }),
+        orderBy: {
+          status: "asc",
+        },
+        _count: {
+          _all: true,
+        },
+      } satisfies Prisma.ReservationGroupByArgs),
 
       // Importe de pagos confirmados en USD
       prisma.payment.aggregate({
@@ -250,7 +284,7 @@ export async function GET(request: Request) {
     };
 
     for (const group of clubStatusGroups) {
-      clubsByStatus[group.status] = group._count._all;
+      clubsByStatus[group.status] = getGroupCount(group);
     }
 
     const totalClubs =
@@ -266,7 +300,7 @@ export async function GET(request: Request) {
     };
 
     for (const group of userStatusGroups) {
-      usersByStatus[group.status] = group._count._all;
+      usersByStatus[group.status] = getGroupCount(group);
     }
 
     const totalUsers =
@@ -285,7 +319,7 @@ export async function GET(request: Request) {
 
     for (const group of subscriptionStatusGroups) {
       subscriptionsByStatus[group.status] =
-        group._count._all;
+        getGroupCount(group);
     }
 
     const totalSubscriptions = Object.values(
@@ -300,7 +334,7 @@ export async function GET(request: Request) {
 
     for (const group of reservationStatusGroups) {
       reservationsByStatus[group.status] =
-        group._count._all;
+        getGroupCount(group);
     }
 
     const totalReservations =

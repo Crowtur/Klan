@@ -1,4 +1,3 @@
-
 import { NextResponse } from "next/server";
 import { Prisma } from "@prisma/client";
 
@@ -7,6 +6,42 @@ import { requireAuth } from "@/lib/auth/auth";
 
 const TIME_ZONE = "America/Guayaquil";
 const CURRENCY = "usd";
+
+function getGroupCount(group: {
+  _count?: true | { _all?: number };
+}): number {
+  const count = group._count;
+
+  if (
+    count === undefined ||
+    count === true ||
+    typeof count._all !== "number"
+  ) {
+    throw new Error(
+      "La consulta groupBy no devolvió _count._all"
+    );
+  }
+
+  return count._all;
+}
+
+function getGroupAmount(group: {
+  _sum?: { amount?: Prisma.Decimal | null } | null;
+} | undefined): string {
+  if (!group) {
+    return "0.00";
+  }
+
+  const sum = group._sum;
+
+  if (sum === undefined || sum === null) {
+    throw new Error(
+      "La consulta groupBy no devolvió _sum"
+    );
+  }
+
+  return sum.amount?.toFixed(2) ?? "0.00";
+}
 
 function monthStart(year: number, month: number) {
   return new Date(
@@ -167,6 +202,7 @@ export async function GET(request: Request) {
       prisma.club.groupBy({
         by: ["status"],
         where,
+        orderBy: { status: "asc" },
         _count: {
           _all: true,
         },
@@ -231,6 +267,7 @@ export async function GET(request: Request) {
         where: {
           clubId: { in: clubIds },
         },
+        orderBy: { clubId: "asc" },
         _count: {
           _all: true,
         },
@@ -242,6 +279,7 @@ export async function GET(request: Request) {
           clubId: { in: clubIds },
           status: "ACTIVE",
         },
+        orderBy: { clubId: "asc" },
         _count: {
           _all: true,
         },
@@ -261,6 +299,7 @@ export async function GET(request: Request) {
             isActive: true,
           },
         },
+        orderBy: { planId: "asc" },
         _count: {
           _all: true,
         },
@@ -271,6 +310,7 @@ export async function GET(request: Request) {
         where: {
           clubId: { in: clubIds },
         },
+        orderBy: { clubId: "asc" },
         _count: {
           _all: true,
         },
@@ -282,6 +322,7 @@ export async function GET(request: Request) {
           clubId: { in: clubIds },
           status: "ACTIVE",
         },
+        orderBy: { clubId: "asc" },
         _count: {
           _all: true,
         },
@@ -309,6 +350,10 @@ export async function GET(request: Request) {
             lt: periodEnd,
           },
         },
+        orderBy: [
+          { facilityId: "asc" },
+          { status: "asc" },
+        ],
         _count: {
           _all: true,
         },
@@ -325,6 +370,7 @@ export async function GET(request: Request) {
             lt: periodEnd,
           },
         },
+        orderBy: { clubId: "asc" },
         _count: {
           _all: true,
         },
@@ -341,6 +387,7 @@ export async function GET(request: Request) {
             lt: periodEnd,
           },
         },
+        orderBy: { clubId: "asc" },
         _sum: {
           amount: true,
         },
@@ -380,13 +427,19 @@ export async function GET(request: Request) {
     function countForClub(
       groups: {
         clubId: string;
-        _count: { _all: number };
+        _count?: true | { _all?: number };
       }[],
       clubId: string
-    ) {
-      return groups.find(
-        (group) => group.clubId === clubId
-      )?._count._all ?? 0;
+    ): number {
+      const group = groups.find(
+        (item) => item.clubId === clubId
+      );
+
+      if (!group) {
+        return 0;
+      }
+
+      return getGroupCount(group);
     }
 
     // 9. Construir estadísticas por club
@@ -420,7 +473,7 @@ export async function GET(request: Request) {
           subscriptionGroups.reduce(
             (total, group) => {
               return planToClub.get(group.planId) === clubId
-                ? total + group._count._all
+                ? total + getGroupCount(group)
                 : total;
             },
             0
@@ -437,11 +490,9 @@ export async function GET(request: Request) {
           }
 
           if (group.status === "CONFIRMED") {
-            confirmedReservations +=
-              group._count._all;
+            confirmedReservations += getGroupCount(group);
           } else if (group.status === "CANCELLED") {
-            cancelledReservations +=
-              group._count._all;
+            cancelledReservations += getGroupCount(group);
           }
         }
 
@@ -450,10 +501,11 @@ export async function GET(request: Request) {
           clubId
         );
 
-        const grossRevenue =
+        const grossRevenue = getGroupAmount(
           paymentAmounts.find(
             (group) => group.clubId === clubId
-          )?._sum.amount?.toFixed(2) ?? "0.00";
+          )
+        );
 
         return {
           clubId,
@@ -509,13 +561,13 @@ export async function GET(request: Request) {
     const activeClubIds = new Set<string>();
 
     for (const group of paymentGroups) {
-      if (group._count._all > 0) {
+      if (getGroupCount(group) > 0) {
         activeClubIds.add(group.clubId);
       }
     }
 
     for (const group of reservationGroups) {
-      if (group._count._all === 0) continue;
+      if (getGroupCount(group) === 0) continue;
 
       const clubId = facilityToClub.get(
         group.facilityId
@@ -535,7 +587,7 @@ export async function GET(request: Request) {
 
     for (const group of statusGroups) {
       clubsByStatus[group.status] =
-        group._count._all;
+        getGroupCount(group);
     }
 
     // 14. Crecimiento mensual

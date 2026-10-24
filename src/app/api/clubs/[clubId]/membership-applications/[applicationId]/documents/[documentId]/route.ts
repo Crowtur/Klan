@@ -1,69 +1,87 @@
+
 import { prisma } from "@/lib/prisma";
 import { requireAuth } from "@/lib/auth/auth";
 import { requireClubAdmin } from "@/lib/auth/authorization";
 import { NextResponse } from "next/server";
 
-// PATCH: Aprobar o Rechazar un documento individual (Solo CLUB_ADMIN)
+type RouteContext = {
+  params: Promise<{
+    clubId: string;
+    applicationId: string;
+    documentId: string;
+  }>;
+};
+
 export async function PATCH(
   request: Request,
-  context: {
-    params: Promise<{
-      clubId: string;
-      applicationId: string;
-      documentId: string;
-    }>;
-  }
+  context: RouteContext
 ) {
   try {
     const user = await requireAuth(request);
 
-    const { clubId, applicationId, documentId } = await context.params;
+    const { clubId, applicationId, documentId } =
+      await context.params;
 
-    // Verificar que el usuario sea administrador del club indicado
     await requireClubAdmin(user.id, clubId);
 
     const body = await request.json();
+
     const { status, rejectionReason } = body;
 
-    // Validar estado recibido
-    if (status !== "APPROVED" && status !== "REJECTED") {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "El estado debe ser APPROVED o REJECTED",
-        },
-        { status: 400 }
-      );
-    }
-
-    // Si se rechaza, la razón es obligatoria
     if (
-      status === "REJECTED" &&
-      (!rejectionReason ||
-        typeof rejectionReason !== "string" ||
-        !rejectionReason.trim())
+      status !== "APPROVED" &&
+      status !== "REJECTED"
     ) {
       return NextResponse.json(
         {
           success: false,
-          message: "Debe proporcionar una razón para rechazar el documento",
+          message:
+            "El estado debe ser APPROVED o REJECTED",
         },
         { status: 400 }
       );
     }
 
-    // Verificar que el documento existe y pertenece a la solicitud y club indicados
-    const document = await prisma.membershipDocument.findFirst({
-      where: {
-        id: documentId,
-        applicationId,
-        application: {
-          plan: {
-            clubId,
+    if (
+      status === "REJECTED" &&
+      (
+        typeof rejectionReason !== "string" ||
+        !rejectionReason.trim()
+      )
+    ) {
+      return NextResponse.json(
+        {
+          success: false,
+          message:
+            "Debes proporcionar una razón para rechazar el documento",
+        },
+        { status: 400 }
+      );
+    }
+
+    // Verificar que el documento pertenece
+    // a la solicitud y al club.
+    const document =
+      await prisma.membershipDocument.findFirst({
+        where: {
+          id: documentId,
+          applicationId,
+          application: {
+            plan: {
+              clubId,
+            },
           },
         },
-      },
-    });
+        select: {
+          id: true,
+          status: true,
+          application: {
+            select: {
+              status: true,
+            },
+          },
+        },
+      });
 
     if (!document) {
       return NextResponse.json(
@@ -75,18 +93,82 @@ export async function PATCH(
       );
     }
 
-    // Actualizar estado del documento
-    const updatedDocument = await prisma.membershipDocument.update({
+    // Solo se pueden revisar solicitudes abiertas.
+    if (
+      document.application.status !== "PENDING" &&
+      document.application.status !==
+        "DOCUMENTATION_REVIEW"
+    ) {
+      return NextResponse.json(
+        {
+          success: false,
+          message:
+            "La solicitud ya no permite revisar documentos",
+        },
+        { status: 409 }
+      );
+    }
+
+    // No permitir cambiar decisiones anteriores.
+    if (document.status !== "PENDING") {
+      return NextResponse.json(
+        {
+          success: false,
+          message:
+            "Este documento ya fue revisado",
+        },
+        { status: 409 }
+      );
+    }
+
+    // Actualización condicional para evitar
+    // que dos administradores revisen el mismo
+    // documento simultáneamente.
+    const updated = await prisma.membershipDocument.updateMany({
       where: {
         id: documentId,
+        applicationId,
+        status: "PENDING",
+        application: {
+          status: {
+            in: [
+              "PENDING",
+              "DOCUMENTATION_REVIEW",
+            ],
+          },
+          plan: {
+            clubId,
+          },
+        },
       },
       data: {
         status,
-        rejectionReason: status === "REJECTED" ? rejectionReason.trim() : null,
         reviewedAt: new Date(),
         reviewedById: user.id,
+        rejectionReason:
+          status === "REJECTED"
+            ? rejectionReason.trim()
+            : null,
       },
     });
+
+    if (updated.count !== 1) {
+      return NextResponse.json(
+        {
+          success: false,
+          message:
+            "El documento o la solicitud cambiaron de estado. Actualiza la información e inténtalo nuevamente.",
+        },
+        { status: 409 }
+      );
+    }
+
+    const updatedDocument =
+      await prisma.membershipDocument.findUniqueOrThrow({
+        where: {
+          id: documentId,
+        },
+      });
 
     return NextResponse.json({
       success: true,
@@ -97,7 +179,10 @@ export async function PATCH(
       document: updatedDocument,
     });
   } catch (error) {
-    console.error("Review membership document error:", error);
+    console.error(
+      "Review membership document error:",
+      error
+    );
 
     if (error instanceof Error) {
       if (error.message === "UNAUTHORIZED") {
@@ -114,7 +199,8 @@ export async function PATCH(
         return NextResponse.json(
           {
             success: false,
-            message: "No tienes permisos para revisar este documento",
+            message:
+              "No tienes permisos para revisar este documento",
           },
           { status: 403 }
         );

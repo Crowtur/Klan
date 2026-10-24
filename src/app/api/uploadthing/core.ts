@@ -1,0 +1,503 @@
+import { createUploadthing, type FileRouter } from "uploadthing/next";
+import { UploadThingError } from "uploadthing/server";
+import { z } from "zod";
+
+import { prisma } from "@/lib/prisma";
+import { requireAuth } from "@/lib/auth/auth";
+import { requireClubAdmin } from "@/lib/auth/authorization";
+import { deleteUploadThingFile } from "@/lib/uploadthing-server";
+
+const f = createUploadthing();
+
+const clubUploadInput = z.object({
+  clubId: z.string().uuid(),
+});
+
+async function getAuthenticatedUser(req: Request) {
+  try {
+    return await requireAuth(req);
+  } catch {
+    throw new UploadThingError({
+      code: "FORBIDDEN",
+      message: "Debes iniciar sesión para subir archivos",
+    });
+  }
+}
+
+async function verifyClubAdmin(userId: string, clubId: string) {
+  try {
+    await requireClubAdmin(userId, clubId);
+  } catch {
+    throw new UploadThingError({
+      code: "FORBIDDEN",
+      message: "No tienes permisos para subir archivos a este club",
+    });
+  }
+}
+
+/**
+ * Comprueba si un archivo continúa referenciado
+ * en algún registro de la plataforma.
+ */
+async function isFileReferenced(fileKey: string) {
+  const [users, clubs, documents] = await Promise.all([
+    prisma.user.count({
+      where: { avatarFileKey: fileKey },
+    }),
+    prisma.club.count({
+      where: { logoFileKey: fileKey },
+    }),
+    prisma.membershipDocument.count({
+      where: { fileKey },
+    }),
+  ]);
+
+  return users + clubs + documents > 0;
+}
+
+/**
+ * Intenta eliminar un archivo antiguo.
+ *
+ * Un fallo de limpieza no debe provocar que
+ * la nueva imagen deje de funcionar.
+ */
+async function cleanupOldFile(
+  oldFileKey: string | null,
+  newFileKey: string
+) {
+  if (!oldFileKey || oldFileKey === newFileKey) {
+    return;
+  }
+
+  try {
+    const referenced = await isFileReferenced(oldFileKey);
+
+    if (referenced) {
+      console.warn(
+        "[UploadThing] Archivo anterior todavía referenciado:",
+        oldFileKey
+      );
+      return;
+    }
+
+    await deleteUploadThingFile(oldFileKey);
+
+    console.log(
+      "[UploadThing] Archivo anterior eliminado:",
+      oldFileKey
+    );
+  } catch (error) {
+    console.error(
+      "[UploadThing] Error al eliminar archivo anterior:",
+      error
+    );
+  }
+}
+
+/**
+ * Intenta eliminar un archivo recién subido
+ * cuando no pudo registrarse en PostgreSQL.
+ */
+async function cleanupFailedUpload(fileKey: string) {
+  try {
+    const referenced = await isFileReferenced(fileKey);
+
+    if (!referenced) {
+      await deleteUploadThingFile(fileKey);
+    }
+  } catch (error) {
+    console.error(
+      "[UploadThing] No se pudo limpiar la subida fallida:",
+      error
+    );
+  }
+}
+
+export const ourFileRouter = {
+  // 1. Fotografía de perfil
+  userAvatarUploader: f({
+    image: {
+      maxFileSize: "2MB",
+      maxFileCount: 1,
+    },
+  })
+    .middleware(async ({ req }) => {
+      const user = await getAuthenticatedUser(req);
+
+      return {
+        userId: user.id,
+      };
+    })
+    .onUploadComplete(async ({ metadata, file }) => {
+      // Guardar la referencia anterior antes del cambio.
+      const previousUser = await prisma.user.findUnique({
+        where: {
+          id: metadata.userId,
+        },
+        select: {
+          avatarFileKey: true,
+        },
+      });
+
+      if (!previousUser) {
+        throw new UploadThingError({
+          code: "FORBIDDEN",
+          message: "El usuario ya no existe",
+        });
+      }
+
+      // Actualizar la fotografía en PostgreSQL.
+      await prisma.user.update({
+        where: {
+          id: metadata.userId,
+          status: "ACTIVE",
+        },
+        data: {
+          avatarUrl: file.ufsUrl,
+          avatarFileKey: file.key,
+        },
+      });
+
+      // Eliminar la fotografía anterior, si corresponde.
+      await cleanupOldFile(
+        previousUser.avatarFileKey,
+        file.key
+      );
+
+      return {
+        uploadedBy: metadata.userId,
+        fileKey: file.key,
+        fileUrl: file.ufsUrl,
+        persisted: true,
+      };
+    }),
+
+  // 2. Logotipo del club
+  clubLogoUploader: f({
+    image: {
+      maxFileSize: "4MB",
+      maxFileCount: 1,
+    },
+  })
+    .input(clubUploadInput)
+    .middleware(async ({ req, input }) => {
+      const user = await getAuthenticatedUser(req);
+
+      await verifyClubAdmin(user.id, input.clubId);
+
+      return {
+        userId: user.id,
+        clubId: input.clubId,
+      };
+    })
+    .onUploadComplete(async ({ metadata, file }) => {
+      // Revalidar permisos antes de modificar el club.
+      await verifyClubAdmin(
+        metadata.userId,
+        metadata.clubId
+      );
+
+      // Consultar el logotipo anterior.
+      const previousClub = await prisma.club.findUnique({
+        where: {
+          id: metadata.clubId,
+        },
+        select: {
+          logoFileKey: true,
+        },
+      });
+
+      if (!previousClub) {
+        throw new UploadThingError({
+          code: "FORBIDDEN",
+          message: "El club ya no existe",
+        });
+      }
+
+      // Guardar el nuevo logotipo.
+      await prisma.club.update({
+        where: {
+          id: metadata.clubId,
+          status: "ACTIVE",
+        },
+        data: {
+          logoUrl: file.ufsUrl,
+          logoFileKey: file.key,
+        },
+      });
+
+      // Intentar eliminar el logotipo anterior.
+      await cleanupOldFile(
+        previousClub.logoFileKey,
+        file.key
+      );
+
+      return {
+        uploadedBy: metadata.userId,
+        clubId: metadata.clubId,
+        fileKey: file.key,
+        fileUrl: file.ufsUrl,
+        persisted: true,
+      };
+    }),
+
+  // 3. Documentos de solicitudes de membresía
+  membershipDocumentUploader: f({
+    pdf: {
+      maxFileSize: "8MB",
+      maxFileCount: 1,
+    },
+  })
+    .input(
+      z.object({
+        clubId: z.string().uuid(),
+        applicationId: z.string().uuid(),
+        requirementId: z.string().uuid(),
+      })
+    )
+    .middleware(async ({ req, input }) => {
+      const user = await getAuthenticatedUser(req);
+
+      // Verificar que la solicitud pertenezca al usuario y al club especificado.
+      const application = await prisma.membershipApplication.findFirst({
+        where: {
+          id: input.applicationId,
+          userId: user.id,
+          status: {
+            in: ["PENDING", "DOCUMENTATION_REVIEW"],
+          },
+          plan: {
+            clubId: input.clubId,
+            requiresDocumentation: true,
+          },
+        },
+        select: {
+          id: true,
+          planId: true,
+        },
+      });
+
+      if (!application) {
+        throw new UploadThingError({
+          code: "FORBIDDEN",
+          message: "No puedes cargar documentos en esta solicitud",
+        });
+      }
+
+      // Verificar que el requisito pertenezca al plan de la solicitud.
+      const requirement = await prisma.planDocumentRequirement.findFirst({
+        where: {
+          id: input.requirementId,
+          planId: application.planId,
+          isActive: true,
+        },
+        select: {
+          id: true,
+        },
+      });
+
+      if (!requirement) {
+        throw new UploadThingError({
+          code: "BAD_REQUEST",
+          message: "El requisito documental no es válido",
+        });
+      }
+
+      const existing = await prisma.membershipDocument.findUnique({
+        where: {
+          applicationId_requirementId: {
+            applicationId: input.applicationId,
+            requirementId: input.requirementId,
+          },
+        },
+        select: {
+          id: true,
+          status: true,
+        },
+      });
+
+      // Si ya existe un documento, solamente puede
+      // reemplazarse cuando fue rechazado.
+      if (existing && existing.status !== "REJECTED") {
+        throw new UploadThingError({
+          code: "BAD_REQUEST",
+          message:
+            "Solo puedes reemplazar documentos rechazados",
+        });
+      }
+
+      return {
+        userId: user.id,
+        clubId: input.clubId,
+        applicationId: input.applicationId,
+        requirementId: input.requirementId,
+      };
+    })
+    .onUploadComplete(async ({ metadata, file }) => {
+      try {
+        // Revalidar que la solicitud sigue perteneciendo
+        // al usuario y que continúa abierta.
+        const application =
+          await prisma.membershipApplication.findFirst({
+            where: {
+              id: metadata.applicationId,
+              userId: metadata.userId,
+              status: {
+                in: ["PENDING", "DOCUMENTATION_REVIEW"],
+              },
+              plan: {
+                clubId: metadata.clubId,
+                requiresDocumentation: true,
+              },
+            },
+            select: {
+              id: true,
+              planId: true,
+            },
+          });
+
+        if (!application) {
+          throw new UploadThingError({
+            code: "FORBIDDEN",
+            message:
+              "La solicitud ya no permite subir documentos",
+          });
+        }
+
+        // Verificar que el requisito sigue activo
+        // y pertenece al plan de la solicitud.
+        const requirement =
+          await prisma.planDocumentRequirement.findFirst({
+            where: {
+              id: metadata.requirementId,
+              planId: application.planId,
+              isActive: true,
+            },
+            select: {
+              id: true,
+            },
+          });
+
+        if (!requirement) {
+          throw new UploadThingError({
+            code: "BAD_REQUEST",
+            message:
+              "El requisito documental ya no es válido",
+          });
+        }
+
+        const existing =
+          await prisma.membershipDocument.findUnique({
+            where: {
+              applicationId_requirementId: {
+                applicationId: metadata.applicationId,
+                requirementId: metadata.requirementId,
+              },
+            },
+            select: {
+              id: true,
+              status: true,
+              fileKey: true,
+            },
+          });
+
+        // CASO 1: Primera subida.
+        if (!existing) {
+          const document =
+            await prisma.membershipDocument.create({
+              data: {
+                applicationId: metadata.applicationId,
+                requirementId: metadata.requirementId,
+                fileUrl: file.ufsUrl,
+                fileKey: file.key,
+                fileName: file.name,
+                mimeType: "application/pdf",
+                status: "PENDING",
+              },
+            });
+
+          return {
+            persisted: true,
+            replaced: false,
+            documentId: document.id,
+            applicationId: document.applicationId,
+            requirementId: document.requirementId,
+          };
+        }
+
+        // CASO 2: Solo se reemplazan documentos rechazados.
+        if (existing.status !== "REJECTED") {
+          throw new UploadThingError({
+            code: "BAD_REQUEST",
+            message:
+              "Solo puedes reemplazar documentos rechazados",
+          });
+        }
+
+        // Actualización condicional para evitar que
+        // dos reemplazos sobrescriban el mismo documento.
+        const updated =
+          await prisma.membershipDocument.updateMany({
+            where: {
+              id: existing.id,
+              status: "REJECTED",
+              application: {
+                userId: metadata.userId,
+                status: {
+                  in: ["PENDING", "DOCUMENTATION_REVIEW"],
+                },
+                plan: {
+                  clubId: metadata.clubId,
+                  requiresDocumentation: true,
+                },
+              },
+              requirement: {
+                planId: application.planId,
+                isActive: true,
+              },
+            },
+            data: {
+              fileUrl: file.ufsUrl,
+              fileKey: file.key,
+              fileName: file.name,
+              mimeType: "application/pdf",
+              status: "PENDING",
+              rejectionReason: null,
+              reviewedAt: null,
+              reviewedById: null,
+            },
+          });
+
+        if (updated.count !== 1) {
+          throw new UploadThingError({
+            code: "BAD_REQUEST",
+            message:
+              "El documento cambió de estado. Actualiza la solicitud antes de intentar nuevamente.",
+          });
+        }
+
+        // PostgreSQL ya apunta al PDF nuevo.
+        // Intentamos eliminar el PDF rechazado anterior.
+        await cleanupOldFile(
+          existing.fileKey,
+          file.key
+        );
+
+        return {
+          persisted: true,
+          replaced: true,
+          documentId: existing.id,
+          applicationId: metadata.applicationId,
+          requirementId: metadata.requirementId,
+        };
+      } catch (error) {
+        // Si el nuevo archivo no quedó referenciado,
+        // intentamos eliminarlo de UploadThing.
+        await cleanupFailedUpload(file.key);
+
+        throw error;
+      }
+    }),
+} satisfies FileRouter;
+
+export type OurFileRouter = typeof ourFileRouter;

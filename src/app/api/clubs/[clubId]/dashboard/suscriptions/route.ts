@@ -1,4 +1,3 @@
-
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAuth } from "@/lib/auth/auth";
@@ -11,6 +10,24 @@ type RouteContext = {
 };
 
 const CLUB_TIME_ZONE = "America/Guayaquil";
+
+function getGroupCount(group: {
+  _count?: true | { _all?: number };
+}): number {
+  const count = group._count;
+
+  if (
+    count === undefined ||
+    count === true ||
+    typeof count._all !== "number"
+  ) {
+    throw new Error(
+      "La consulta groupBy no devolvió _count._all"
+    );
+  }
+
+  return count._all;
+}
 
 function getEcuadorMonthStart(
   year: number,
@@ -157,6 +174,9 @@ export async function GET(
         by: ["status"],
         where: {
           clubMembership: { clubId },
+        },
+        orderBy: {
+          status: "asc",
         },
         _count: { _all: true },
       }),
@@ -317,7 +337,7 @@ export async function GET(
     };
 
     for (const group of statusGroups) {
-      statusCounts[group.status] = group._count._all;
+      statusCounts[group.status] = getGroupCount(group);
     }
 
     const totalSubscriptions = Object.values(

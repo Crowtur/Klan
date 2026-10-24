@@ -113,6 +113,10 @@ model User {
   globalRole   GlobalRole @default(USER)
   status       UserStatus @default(ACTIVE)
 
+  // Fotografía de perfil
+  avatarUrl     String?
+  avatarFileKey String?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -127,6 +131,10 @@ model Club {
   slug        String     @unique
   description String?
   status      ClubStatus @default(ACTIVE)
+
+  // Logotipo del club
+  logoUrl     String?
+  logoFileKey String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -282,6 +290,7 @@ model MembershipDocument {
   requirementId String
 
   fileUrl  String
+  fileKey  String?
   fileName String?
   mimeType String?
 

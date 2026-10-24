@@ -1,4 +1,3 @@
-
 import { NextResponse } from "next/server";
 import { Prisma } from "@prisma/client";
 
@@ -14,6 +13,24 @@ type RouteContext = {
 
 const CLUB_TIME_ZONE = "America/Guayaquil";
 const CURRENCY = "usd";
+
+function getGroupCount(group: {
+  _count?: true | { _all?: number };
+}): number {
+  const count = group._count;
+
+  if (
+    count === undefined ||
+    count === true ||
+    typeof count._all !== "number"
+  ) {
+    throw new Error(
+      "La consulta groupBy no devolvió _count._all"
+    );
+  }
+
+  return count._all;
+}
 
 // Porcentajes del modelo financiero del MVP
 const STRIPE_RATE = new Prisma.Decimal("0.04");
@@ -204,6 +221,9 @@ export async function GET(
             lt: periodEnd,
           },
         },
+        orderBy: {
+          status: "asc",
+        },
         _count: {
           _all: true,
         },
@@ -297,7 +317,7 @@ export async function GET(
 
     for (const group of paymentsByStatus) {
       paymentStatusCounts[group.status] =
-        group._count._all;
+        getGroupCount(group);
     }
 
     // 7. Cálculos financieros del período
