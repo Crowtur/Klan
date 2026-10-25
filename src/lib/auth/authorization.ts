@@ -76,3 +76,44 @@ export async function requireSuperAdmin(userId: string) {
 
   return user;
 }
+
+export async function requireClubSuspensionPermission(
+  userId: string,
+  clubId: string
+) {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: {
+      id: true,
+      status: true,
+      globalRole: true,
+    },
+  });
+
+  if (!user || user.status !== "ACTIVE") {
+    throw new Error("FORBIDDEN");
+  }
+
+  // Un SUPER_ADMIN puede suspender cualquier club.
+  if (user.globalRole === "SUPER_ADMIN") {
+    return;
+  }
+
+  // Un CLUB_ADMIN solo puede suspender su propio club.
+  const membership = await prisma.clubMembership.findUnique({
+    where: {
+      userId_clubId: {
+        userId,
+        clubId,
+      },
+    },
+  });
+
+  if (
+    !membership ||
+    membership.status !== "ACTIVE" ||
+    membership.role !== "CLUB_ADMIN"
+  ) {
+    throw new Error("FORBIDDEN");
+  }
+}

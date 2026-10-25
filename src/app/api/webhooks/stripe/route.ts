@@ -123,6 +123,16 @@ function resolveExpirationDate(
   );
 }
 
+async function isClubSuspensionBlocked(clubId: string): Promise<boolean> {
+  const club = await prisma.club.findUnique({
+    where: { id: clubId },
+    select: { status: true },
+  });
+
+  // También bloqueamos clubes inexistentes por seguridad.
+  return !club || club.status !== "ACTIVE";
+}
+
 export async function POST(request: Request) {
   const signature = request.headers.get("stripe-signature");
 
@@ -240,6 +250,10 @@ export async function POST(request: Request) {
           });
         }
 
+        const clubBlocked = await isClubSuspensionBlocked(
+          payment.subscription.clubMembership.clubId
+        );
+
         const stripeSubscriptionId = extractId(session.subscription);
         const stripeInvoiceId = extractId(session.invoice);
         let paymentIntentId = extractId(session.payment_intent);
@@ -326,27 +340,44 @@ export async function POST(request: Request) {
             },
           });
 
-          await tx.subscription.update({
-            where: {
-              id: payment.subscriptionId,
-            },
-            data: {
-              status: "ACTIVE",
-              startedAt,
-              expiresAt,
-              stripeSubscriptionId,
-              gracePeriodEndsAt: null,
-            },
-          });
+          if (!clubBlocked) {
+            await tx.subscription.update({
+              where: {
+                id: payment.subscriptionId,
+              },
+              data: {
+                status: "ACTIVE",
+                startedAt,
+                expiresAt,
+                stripeSubscriptionId,
+                gracePeriodEndsAt: null,
+              },
+            });
 
-          await tx.clubMembership.update({
-            where: {
-              id: payment.subscription.clubMembershipId,
-            },
-            data: {
-              status: "ACTIVE",
-            },
-          });
+            await tx.clubMembership.update({
+              where: {
+                id: payment.subscription.clubMembershipId,
+              },
+              data: {
+                status: "ACTIVE",
+              },
+            });
+          } else {
+            // Conservar el identificador para permitir
+            // su cancelación durante la suspensión.
+            await tx.subscription.update({
+              where: {
+                id: payment.subscriptionId,
+              },
+              data: {
+                stripeSubscriptionId,
+              },
+            });
+
+            console.warn(
+              `Pago inicial registrado, pero membresía no activada: club ${payment.subscription.clubMembership.clubId} bloqueado`
+            );
+          }
         });
 
         console.log(
@@ -438,7 +469,12 @@ export async function POST(request: Request) {
             subscription.gracePeriodEndsAt <= now
           );
 
+        const clubBlocked = await isClubSuspensionBlocked(
+          subscription.clubMembership.clubId
+        );
+
         const canReactivateMembership =
+          !clubBlocked &&
           !graceAlreadyExpired &&
           (
             subscription.clubMembership.status === "ACTIVE" ||
@@ -483,8 +519,12 @@ export async function POST(request: Request) {
             });
           }
 
-          // Solo reactivar la suscripción si la gracia no ha vencido previamente
-          if (!graceAlreadyExpired) {
+          // Solo reactivar la suscripción si la gracia no ha vencido previamente y el club no está bloqueado.
+          if (
+            !clubBlocked &&
+            !graceAlreadyExpired &&
+            subscription.status !== "SUSPENDED"
+          ) {
             await tx.subscription.updateMany({
               where: {
                 id: subscription.id,
@@ -552,6 +592,21 @@ export async function POST(request: Request) {
           break;
         }
 
+        const clubBlocked = await isClubSuspensionBlocked(
+          subscription.clubMembership.clubId
+        );
+
+        if (
+          clubBlocked ||
+          subscription.status === "SUSPENDED" ||
+          subscription.status === "CANCELLED"
+        ) {
+          console.log(
+            `Se ignora el cambio de estado por pago fallido de la suscripción ${subscription.id}`
+          );
+          break;
+        }
+
         // Protección adicional: la gracia aplica exclusivamente a renovaciones
         // de suscripciones que ya hayan iniciado (startedAt existe).
         if (!subscription.startedAt) {
@@ -613,10 +668,7 @@ export async function POST(request: Request) {
         }
 
         // No reabrir suscripciones que ya terminaron.
-        if (
-          subscription.status === "CANCELLED" ||
-          subscription.status === "EXPIRED"
-        ) {
+        if (subscription.status === "EXPIRED") {
           console.log(
             `Subscription ${subscription.id} ya terminó. Se ignora el fallo.`
           );
@@ -703,12 +755,27 @@ export async function POST(request: Request) {
           },
           include: {
             plan: true,
+            clubMembership: true,
           },
         });
 
         if (!localSubscription) {
           console.log(
             `Subscription local no encontrada para ${eventSubscription.id}`
+          );
+          break;
+        }
+
+        const clubBlocked = await isClubSuspensionBlocked(
+          localSubscription.clubMembership.clubId
+        );
+
+        if (
+          clubBlocked ||
+          localSubscription.status === "CANCELLED"
+        ) {
+          console.log(
+            `Se omite la actualización de estado de la suscripción ${localSubscription.id} porque el club está bloqueado o la suscripción fue cancelada`
           );
           break;
         }
@@ -751,10 +818,7 @@ export async function POST(request: Request) {
             }
 
             // Evitar reactivar una suscripción que terminó localmente.
-            if (
-              localSubscription.status === "CANCELLED" ||
-              localSubscription.status === "EXPIRED"
-            ) {
+            if (localSubscription.status === "EXPIRED") {
               console.log(
                 `Subscription ${localSubscription.id} está terminada localmente.`
               );
@@ -791,10 +855,7 @@ export async function POST(request: Request) {
               new Date(failureDate.getTime() + 7 * 24 * 60 * 60 * 1000);
 
             // No reabrir una suscripción local ya terminada.
-            if (
-              localSubscription.status === "CANCELLED" ||
-              localSubscription.status === "EXPIRED"
-            ) {
+            if (localSubscription.status === "EXPIRED") {
               break;
             }
 
@@ -874,10 +935,7 @@ export async function POST(request: Request) {
               break;
             }
 
-            if (
-              localSubscription.status === "CANCELLED" ||
-              localSubscription.status === "EXPIRED"
-            ) {
+            if (localSubscription.status === "EXPIRED") {
               break;
             }
 

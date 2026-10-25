@@ -71,7 +71,7 @@ export async function POST(
       },
     });
 
-    if (existingMembership) {
+    if (existingMembership?.status === "ACTIVE") {
       return NextResponse.json(
         {
           success: false,

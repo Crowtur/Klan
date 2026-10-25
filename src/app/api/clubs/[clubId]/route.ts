@@ -63,40 +63,146 @@ export async function GET(
   }
 }
 
-// PATCH: Actualizar información del club (solo CLUB_ADMIN)
+
+// PATCH: Editar nombre, descripción y slug del club
 export async function PATCH(
   request: Request,
   context: { params: Promise<{ clubId: string }> }
 ) {
   try {
     const user = await requireAuth(request);
-
     const { clubId } = await context.params;
 
     await requireClubAdmin(user.id, clubId);
 
-    const body = await request.json();
+    const body: unknown = await request.json();
 
-    const { name, description } = body;
+    if (
+      typeof body !== "object" ||
+      body === null ||
+      Array.isArray(body)
+    ) {
+      return NextResponse.json(
+        { success: false, message: "Datos inválidos" },
+        { status: 400 }
+      );
+    }
 
-    if (!name) {
+    const data = body as Record<string, unknown>;
+
+    const allowedFields = ["name", "description", "slug"];
+
+    const invalidFields = Object.keys(data).filter(
+      (field) => !allowedFields.includes(field)
+    );
+
+    if (invalidFields.length > 0) {
       return NextResponse.json(
         {
           success: false,
-          message: "El nombre es obligatorio",
+          message: "Se enviaron campos que no pueden editarse",
+          invalidFields,
         },
         { status: 400 }
       );
     }
 
-    const club = await prisma.club.update({
+    const updateData: {
+      name?: string;
+      description?: string | null;
+      slug?: string;
+    } = {};
+
+    // Validar nombre
+    if ("name" in data) {
+      if (
+        typeof data.name !== "string" ||
+        !data.name.trim()
+      ) {
+        return NextResponse.json(
+          {
+            success: false,
+            message: "El nombre debe ser un texto no vacío",
+          },
+          { status: 400 }
+        );
+      }
+
+      updateData.name = data.name.trim();
+    }
+
+    // Validar descripción
+    if ("description" in data) {
+      if (
+        data.description !== null &&
+        typeof data.description !== "string"
+      ) {
+        return NextResponse.json(
+          {
+            success: false,
+            message: "La descripción debe ser texto o null",
+          },
+          { status: 400 }
+        );
+      }
+
+      updateData.description =
+        typeof data.description === "string"
+          ? data.description.trim() || null
+          : null;
+    }
+
+    // Validar slug
+    if ("slug" in data) {
+      if (
+        typeof data.slug !== "string" ||
+        !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(data.slug) ||
+        data.slug.length > 80
+      ) {
+        return NextResponse.json(
+          {
+            success: false,
+            message:
+              "El slug debe contener únicamente letras minúsculas, números y guiones internos (máximo 80 caracteres)",
+          },
+          { status: 400 }
+        );
+      }
+
+      updateData.slug = data.slug;
+    }
+
+    if (Object.keys(updateData).length === 0) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Debes enviar al menos un campo para actualizar",
+        },
+        { status: 400 }
+      );
+    }
+
+    // Actualizar únicamente si el club continúa activo.
+    const updated = await prisma.club.updateMany({
       where: {
         id: clubId,
+        status: "ACTIVE",
       },
-      data: {
-        name,
-        description,
-      },
+      data: updateData,
+    });
+
+    if (updated.count === 0) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "El club no existe o está suspendido",
+        },
+        { status: 409 }
+      );
+    }
+
+    const club = await prisma.club.findUnique({
+      where: { id: clubId },
     });
 
     return NextResponse.json({
@@ -110,10 +216,7 @@ export async function PATCH(
     if (error instanceof Error) {
       if (error.message === "UNAUTHORIZED") {
         return NextResponse.json(
-          {
-            success: false,
-            message: "No autenticado",
-          },
+          { success: false, message: "No autenticado" },
           { status: 401 }
         );
       }
@@ -125,6 +228,20 @@ export async function PATCH(
             message: "No tienes permisos para realizar esta acción",
           },
           { status: 403 }
+        );
+      }
+
+      // Prisma: violación de una restricción única.
+      if (
+        "code" in error &&
+        error.code === "P2002"
+      ) {
+        return NextResponse.json(
+          {
+            success: false,
+            message: "El slug ya está siendo utilizado por otro club",
+          },
+          { status: 409 }
         );
       }
     }

@@ -52,6 +52,17 @@ export async function POST(
       );
     }
 
+    if (subscription.clubMembership.club.status !== "ACTIVE") {
+      return NextResponse.json(
+        {
+          success: false,
+          message:
+            "No se pueden iniciar pagos porque el club no está activo",
+        },
+        { status: 409 }
+      );
+    }
+
     if (subscription.clubMembership.userId !== user.id) {
       return NextResponse.json(
         {
