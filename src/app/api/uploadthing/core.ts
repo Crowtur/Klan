@@ -40,19 +40,25 @@ async function verifyClubAdmin(userId: string, clubId: string) {
  * en algún registro de la plataforma.
  */
 async function isFileReferenced(fileKey: string) {
-  const [users, clubs, documents] = await Promise.all([
+  const [users, clubs, documents, posts] = await Promise.all([
     prisma.user.count({
       where: { avatarFileKey: fileKey },
     }),
+
     prisma.club.count({
       where: { logoFileKey: fileKey },
     }),
+
     prisma.membershipDocument.count({
       where: { fileKey },
     }),
+
+    prisma.post.count({
+      where: { imageFileKey: fileKey },
+    }),
   ]);
 
-  return users + clubs + documents > 0;
+  return users + clubs + documents + posts > 0;
 }
 
 /**
@@ -495,6 +501,125 @@ export const ourFileRouter = {
         // intentamos eliminarlo de UploadThing.
         await cleanupFailedUpload(file.key);
 
+        throw error;
+      }
+    }),
+
+  // 4. Imagen de publicación
+  postImageUploader: f({
+    image: {
+      maxFileSize: "4MB",
+      maxFileCount: 1,
+    },
+  })
+    .input(
+      z.object({
+        clubId: z.string().uuid(),
+        postId: z.string().uuid(),
+      })
+    )
+    .middleware(async ({ req, input }) => {
+      const user = await getAuthenticatedUser(req);
+
+      await verifyClubAdmin(user.id, input.clubId);
+
+      const post = await prisma.post.findFirst({
+        where: {
+          id: input.postId,
+          clubId: input.clubId,
+          club: {
+            status: "ACTIVE",
+          },
+        },
+        select: {
+          id: true,
+        },
+      });
+
+      if (!post) {
+        throw new UploadThingError({
+          code: "NOT_FOUND",
+          message: "La publicación no existe en este club activo",
+        });
+      }
+
+      return {
+        userId: user.id,
+        clubId: input.clubId,
+        postId: input.postId,
+      };
+    })
+    .onUploadComplete(async ({ metadata, file }) => {
+      try {
+        // 1. Revalidar permisos.
+        await verifyClubAdmin(
+          metadata.userId,
+          metadata.clubId
+        );
+
+        // 2. Consultar el estado actual de la publicación.
+        const previousPost = await prisma.post.findFirst({
+          where: {
+            id: metadata.postId,
+            clubId: metadata.clubId,
+            club: {
+              status: "ACTIVE",
+            },
+          },
+          select: {
+            id: true,
+            imageFileKey: true,
+          },
+        });
+
+        if (!previousPost) {
+          throw new UploadThingError({
+            code: "NOT_FOUND",
+            message: "La publicación ya no está disponible",
+          });
+        }
+
+        // 3. Actualización condicional:
+        // solo reemplazar si la imagen no ha cambiado.
+        const updated = await prisma.post.updateMany({
+          where: {
+            id: metadata.postId,
+            clubId: metadata.clubId,
+            club: {
+              status: "ACTIVE",
+            },
+            imageFileKey: previousPost.imageFileKey,
+          },
+          data: {
+            imageUrl: file.ufsUrl,
+            imageFileKey: file.key,
+          },
+        });
+
+        if (updated.count !== 1) {
+          throw new UploadThingError({
+            code: "BAD_REQUEST",
+            message:
+              "La imagen fue modificada durante la subida. Intenta nuevamente.",
+          });
+        }
+
+        // 4. Eliminar la imagen anterior si ya no está referenciada.
+        await cleanupOldFile(
+          previousPost.imageFileKey,
+          file.key
+        );
+
+        return {
+          persisted: true,
+          postId: metadata.postId,
+          clubId: metadata.clubId,
+          fileKey: file.key,
+          fileUrl: file.ufsUrl,
+        };
+      } catch (error) {
+        // Si esta subida no quedó guardada, intentar limpiar el archivo.
+        await cleanupFailedUpload(file.key);
         throw error;
       }
     }),
