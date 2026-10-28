@@ -1,0 +1,150 @@
+.page {
+  min-height: 100vh;
+  background: #f5f5f5;
+  color: #171717;
+  font-family: Arial, sans-serif;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  padding: 20px max(20px, calc((100% - 1000px) / 2));
+  background: white;
+  border-bottom: 1px solid #ccc;
+}
+
+.brand {
+  color: inherit;
+  font-size: 22px;
+  font-weight: bold;
+  text-decoration: none;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+
+.main {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 48px 20px;
+}
+
+.hero {
+  padding: 30px 0 50px;
+}
+
+.hero h1 {
+  max-width: 750px;
+  margin-bottom: 20px;
+  font-size: clamp(32px, 6vw, 52px);
+  line-height: 1.15;
+  font-weight: bold;
+}
+
+.page p {
+  margin: 14px 0;
+  line-height: 1.7;
+}
+
+.page h2 {
+  margin-bottom: 16px;
+  font-size: 26px;
+  font-weight: bold;
+}
+
+.page h3 {
+  margin-bottom: 10px;
+  font-size: 20px;
+  font-weight: bold;
+}
+
+.button {
+  display: inline-block;
+  padding: 12px 18px;
+  border: 1px solid #222;
+  border-radius: 5px;
+  background: #222;
+  color: white;
+  font: inherit;
+  text-align: center;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.button:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+.link {
+  color: #17469e;
+  text-decoration: underline;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 18px;
+  margin: 24px 0 40px;
+}
+
+.card {
+  padding: 24px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  background: white;
+}
+
+.formContainer {
+  max-width: 460px;
+  margin: 0 auto;
+}
+
+.form {
+  display: grid;
+  gap: 18px;
+  margin-top: 24px;
+}
+
+.field {
+  display: grid;
+  gap: 7px;
+}
+
+.input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 12px;
+  border: 1px solid #888;
+  border-radius: 4px;
+  background: white;
+  color: #171717;
+  font: inherit;
+}
+
+.error {
+  padding: 12px;
+  border: 1px solid #a00;
+  background: #fff0f0;
+  color: #900;
+}
+
+.success {
+  padding: 12px;
+  border: 1px solid #176b32;
+  background: #edf9ef;
+  color: #145428;
+}
+
+.footer {
+  padding: 24px 20px;
+  border-top: 1px solid #ccc;
+  text-align: center;
+}
