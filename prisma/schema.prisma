@@ -203,37 +203,10 @@ model MembershipPlan {
   documentRequirements PlanDocumentRequirement[]
   applications         MembershipApplication[]
   subscriptions        Subscription[]
-  PlanBenefit          PlanBenefit[]
   facilityAccesses     FacilityPlanAccess[]
 
   @@index([clubId])
   @@index([clubId, isActive])
-}
-
-model Benefit {
-  id String @id @default(uuid())
-
-  code        String  @unique
-  name        String
-  description String?
-
-  createdAt DateTime @default(now())
-
-  plans PlanBenefit[]
-}
-
-model PlanBenefit {
-  id String @id @default(uuid())
-
-  planId    String
-  benefitId String
-
-  plan    MembershipPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
-  benefit Benefit        @relation(fields: [benefitId], references: [id], onDelete: Cascade)
-
-  @@unique([planId, benefitId])
-  @@index([planId])
-  @@index([benefitId])
 }
 
 model PlanDocumentRequirement {
