@@ -4,21 +4,7 @@ import styles from "../components/basic.module.css";
 export default function HomePage() {
   return (
     <div className={styles.page}>
-      <header className={styles.header}>
-        <Link href="/" className={styles.brand}>
-          Club SaaS
-        </Link>
 
-        <nav className={styles.actions} aria-label="Navegación principal">
-          <Link href="/login" className={styles.link}>
-            Iniciar sesión
-          </Link>
-
-          <Link href="/register" className={styles.button}>
-            Registrarse
-          </Link>
-        </nav>
-      </header>
 
       <main className={styles.main}>
         <section className={styles.hero}>

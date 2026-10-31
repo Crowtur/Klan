@@ -69,7 +69,7 @@ export default function AuthForm({ mode }: Props) {
         return;
       }
 
-      router.replace("/account");
+      router.replace("/app");
       router.refresh();
     } catch {
       setError(
@@ -82,15 +82,7 @@ export default function AuthForm({ mode }: Props) {
 
   return (
     <div className={styles.page}>
-      <header className={styles.header}>
-        <Link href="/" className={styles.brand}>
-          Club SaaS
-        </Link>
 
-        <Link href="/" className={styles.link}>
-          Volver al inicio
-        </Link>
-      </header>
 
       <main className={styles.main}>
         <section className={`${styles.card} ${styles.formContainer}`}>

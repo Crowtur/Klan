@@ -1,0 +1,183 @@
+﻿Folder PATH listing for volume Windows
+Volume serial number is 84A4-EFB2
+C:\PROJECTS\CLUB-SAAS\SRC\APP\API
++---admin
+|   +---dashboard
+|   |   +---clubs
+|   |   |       route.ts
+|   |   |       
+|   |   +---finances
+|   |   |       route.ts
+|   |   |       
+|   |   \---overview
+|   |           route.ts
+|   |           
+|   +---settlements
+|   |   |   route.ts
+|   |   |   
+|   |   \---[settlementId]
+|   |           route.ts
+|   |           
+|   \---test
+|           route.ts
+|           
++---auth
+|   +---login
+|   |       route.ts
+|   |       
+|   +---logout
+|   |       route.ts
+|   |       
+|   +---me
+|   |       route.ts
+|   |       
+|   \---register
+|           route.ts
+|           
++---clubs
+|   |   route.ts
+|   |   
+|   \---[clubId]
+|       |   route.ts
+|       |   
+|       +---dashboard
+|       |   +---alerts
+|       |   |       route.ts
+|       |   |       
+|       |   +---finances
+|       |   |       route.ts
+|       |   |       
+|       |   +---members
+|       |   |       route.ts
+|       |   |       
+|       |   +---overview
+|       |   |       route.ts
+|       |   |       
+|       |   +---reservations
+|       |   |       route.ts
+|       |   |       
+|       |   \---suscriptions
+|       |           route.ts
+|       |           
+|       +---facilities
+|       |   |   route.ts
+|       |   |   
+|       |   \---[facilityId]
+|       |       |   route.ts
+|       |       |   
+|       |       +---availability
+|       |       |       route.ts
+|       |       |       
+|       |       +---plan-access
+|       |       |       route.ts
+|       |       |       
+|       |       +---reservations
+|       |       |   |   route.ts
+|       |       |   |   
+|       |       |   \---[reservationId]
+|       |       |           route.ts
+|       |       |           
+|       |       \---schedule
+|       |               route.ts
+|       |               
+|       +---members
+|       |   |   route.ts
+|       |   |   
+|       |   \---[memberId]
+|       |           route.ts
+|       |           
+|       +---membership-applications
+|       |   |   route.ts
+|       |   |   
+|       |   \---[applicationId]
+|       |       |   route.ts
+|       |       |   
+|       |       +---documents
+|       |       |   |   route.ts
+|       |       |   |   
+|       |       |   \---[documentId]
+|       |       |           route.ts
+|       |       |           
+|       |       \---review
+|       |               route.ts
+|       |               
+|       +---membership-plans
+|       |   |   route.ts
+|       |   |   
+|       |   \---[planId]
+|       |       |   route.ts
+|       |       |   
+|       |       \---document-requirements
+|       |           |   route.ts
+|       |           |   
+|       |           \---[requirementId]
+|       |                   route.ts
+|       |                   
+|       +---my-reservations
+|       |       route.ts
+|       |       
+|       +---payments
+|       |   |   route.ts
+|       |   |   
+|       |   \---summary
+|       |           route.ts
+|       |           
+|       +---posts
+|       |   |   route.ts
+|       |   |   
+|       |   \---[postId]
+|       |           route.ts
+|       |           
+|       +---reactivate
+|       |       route.ts
+|       |       
+|       +---subscriptions
+|       |   \---[subscriptionId]
+|       |       +---cancel
+|       |       |       route.ts
+|       |       |       
+|       |       \---checkout
+|       |               route.ts
+|       |               
+|       \---suspend
+|               route.ts
+|               
++---cron
+|   +---expired-plans
+|   |       route.ts
+|   |       
+|   \---settlements
+|           route.ts
+|           
++---feed
+|       route.ts
+|       
++---me
+|   +---memberships
+|   |       route.ts
+|   |       
+|   +---payments
+|   |       route.ts
+|   |       
+|   \---subscriptions
+|           route.ts
+|           
++---payments
+|   \---[paymentId]
+|           route.ts
+|           
++---search
+|   \---clubs
+|           route.ts
+|           
++---test-db
+|       route.ts
+|       
++---uploadthing
+|       core.ts
+|       route.ts
+|       
+\---webhooks
+    \---stripe
+            route.ts
+            

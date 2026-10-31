@@ -1,0 +1,172 @@
+.workspace {
+  max-width: 1200px;
+  margin: auto;
+  padding: 24px;
+  color: #202020;
+  background: #f7f7f7;
+  min-height: 80vh;
+  font:
+    16px Arial,
+    sans-serif;
+}
+.workspace h1 {
+  font-size: 30px;
+  font-weight: 700;
+  margin: 20px 0;
+}
+.workspace h2 {
+  font-size: 22px;
+  font-weight: 700;
+  margin: 10px 0;
+}
+.workspace h3 {
+  font-size: 18px;
+  font-weight: 700;
+  margin: 10px 0;
+}
+.workspace p {
+  margin: 12px 0;
+  line-height: 1.55;
+  overflow-wrap: anywhere;
+}
+.workspace a {
+  color: #174a87;
+  text-decoration: underline;
+}
+.panel {
+  border: 1px solid #ccc;
+  background: white;
+  padding: 20px;
+  border-radius: 6px;
+  margin: 18px 0;
+}
+.actions,
+.tabs {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin: 15px 0;
+}
+.workspace button,
+.workspace .button {
+  border: 1px solid #777;
+  border-radius: 4px;
+  background: #eee;
+  color: #111;
+  padding: 9px 15px;
+  cursor: pointer;
+}
+.workspace button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.workspace input,
+.workspace select,
+.workspace textarea {
+  padding: 9px;
+  border: 1px solid #888;
+  border-radius: 3px;
+  background: #fff;
+  color: #111;
+  max-width: 100%;
+}
+.workspace label {
+  display: grid;
+  gap: 6px;
+}
+.workspace fieldset {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  border: 0;
+  margin: 15px 0;
+}
+.workspace textarea {
+  min-height: 110px;
+}
+.workspace input[type="checkbox"] {
+  width: 22px;
+  height: 22px;
+}
+.workspace .error {
+  background: #fff0f0;
+  color: #9d1717;
+  padding: 16px;
+}
+.workspace .notice {
+  padding: 14px;
+  background: #eef3f9;
+  border: 1px solid #aabbd2;
+}
+.workspace .grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 18px;
+}
+.workspace img {
+  max-width: 100%;
+  height: auto;
+  max-height: 460px;
+  object-fit: contain;
+}
+.workspace .action {
+  display: inline-grid;
+  gap: 6px;
+  margin: 6px;
+}
+.workspace small {
+  display: block;
+  color: #555;
+}
+.workspace details {
+  margin: 12px 0;
+  border-top: 1px solid #ddd;
+  padding: 12px 0;
+}
+.workspace summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+.workspace dl {
+  display: grid;
+  grid-template-columns: minmax(120px, 1fr) 2fr;
+  gap: 10px;
+}
+.workspace dt {
+  font-weight: 600;
+}
+.workspace dd {
+  overflow-wrap: anywhere;
+}
+.workspace .table-wrap {
+  overflow: auto;
+}
+.workspace table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.workspace td,
+.workspace th {
+  padding: 10px;
+  text-align: left;
+  border-bottom: 1px solid #ddd;
+}
+.workspace :focus-visible {
+  outline: 3px solid #2268b2;
+  outline-offset: 3px;
+}
+@media (max-width: 600px) {
+  .workspace {
+    padding: 12px;
+  }
+  .panel {
+    padding: 14px;
+  }
+  .workspace dl {
+    grid-template-columns: 1fr;
+  }
+  .workspace fieldset {
+    grid-template-columns: 1fr;
+  }
+}

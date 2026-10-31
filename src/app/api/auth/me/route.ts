@@ -58,6 +58,7 @@ export async function GET(request: Request) {
       user: {
         id: user.id,
         firstName: user.firstName,
+        avatarUrl: user.avatarUrl,
         lastName: user.lastName,
         email: user.email,
         globalRole: user.globalRole,
