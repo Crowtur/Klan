@@ -28,6 +28,7 @@ enum MembershipStatus {
   ACTIVE
   SUSPENDED
   REMOVED
+  FINISHED
 }
 
 enum ClubStatus {
@@ -42,6 +43,7 @@ enum PlanType {
 }
 
 enum DurationUnit {
+  DAY
   MONTH
   YEAR
 }
@@ -61,6 +63,7 @@ enum DocumentStatus {
 }
 
 enum SubscriptionStatus {
+  FINISHED
   PENDING_PAYMENT
   ACTIVE
   EXPIRED
@@ -104,6 +107,47 @@ enum ReservationStatus {
   CANCELLED
 }
 
+enum BillingMode {
+  RECURRING
+  ONE_TIME
+}
+
+enum MembershipEventType {
+  JOINED
+  REACTIVATED
+  SUSPENDED
+  REMOVED
+  LEFT
+  FINISHED
+  ROLE_CHANGED
+}
+
+enum NotificationType {
+  APPLICATION_SUBMITTED
+  DOCUMENTS_SUBMITTED
+  DOCUMENT_APPROVED
+  DOCUMENT_REJECTED
+  APPLICATION_APPROVED
+  APPLICATION_REJECTED
+  MEMBER_LEFT
+  MEMBER_REMOVED
+  RESERVATION_CREATED
+  RESERVATION_CANCELLED
+  SETTLEMENT_UPDATED
+}
+
+enum PaymentObligationStatus {
+  OPEN
+  PAID
+  VOID
+}
+
+enum WebhookEventStatus {
+  RECEIVED
+  PROCESSED
+  FAILED
+}
+
 model User {
   id           String     @id @default(uuid())
   firstName    String
@@ -124,6 +168,8 @@ model User {
   membershipApplications MembershipApplication[]
   payments               Payment[]
   posts                  Post[]
+  notifications          Notification[]
+  paymentObligations     PaymentObligation[]
 }
 
 model Club {
@@ -133,6 +179,13 @@ model Club {
   description String?
   status      ClubStatus @default(ACTIVE)
 
+  // Zona IANA: las fechas de informes y horarios usan esta zona.
+  timeZone      String  @default("America/Guayaquil")
+  address       String?
+  googleMapsUrl String?
+  coverUrl      String?
+  coverFileKey  String?
+
   // Logotipo del club
   logoUrl     String?
   logoFileKey String?
@@ -140,12 +193,14 @@ model Club {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  memberships     ClubMembership[]
-  membershipPlans MembershipPlan[]
-  payments        Payment[]
-  settlements     ClubSettlement[]
-  facilities      Facility[]
-  posts           Post[]
+  memberships        ClubMembership[]
+  membershipPlans    MembershipPlan[]
+  payments           Payment[]
+  settlements        ClubSettlement[]
+  facilities         Facility[]
+  posts              Post[]
+  notifications      Notification[]
+  paymentObligations PaymentObligation[]
 }
 
 model ClubMembership {
@@ -157,7 +212,10 @@ model ClubMembership {
   role   ClubRole         @default(MEMBER)
   status MembershipStatus @default(ACTIVE)
 
-  joinedAt DateTime @default(now())
+  joinedAt   DateTime          @default(now())
+  // No sustituye a removedAt. Solo vencimiento natural sin otro acceso.
+  finishedAt DateTime?
+  events     MembershipEvent[]
 
   removedAt     DateTime?
   removedById   String?
@@ -182,7 +240,8 @@ model MembershipPlan {
   name        String
   description String?
 
-  type PlanType @default(PAID)
+  type        PlanType    @default(PAID)
+  billingMode BillingMode @default(RECURRING)
 
   price Decimal @db.Decimal(10, 2)
 
@@ -264,10 +323,15 @@ model MembershipDocument {
   applicationId String
   requirementId String
 
-  fileUrl  String
-  fileKey  String?
-  fileName String?
-  mimeType String?
+  fileUrl       String
+  fileKey       String?
+  fileName      String?
+  mimeType      String?
+  fileSizeBytes Int?
+  // La fila conserva el documento actual; las versiones previas se archivan.
+  version       Int                         @default(1)
+  deletedAt     DateTime?
+  versions      MembershipDocumentVersion[]
 
   status DocumentStatus @default(PENDING)
 
@@ -294,7 +358,22 @@ model Subscription {
   planId               String
   stripeSubscriptionId String? @unique
 
-  status SubscriptionStatus @default(PENDING_PAYMENT)
+  status                SubscriptionStatus  @default(PENDING_PAYMENT)
+  // Se copia al contratar; no debe cambiar al editar el plan.
+  billingMode           BillingMode         @default(RECURRING)
+  planNameSnapshot      String?
+  priceSnapshot         Decimal?            @db.Decimal(10, 2)
+  currencySnapshot      String?
+  durationValueSnapshot Int?
+  durationUnitSnapshot  DurationUnit?
+  // Primera activación real, no fecha del último ciclo.
+  firstActivatedAt      DateTime?
+  finishedAt            DateTime?
+  cancelledAt           DateTime?
+  cancellationReason    String?
+  nextBillingAt         DateTime?
+  cancelAtPeriodEnd     Boolean             @default(false)
+  obligations           PaymentObligation[]
 
   startedAt         DateTime?
   expiresAt         DateTime?
@@ -311,6 +390,8 @@ model Subscription {
   @@index([planId])
   @@index([status])
   @@index([expiresAt])
+  @@index([planId, firstActivatedAt])
+  @@index([status, billingMode, expiresAt])
 }
 
 model Payment {
@@ -319,6 +400,10 @@ model Payment {
   clubId         String
   userId         String
   subscriptionId String
+
+  // Cada Payment sigue siendo un intento; varios pueden pagar una obligación.
+  obligationId String?
+  obligation   PaymentObligation? @relation(fields: [obligationId], references: [id], onDelete: Restrict)
 
   amount   Decimal @db.Decimal(10, 2)
   currency String  @default("usd")
@@ -344,6 +429,9 @@ model Payment {
   @@index([subscriptionId])
   @@index([status])
   @@index([createdAt])
+  @@index([obligationId])
+  @@index([clubId, status, paidAt])
+  @@index([userId, status, paidAt])
 }
 
 model ClubSettlement {
@@ -446,7 +534,10 @@ model Reservation {
   startAt DateTime
   endAt   DateTime
 
-  status ReservationStatus @default(CONFIRMED)
+  status             ReservationStatus @default(CONFIRMED)
+  cancelledAt        DateTime?
+  cancelledById      String?
+  cancellationReason String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -479,4 +570,113 @@ model Post {
 
   @@index([clubId, createdAt])
   @@index([authorId])
+}
+
+// Historial desde la implementación; no reconstruir bajas o altas desconocidas.
+model MembershipEvent {
+  id               String              @id @default(uuid())
+  clubMembershipId String
+  type             MembershipEventType
+  previousStatus   MembershipStatus?
+  newStatus        MembershipStatus
+  previousRole     ClubRole?
+  newRole          ClubRole
+  actorId          String?
+  reason           String?
+  occurredAt       DateTime            @default(now())
+  // Clave por operación; los reintentos reutilizan la misma.
+  eventKey         String              @unique
+  clubMembership   ClubMembership      @relation(fields: [clubMembershipId], references: [id], onDelete: Restrict)
+
+  @@index([clubMembershipId, occurredAt])
+  @@index([type, occurredAt])
+}
+
+// Archivo inmutable: al reemplazar/eliminar, copiar aquí la versión actual
+// y luego incrementar version/resetear revisión en una sola transacción.
+model MembershipDocumentVersion {
+  id              String             @id @default(uuid())
+  documentId      String
+  version         Int
+  fileUrl         String
+  fileKey         String?
+  fileName        String?
+  mimeType        String?
+  fileSizeBytes   Int?
+  status          DocumentStatus
+  reviewedAt      DateTime?
+  reviewedById    String?
+  rejectionReason String?
+  uploadedAt      DateTime
+  archivedAt      DateTime           @default(now())
+  document        MembershipDocument @relation(fields: [documentId], references: [id], onDelete: Restrict)
+
+  @@unique([documentId, version])
+}
+
+// Una deuda, varios intentos. Nunca sumar Payment fallidos como deudas.
+model PaymentObligation {
+  id              String                  @id @default(uuid())
+  clubId          String
+  userId          String
+  subscriptionId  String
+  obligationKey   String                  @unique
+  stripeInvoiceId String?                 @unique
+  amount          Decimal                 @db.Decimal(10, 2)
+  currency        String                  @default("usd")
+  status          PaymentObligationStatus @default(OPEN)
+  dueAt           DateTime?
+  periodStartAt   DateTime?
+  periodEndAt     DateTime?
+  paidAt          DateTime?
+  createdAt       DateTime                @default(now())
+  updatedAt       DateTime                @updatedAt
+  club            Club                    @relation(fields: [clubId], references: [id], onDelete: Restrict)
+  user            User                    @relation(fields: [userId], references: [id], onDelete: Restrict)
+  subscription    Subscription            @relation(fields: [subscriptionId], references: [id], onDelete: Restrict)
+  payments        Payment[]
+
+  @@index([userId, status, dueAt])
+  @@index([clubId, status, dueAt])
+  @@index([subscriptionId])
+}
+
+model Notification {
+  id          String           @id @default(uuid())
+  recipientId String
+  clubId      String?
+  type        NotificationType
+  eventKey    String
+  title       String
+  message     String?
+  // Destino interno, validado en servidor. Nunca una URL externa arbitraria.
+  targetPath  String
+  entityType  String
+  entityId    String
+  readAt      DateTime?
+  resolvedAt  DateTime?
+  createdAt   DateTime         @default(now())
+  recipient   User             @relation(fields: [recipientId], references: [id], onDelete: Cascade)
+  club        Club?            @relation(fields: [clubId], references: [id], onDelete: Cascade)
+
+  @@unique([recipientId, eventKey])
+  @@index([recipientId, readAt, createdAt])
+  @@index([recipientId, clubId, resolvedAt])
+  @@index([entityType, entityId])
+}
+
+// Recibir un webhook no equivale a procesarlo. Los efectos y PROCESSED
+// deben confirmarse en una misma transacción, con bloqueo/claim del evento.
+model StripeWebhookEvent {
+  id              String             @id // ID de evento Stripe (evt_...), clave de idempotencia.
+  type            String
+  stripeCreatedAt DateTime
+  status          WebhookEventStatus @default(RECEIVED)
+  attempts        Int                @default(0)
+  lastError       String?
+  receivedAt      DateTime           @default(now())
+  processedAt     DateTime?
+  updatedAt       DateTime           @updatedAt
+
+  @@index([status, receivedAt])
 }
