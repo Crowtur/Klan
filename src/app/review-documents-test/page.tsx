@@ -1,6 +1,7 @@
 
 "use client";
 
+import "@/components/workspace/workspace.css";
 import { useState } from "react";
 
 type DocumentStatus = "PENDING" | "APPROVED" | "REJECTED";
@@ -190,7 +191,7 @@ export default function ReviewDocumentsTestPage() {
   }
 
   return (
-    <main className="mx-auto max-w-4xl space-y-6 p-8">
+    <main id="main-content" className="mx-auto max-w-4xl space-y-6 p-8">
       <header>
         <h1 className="text-2xl font-bold">
           Revisión de documentos
@@ -201,7 +202,7 @@ export default function ReviewDocumentsTestPage() {
         </p>
       </header>
 
-      <section className="space-y-4 rounded-lg border p-6">
+      <section className="panel">
         <div>
           <label
             htmlFor="clubId"
@@ -302,7 +303,7 @@ export default function ReviewDocumentsTestPage() {
       {documents.map((document) => (
         <section
           key={document.id}
-          className="space-y-4 rounded-lg border p-6"
+          className="panel"
         >
           <div>
             <h3 className="text-lg font-semibold">

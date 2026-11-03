@@ -1,6 +1,7 @@
 
 "use client";
 
+import "@/components/workspace/workspace.css";
 import { useState } from "react";
 import { UploadButton } from "@/lib/uploadthing";
 
@@ -10,7 +11,7 @@ export default function TestPostImagePage() {
   const [result, setResult] = useState("");
 
   return (
-    <main style={{ padding: "40px", maxWidth: "600px" }}>
+    <main id="main-content" className="workspace technical-page">
       <h1>Prueba de imágenes de publicaciones</h1>
 
       <p>Club ID:</p>

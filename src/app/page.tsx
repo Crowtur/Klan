@@ -1,85 +1,16 @@
 import Link from "next/link";
-import styles from "../components/basic.module.css";
-
+import { Icon } from "@/components/ui";
+const features = [
+    ["users", "Clubes", "Toda la información de tu club y tu comunidad, siempre conectada.", "Un espacio para lo que te une"],
+    ["calendar", "Instalaciones y reservas", "Organiza espacios y horarios. Reservar una instalación nunca fue tan fácil.", "Disponibilidad en tiempo real"],
+    ["wallet", "Membresías y cobros", "Gestiona cuotas y membresías con claridad, sin perder ningún detalle.", "Tus cuentas bajo control"],
+    ["settings", "Administración", "Centraliza tareas, permisos y solicitudes para que todo fluya.", "Menos trabajo, más tranquilidad"],
+];
 export default function HomePage() {
-  return (
-    <div className={styles.page}>
-
-
-      <main className={styles.main}>
-        <section className={styles.hero}>
-          <h1>Tu club, sus miembros y sus actividades en un solo lugar</h1>
-
-          <p>
-            Club SaaS es una plataforma web para organizar clubes y facilitar
-            la participación de sus miembros. Reúne la gestión de membresías,
-            reservas, publicaciones y pagos en un mismo espacio.
-          </p>
-
-          <p>
-            Accede desde tu navegador y encuentra las herramientas que
-            corresponden a tu participación en cada club.
-          </p>
-
-          <Link href="/register" className={styles.button}>
-            Comienza ahora
-          </Link>
-        </section>
-
-        <section aria-labelledby="features">
-          <h2 id="features">¿Qué puedes hacer con la plataforma?</h2>
-
-          <div className={styles.grid}>
-            <article className={styles.card}>
-              <h3>Participar en clubes</h3>
-              <p>
-                Consulta información de los clubes y gestiona tus solicitudes
-                de membresía.
-              </p>
-            </article>
-
-            <article className={styles.card}>
-              <h3>Organizar tus actividades</h3>
-              <p>
-                Consulta los recursos disponibles y administra tus reservas.
-              </p>
-            </article>
-
-            <article className={styles.card}>
-              <h3>Gestionar membresías</h3>
-              <p>
-                Accede a la información de tus membresías, suscripciones y pagos.
-              </p>
-            </article>
-
-            <article className={styles.card}>
-              <h3>Administrar tu club</h3>
-              <p>
-                Los administradores pueden gestionar miembros, solicitudes,
-                recursos y publicaciones según sus permisos.
-              </p>
-            </article>
-          </div>
-        </section>
-
-        <section className={styles.card} aria-labelledby="steps">
-          <h2 id="steps">Así comienzas</h2>
-          <p><strong>1.</strong> Crea tu cuenta con tu nombre y correo.</p>
-          <p><strong>2.</strong> Inicia sesión para acceder a la plataforma.</p>
-          <p>
-            <strong>3.</strong> Participa en los clubes y utiliza las funciones
-            habilitadas para tu cuenta.
-          </p>
-
-          <Link href="/register" className={styles.button}>
-            Comienza ahora
-          </Link>
-        </section>
-      </main>
-
-      <footer className={styles.footer}>
-        Club SaaS · Plataforma de gestión de clubes
-      </footer>
-    </div>
-  );
+    return <main id="main-content">
+ <section className="landing-hero"><div className="landing-inner"><div className="landing-copy"><p className="eyebrow">Tu club. Tu comunidad. Todo conectado.</p><h1>Gestiona tu club<br />en un solo lugar</h1><p>Reservas, membresías y cobros, sin complicaciones. Conecta con tus socios y dedica más tiempo a lo que los une.</p><div className="landing-actions"><Link href="/register" className="btn">Comienza ahora <Icon name="arrow"/></Link><a href="#como-funciona">Descubre cómo funciona ↓</a></div><div className="trust-row"><span><Icon name="check" size={16}/>Fácil de configurar</span><span><Icon name="check" size={16}/>Todo en un lugar</span></div></div><div><div className="product-preview" aria-label="Ejemplo ilustrativo del panel de un club"><div className="preview-top"><span>Klubo / Tu club</span><span>AM</span></div><div className="preview-body"><aside className="preview-side">{[["grid", "Resumen"], ["users", "Miembros"], ["calendar", "Reservas"], ["wallet", "Cobros"]].map(([i, t]) => <span key={i}><Icon name={i} size={15}/>{t}</span>)}</aside><div className="preview-main"><h3>¡Buen día, Ana!</h3><p>Tu club, de un vistazo.</p><div className="preview-kpis"><div><small>Miembros</small><strong>248</strong></div><div><small>Reservas hoy</small><strong>32</strong></div><div><small>Al día</small><strong>98%</strong></div></div><b>Próximas reservas</b><div className="preview-booking"><b>10:00</b><span>Pista de tenis 1<br /><small>Lucía Martínez</small></span></div><div className="preview-booking"><b>11:30</b><span>Cancha 2<br /><small>Carlos Ruiz</small></span></div><small>Todo en orden. Tu comunidad sigue creciendo.</small></div></div></div><p className="preview-caption">Vista ilustrativa · Menos tareas. Más vida de club.</p></div></div></section>
+ <section className="landing-section"><div className="section-intro"><p className="eyebrow">Hecho para tu día a día</p><h2>Todo lo que tu club necesita</h2><p>Una plataforma sencilla. Muchas menos preocupaciones.</p></div><div className="feature-grid">{features.map(([i, t, d, n]) => <article className="feature-card" key={i}><span className="icon-tile"><Icon name={i}/></span><h3>{t}</h3><p>{d}</p><small>{n}</small></article>)}</div></section>
+ <section className="steps-section" id="como-funciona"><div className="landing-section"><div className="section-intro"><p className="eyebrow">Así de fácil</p><h2>Tu club en marcha, en tres pasos</h2><p>De la primera idea a una comunidad mejor organizada.</p></div><div className="steps-grid">{[["Crea tu cuenta", "Regístrate y da el primer paso para simplificar tu día a día."], ["Configura tu club", "Añade tus instalaciones, cuotas y requisitos a tu ritmo."], ["Gestiona tu comunidad", "Revisa solicitudes, organiza reservas y comparte novedades."]].map(([t, d], i) => <article key={t} className="step"><span>{i + 1}</span><div><h3>{t}</h3><p>{d}</p></div></article>)}</div></div></section>
+ <section className="landing-section"><div className="landing-cta"><img src="/brand/klubo-icon.png" alt=""/><h2>Tu próximo gran paso empieza aquí.</h2><p>Haz espacio para lo importante. Nosotros te ayudamos con la gestión.</p><Link href="/register" className="btn btn-mint">Crea tu cuenta <Icon name="arrow"/></Link></div></section>
+ </main>;
 }

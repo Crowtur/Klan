@@ -7,7 +7,7 @@ export default async function Page({
 }) {
   const { clubId } = await params;
   return (
-    <main className="workspace">
+    <main id="main-content" className="workspace">
       <PublicClub club={clubId} />
     </main>
   );

@@ -1,6 +1,7 @@
 
 "use client";
 
+import "@/components/workspace/workspace.css";
 import { useState } from "react";
 import { UploadButton } from "@/lib/uploadthing";
 
@@ -28,7 +29,7 @@ export default function UploadDocumentTestPage() {
     uuidRegex.test(requirementId.trim());
 
   return (
-    <main className="mx-auto max-w-2xl space-y-6 p-8">
+    <main id="main-content" className="workspace technical-page">
       <div>
         <h1 className="text-2xl font-bold">
           Prueba de documentos de membresía
@@ -39,7 +40,7 @@ export default function UploadDocumentTestPage() {
         </p>
       </div>
 
-      <section className="space-y-5 rounded-lg border p-6">
+      <section className="panel">
         <div className="space-y-2">
           <label
             htmlFor="clubId"

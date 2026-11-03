@@ -1,6 +1,7 @@
 
 "use client";
 
+import "@/components/workspace/workspace.css";
 import { useState } from "react";
 import { UploadButton } from "@/lib/uploadthing";
 
@@ -9,7 +10,7 @@ export default function UploadTestPage() {
   const [message, setMessage] = useState("");
 
   return (
-    <main className="mx-auto max-w-2xl space-y-8 p-8">
+    <main id="main-content" className="workspace technical-page">
       <div>
         <h1 className="text-2xl font-bold">
           Pruebas de UploadThing
@@ -19,7 +20,7 @@ export default function UploadTestPage() {
         </p>
       </div>
 
-      <section className="space-y-4 rounded-lg border p-6">
+      <section className="panel">
         <h2 className="text-xl font-semibold">
           Fotografía de perfil
         </h2>
@@ -37,7 +38,7 @@ export default function UploadTestPage() {
         />
       </section>
 
-      <section className="space-y-4 rounded-lg border p-6">
+      <section className="panel">
         <h2 className="text-xl font-semibold">
           Logotipo del club
         </h2>
