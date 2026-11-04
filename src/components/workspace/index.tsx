@@ -1,4 +1,6 @@
 "use client";
+import { NoticeCount } from "./notice-count";
+import { PaymentHistory } from "./payment-history";
 import { Icon } from "@/components/ui";
 import { BrowseClubs } from "./explore";
 import { Feed } from "./feed";
@@ -19,7 +21,7 @@ export default function Workspace() {
     const context = ["club", "facility"].includes(view), globalView = ["admin", "globalClubs", "settlement", "globalPosts"].includes(view);
     return (<div className="workspace-shell">
       <nav className="workspace-nav" aria-label="Secciones"><div>
-        {[["feed", "Inicio", "home"], ["search", "Explorar clubes", "compass"], ["clubs", "Mis clubes", "users"], ["applications", "Mis solicitudes", "document"], ...(global ? [["admin", "Administración global", "grid"], ["globalClubs", "Gestionar clubes", "settings"]] : [])].map(([v, t, i]) => <Link key={v} href={href(v)} aria-current={view === v ? "page" : undefined}><Icon name={i} size={18}/>{t}</Link>)}
+        {[["feed", "Inicio", "home"], ["search", "Explorar clubes", "compass"], ["clubs", "Mis clubes", "users"], ["applications", "Mis solicitudes", "document"], ...(global ? [["admin", "Administración global", "grid"], ["globalClubs", "Gestionar clubes", "settings"]] : [])].map(([v, t, i]) => <Link key={v} href={href(v)} aria-current={view === v ? "page" : undefined}><Icon name={i} size={18}/>{t}{(v === "clubs" || v === "applications") && <NoticeCount kind={v}/>}</Link>)}
       </div></nav>
       <main id="main-content" className="workspace">
       <Status state={user}>
@@ -37,9 +39,9 @@ export default function Workspace() {
                 "clubs",
                 "memberships",
                 "subscriptions",
-                "payments",
                 "applications",
             ].includes(view) && <Personal view={view} q={q.get("q") || ""}/>}
+              {view === "payments" && <PaymentHistory />}
               {view === "feed" && <Feed user={user.data?.user} memberships={memberships.data?.memberships || []}/>}
               {view === "search" && <BrowseClubs authenticated initialQuery={q.get("q") || ""}/>}
               {view === "publicClub" && <PublicClub club={club}/>}

@@ -74,10 +74,10 @@ export async function PATCH(
         },
         select: {
           id: true,
-          status: true,
+          status: true, version:true,
           application: {
             select: {
-              status: true,
+              status: true,userId:true,
             },
           },
         },
@@ -124,11 +124,11 @@ export async function PATCH(
     // Actualización condicional para evitar
     // que dos administradores revisen el mismo
     // documento simultáneamente.
-    const updated = await prisma.membershipDocument.updateMany({
+    const updated = await prisma.$transaction(async tx=>{const result=await tx.membershipDocument.updateMany({
       where: {
         id: documentId,
         applicationId,
-        status: "PENDING",
+        status: "PENDING", deletedAt:null, version: body.version ?? 1,
         application: {
           status: {
             in: [
@@ -152,6 +152,8 @@ export async function PATCH(
       },
     });
 
+    if(result.count)await tx.notification.create({data:{recipientId:document.application.userId,clubId,entityType:"document",entityId:documentId,eventKey:"review:"+documentId+":"+document.version,type:status==="APPROVED"?"DOCUMENT_APPROVED":"DOCUMENT_REJECTED",title:status==="APPROVED"?"Documento aprobado":"Documento rechazado",targetPath:"/app?view=applications"}});
+    return result;});
     if (updated.count !== 1) {
       return NextResponse.json(
         {
@@ -215,4 +217,13 @@ export async function PATCH(
       { status: 500 }
     );
   }
+}
+
+export async function DELETE(request:Request,context:RouteContext){
+  try{
+    const user=await requireAuth(request);
+    const {clubId,documentId,applicationId}=await context.params;
+    const result=await prisma.membershipDocument.updateMany({where:{id:documentId,applicationId,deletedAt:null,application:{userId:user.id,plan:{clubId},status:{in:["PENDING","DOCUMENTATION_REVIEW"]}}},data:{deletedAt:new Date()}});
+    return NextResponse.json({success:result.count===1},{status:result.count?200:404});
+  }catch(e){return NextResponse.json({success:false},{status:e instanceof Error&&e.message==="UNAUTHORIZED"?401:500});}
 }

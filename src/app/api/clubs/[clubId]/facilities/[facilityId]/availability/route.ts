@@ -24,7 +24,7 @@ type BookingSlot = {
   durationMinutes: number;
 };
 
-const CLUB_TIME_ZONE = "America/Guayaquil";
+
 
 const DAYS: DayOfWeek[] = [
   "SUNDAY",
@@ -53,9 +53,9 @@ function minutesToTime(totalMinutes: number): string {
 }
 
 // Obtiene la fecha local de un instante UTC.
-function getLocalDateTime(date: Date) {
+function getLocalDateTime(date: Date,timeZone:string) {
   const parts = new Intl.DateTimeFormat("en-US", {
-    timeZone: CLUB_TIME_ZONE,
+    timeZone,
     year: "numeric",
     month: "2-digit",
     day: "2-digit",
@@ -129,14 +129,14 @@ function generateBookingSlots(
   date: string,
   durationMinutes: number,
   stepMinutes: number,
-  now: Date
+  now: Date, timeZone:string
 ): BookingSlot[] {
   const slots: BookingSlot[] = [];
 
   // America/Guayaquil (UTC-05:00)
-  const offset = "-05:00";
+  const offset = timeZone==="Pacific/Galapagos"?"-06:00":"-05:00";
 
-  const localNow = getLocalDateTime(now);
+  const localNow = getLocalDateTime(now,timeZone);
   const isToday = localNow.date === date;
 
   const currentMinute = isToday
@@ -262,13 +262,14 @@ export async function GET(
     }
 
     // 4. Interpretar fecha como día local de Ecuador (UTC-05:00)
+    const timeZone=membership.club.timeZone;
     const dayStart = new Date(
-      `${dateParam}T00:00:00-05:00`
+      `${dateParam}T00:00:00${timeZone==="Pacific/Galapagos"?"-06:00":"-05:00"}`
     );
 
     if (
       !Number.isFinite(dayStart.getTime()) ||
-      getLocalDateTime(dayStart).date !== dateParam
+      getLocalDateTime(dayStart,timeZone).date !== dateParam
     ) {
       return NextResponse.json(
         {
@@ -377,11 +378,11 @@ export async function GET(
         );
 
         return {
-          start: getLocalDateTime(clippedStart).time,
+          start: getLocalDateTime(clippedStart,timeZone).time,
           end:
             clippedEnd.getTime() === nextDayStart.getTime()
               ? "24:00"
-              : getLocalDateTime(clippedEnd).time,
+              : getLocalDateTime(clippedEnd,timeZone).time,
         };
       });
 
@@ -412,7 +413,7 @@ export async function GET(
         },
         select: {
           id: true,
-          planId: true,
+          planId: true, expiresAt:true,
         },
       });
 
@@ -438,7 +439,7 @@ export async function GET(
         : [];
 
     // Mayor límite disponible entre los planes autorizados
-    const maxMinutesPerDay =
+    const maxMinutesPerDay = membership.role === "CLUB_ADMIN" ? 1440 :
       planAccesses.length > 0
         ? Math.max(
             ...planAccesses.map(
@@ -448,7 +449,7 @@ export async function GET(
         : 0;
 
     const hasActiveSubscription = activeSubscriptions.length > 0;
-    const hasFacilityAccess = planAccesses.length > 0;
+    const hasFacilityAccess = membership.role === "CLUB_ADMIN" || planAccesses.length > 0;
 
     // 13. Calcular minutos confirmados del socio para esta instalación y fecha
     const memberReservations =
@@ -500,7 +501,7 @@ export async function GET(
     );
 
     const canReserve =
-      hasActiveSubscription &&
+      (membership.role === "CLUB_ADMIN" || hasActiveSubscription) &&
       hasFacilityAccess &&
       remainingMinutes > 0;
 
@@ -520,8 +521,8 @@ export async function GET(
             dateParam,
             durationMinutes,
             stepMinutes,
-            now
-          )
+            now,timeZone
+          ).filter(slot=>membership.role==="CLUB_ADMIN"||activeSubscriptions.some(s=>s.expiresAt && +s.expiresAt>=Date.parse(slot.endAt) && planAccesses.some(access=>access.membershipPlanId===s.planId && access.maxReservationMinutesPerDay>=usedMinutes+durationMinutes)))
         : [];
 
     // 16. Respuesta completa con bookingOptions
@@ -529,7 +530,7 @@ export async function GET(
       success: true,
       date: dateParam,
       dayOfWeek,
-      timeZone: CLUB_TIME_ZONE,
+      timeZone,
       facility,
 
       availability: {

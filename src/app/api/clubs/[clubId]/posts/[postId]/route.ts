@@ -120,12 +120,12 @@ export async function PATCH(
     }
 
     const data = body as Record<string, unknown>;
-    const { title, content } = data;
+    const { title, content,removeImage } = data;
 
     // 5. Exigir al menos un campo editable.
     if (
       title === undefined &&
-      content === undefined
+      content === undefined && removeImage !== true
     ) {
       return NextResponse.json(
         {
@@ -201,6 +201,7 @@ export async function PATCH(
         clubId,
       },
       data: {
+        ...(removeImage===true && {imageUrl:null,imageFileKey:null}),
         ...(title !== undefined && {
           title:
             typeof title === "string"

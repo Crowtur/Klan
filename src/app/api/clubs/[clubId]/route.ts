@@ -90,7 +90,7 @@ export async function PATCH(
 
     const data = body as Record<string, unknown>;
 
-    const allowedFields = ["name", "description", "slug"];
+    const allowedFields = ["name", "description", "slug","address","googleMapsUrl","clearCover","clearLogo","timeZone"];
 
     const invalidFields = Object.keys(data).filter(
       (field) => !allowedFields.includes(field)
@@ -110,14 +110,26 @@ export async function PATCH(
     const updateData: {
       name?: string;
       description?: string | null;
-      slug?: string;
+      timeZone?:string;slug?: string; address?:string|null; googleMapsUrl?:string|null; coverUrl?:null;coverFileKey?:null;logoUrl?:null;logoFileKey?:null;
     } = {};
 
+    if("timeZone" in data){
+      if(data.timeZone!=="America/Guayaquil"&&data.timeZone!=="Pacific/Galapagos")return NextResponse.json({error:"Zona de Ecuador inválida"},{status:400});
+      updateData.timeZone=data.timeZone;
+    }
+    for(const key of ["address","googleMapsUrl"] as const){
+      if(!(key in data))continue;
+      const value=data[key];
+      if(value!==null && (typeof value!=="string" || value.length>2048 || (key==="googleMapsUrl" && !/^https:\/\//i.test(value)))) return NextResponse.json({error:"Dirección inválida"},{status:400});
+      updateData[key]=typeof value==="string"?value.trim()||null:null;
+    }
+    if(data.clearCover===true) Object.assign(updateData,{coverUrl:null,coverFileKey:null});
+    if(data.clearLogo===true) Object.assign(updateData,{logoUrl:null,logoFileKey:null});
     // Validar nombre
     if ("name" in data) {
       if (
         typeof data.name !== "string" ||
-        !data.name.trim()
+        (!data.name.trim() || data.name.trim().length > 50)
       ) {
         return NextResponse.json(
           {
@@ -135,7 +147,7 @@ export async function PATCH(
     if ("description" in data) {
       if (
         data.description !== null &&
-        typeof data.description !== "string"
+        (typeof data.description !== "string" || data.description.length > 200)
       ) {
         return NextResponse.json(
           {

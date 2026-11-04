@@ -26,7 +26,7 @@ export function Icon({ name, size = 20 }: {
 export function Brand({ href = "/" }: {
     href?: string;
 }) { return <Link href={href} className="brand"><img src="/brand/klubo-icon.png" alt="" width="36" height="36"/><span>Klubo</span></Link>; }
-export function Footer() { return <footer className="site-footer"><div><Brand /><p>Más tiempo para tu comunidad. Menos para la gestión.</p></div><small>© {new Date().getFullYear()} Klubo. Todos los derechos reservados.</small></footer>; }
+export function Footer() { return <footer className="site-footer"><div><Brand /><p>Más tiempo para tu comunidad. Menos para la gestión.</p></div></footer>; }
 export function PageHeading({ eyebrow, title, description, action, level = 1 }: {
     eyebrow?: string;
     title: string;

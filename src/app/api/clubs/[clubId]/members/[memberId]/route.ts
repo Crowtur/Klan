@@ -31,18 +31,8 @@ export async function DELETE(
     }
 
     // 2. Autorización contextual
-    const adminMembership = await requireClubAdmin(
-      user.id,
-      clubId
-    );
-
-    if (!adminMembership) {
-      return NextResponse.json(
-        { error: "No tienes permisos para administrar este club" },
-        { status: 403 }
-      );
-    }
-
+    const leaving=user.id===memberId;
+    if(!leaving)await requireClubAdmin(user.id,clubId);
     // 3. Buscar la membresía objetivo
     const membership = await prisma.clubMembership.findFirst({
       where: {
@@ -72,13 +62,6 @@ export async function DELETE(
     }
 
     // 4. Protecciones
-    if (membership.userId === user.id) {
-      return NextResponse.json(
-        { error: "No puedes expulsarte a ti mismo" },
-        { status: 403 }
-      );
-    }
-
     if (membership.role === "CLUB_ADMIN") {
       return NextResponse.json(
         { error: "No puedes expulsar a otro administrador" },
@@ -142,7 +125,7 @@ export async function DELETE(
       const result = await tx.clubMembership.updateMany({
         where: {
           id: membership.id,
-          status: { not: "REMOVED" },
+          status: { in: ["ACTIVE","SUSPENDED"] },
           role: "MEMBER",
         },
         data: {
@@ -157,6 +140,9 @@ export async function DELETE(
         return false;
       }
 
+      const key = "removed:"+crypto.randomUUID();
+      await tx.membershipEvent.create({data:{clubMembershipId:membership.id,actorId:user.id,type:leaving?"LEFT":"REMOVED",previousStatus:membership.status,newStatus:"REMOVED",newRole:"MEMBER",reason,eventKey:key}});
+      await tx.notification.create({data:{recipientId:membership.userId,clubId,type:leaving?"MEMBER_LEFT":"MEMBER_REMOVED",eventKey:key,title:"Retiro del club",entityType:"membership",entityId:membership.id,targetPath:"/app?view=memberships"}});
       await tx.subscription.updateMany({
         where: {
           clubMembershipId: membership.id,

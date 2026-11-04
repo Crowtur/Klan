@@ -52,7 +52,7 @@ export async function GET(
 
     const documents = await prisma.membershipDocument.findMany({
       where: {
-        applicationId,
+        applicationId, deletedAt:null,
       },
       include: {
         requirement: {

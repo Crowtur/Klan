@@ -1,7 +1,8 @@
 "use client";
+import { EditorModal } from "./modal";
 import { useState } from "react";
 import Link from "next/link";
-import { Badge, api, useData, Status, Panel, Form, Action, Empty, href, date, label, facilityFields, type Row, } from "./common";
+import { Badge, api, useData, Status, Panel, Form, Action, Empty, href, date, label, facilityFields, safeUrl, type Row, } from "./common";
 const days = [
     "MONDAY",
     "TUESDAY",
@@ -29,10 +30,9 @@ export function Facilities({ club, admin }: {
     const state = useData(base, v);
     return (<>
       <h2>Instalaciones</h2>
-      {admin && (<details>
-          <summary>Crear instalación</summary>
+      {admin && (<EditorModal title="Crear instalación">
           <Form fields={facilityFields} url={base} onDone={() => setV(v + 1)}/>
-        </details>)}
+        </EditorModal>)}
       <Status state={state}>
         <Empty rows={state.data?.facilities || []}/>
         <div className="grid">
@@ -69,7 +69,7 @@ export function Reservations({ club, facility, admin = false, onChanged, }: {
             <p>
               {date(r.startAt)} — {date(r.endAt)} (Ecuador)
             </p>
-            <p><Badge value={r.status}/></p>
+            <p><Badge value={r.status}/></p>{r.clubMembership?.user && <p>Reserva de {r.clubMembership.user.firstName} {r.clubMembership.user.lastName}</p>}
             {r.status === "CONFIRMED" && (<Action method="PATCH" url={`${base}/facilities/${r.facilityId || facility}/reservations/${r.id}`} confirm="¿Cancelar esta reserva?" onDone={() => { setV(v + 1); onChanged?.(); }}>
                 Cancelar reserva
               </Action>)}
@@ -88,18 +88,19 @@ export function Facility({ club, id, admin, }: {
     const state = useData(base, v);
     const available = useData(`${base}/availability?date=${day}&duration=${duration}&step=30`, v);
     const schedule = useData(`${base}/schedule`, v);
+    const identity=useData(`/api/clubs/${club}`);
     const f = state.data?.facility;
     return (<>
       <Link href={href("club", { club, tab: "facilities" })}>
         Volver al club
       </Link>
+      {identity.data?.club&&<div className="club-identity"><span className="avatar">{safeUrl(identity.data.club.logoUrl)&&<img src={safeUrl(identity.data.club.logoUrl)} alt=""/>}</span><div><h2>{identity.data.club.name}</h2><p>{identity.data.club.description}</p></div></div>}
       <h1>{f?.name || "Instalación"}</h1>
       <Status state={state}>
         {f && (<>
             <p>{f.description}</p>
             <p>Ubicación: {f.location || "—"}</p>
-            {admin && (<details>
-                <summary>Editar instalación</summary>
+            {admin && (<EditorModal title="Editar instalación">
                 <Form fields={[
                     ...facilityFields,
                     {
@@ -114,17 +115,12 @@ export function Facility({ club, id, admin, }: {
                 <Action url={base} method="DELETE" confirm="¿Desactivar esta instalación?" onDone={() => setV(v + 1)}>
                   Desactivar
                 </Action>
-              </details>)}
+              </EditorModal>)}
           </>)}
       </Status>
       <div className="facility-booking"><Panel title="Horarios">
         <Status state={schedule}>
-          {(schedule.data?.schedules || [])
-            .filter((r: Row) => !r.isClosed)
-            .map((r: Row) => (<p key={r.id}>
-                {dayNames[days.indexOf(r.dayOfWeek)]}: {r.openingTime} —{" "}
-                {r.closingTime}
-              </p>))}
+          <div className="week-schedule">{days.map((day, i) => { const intervals = (schedule.data?.schedules || []).filter((r: Row) => r.dayOfWeek === day && !r.isClosed); return <div className={intervals.length ? "open-day" : ""} key={day}><strong>{dayNames[i]}</strong>{intervals.length ? intervals.map((r: Row) => <small key={r.id}>{r.openingTime} – {r.closingTime}</small>) : <small>Cerrado</small>}</div>; })}</div>
         </Status>
       </Panel>
       <Panel title="Disponibilidad y reserva">
@@ -151,7 +147,7 @@ export function Facility({ club, id, admin, }: {
               momento.
             </p>)}
           {available.data && (<p>
-              Minutos disponibles para hoy:{" "}
+              Minutos disponibles para este día:{" "}
               {available.data.membershipLimits.remainingMinutes}
             </p>)}
           <Empty rows={available.data?.bookingOptions.slots || []}/>
@@ -176,12 +172,11 @@ function ScheduleEditor({ base, onDone, }: {
     onDone: () => void;
 }) {
     const state = useData(`${base}/schedule`);
-    return (<details>
-      <summary>Configurar horarios</summary>
+    return (<EditorModal title="Configurar horarios">
       <Status state={state}>
         {state.data && (<ScheduleForm base={base} initial={state.data.schedules} onDone={onDone}/>)}
       </Status>
-    </details>);
+    </EditorModal>);
 }
 function ScheduleForm({ base, initial, onDone, }: {
     base: string;
@@ -255,14 +250,13 @@ function AccessEditor({ club, base, onDone, }: {
     onDone: () => void;
 }) {
     const plans = useData(`/api/clubs/${club}/membership-plans`), access = useData(`${base}/plan-access`);
-    return (<details>
-      <summary>Planes con acceso a esta instalación</summary>
+    return (<EditorModal title="Planes con acceso a esta instalación">
       <Status state={plans}>
         <Status state={access}>
           {plans.data && access.data && (<AccessForm plans={plans.data.plans} initial={access.data.planAccesses} base={base} onDone={onDone}/>)}
         </Status>
       </Status>
-    </details>);
+    </EditorModal>);
 }
 function AccessForm({ plans, initial, base, onDone, }: {
     plans: Row[];

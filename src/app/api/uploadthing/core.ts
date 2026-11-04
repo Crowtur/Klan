@@ -40,25 +40,26 @@ async function verifyClubAdmin(userId: string, clubId: string) {
  * en algún registro de la plataforma.
  */
 async function isFileReferenced(fileKey: string) {
-  const [users, clubs, documents, posts] = await Promise.all([
+  const [users, clubs, documents, posts, versions] = await Promise.all([
     prisma.user.count({
       where: { avatarFileKey: fileKey },
     }),
 
     prisma.club.count({
-      where: { logoFileKey: fileKey },
+      where: { OR: [{logoFileKey:fileKey},{coverFileKey:fileKey}] },
     }),
 
     prisma.membershipDocument.count({
       where: { fileKey },
     }),
 
+    prisma.membershipDocumentVersion.count({where:{fileKey}}),
     prisma.post.count({
       where: { imageFileKey: fileKey },
     }),
   ]);
 
-  return users + clubs + documents + posts > 0;
+  return users + clubs + documents + posts + versions > 0;
 }
 
 /**
@@ -246,6 +247,73 @@ export const ourFileRouter = {
         persisted: true,
       };
     }),
+  clubCoverUploader: f({
+    image: {
+      maxFileSize: "4MB",
+      maxFileCount: 1,
+    },
+  })
+    .input(clubUploadInput)
+    .middleware(async ({ req, input }) => {
+      const user = await getAuthenticatedUser(req);
+
+      await verifyClubAdmin(user.id, input.clubId);
+
+      return {
+        userId: user.id,
+        clubId: input.clubId,
+      };
+    })
+    .onUploadComplete(async ({ metadata, file }) => {
+      // Revalidar permisos antes de modificar el club.
+      await verifyClubAdmin(
+        metadata.userId,
+        metadata.clubId
+      );
+
+      // Consultar el logotipo anterior.
+      const previousClub = await prisma.club.findUnique({
+        where: {
+          id: metadata.clubId,
+        },
+        select: {
+          coverFileKey: true,
+        },
+      });
+
+      if (!previousClub) {
+        throw new UploadThingError({
+          code: "FORBIDDEN",
+          message: "El club ya no existe",
+        });
+      }
+
+      // Guardar el nuevo logotipo.
+      await prisma.club.update({
+        where: {
+          id: metadata.clubId,
+          status: "ACTIVE",
+        },
+        data: {
+          coverUrl: file.ufsUrl,
+          coverFileKey: file.key,
+        },
+      });
+
+      // Intentar eliminar el logotipo anterior.
+      await cleanupOldFile(
+        previousClub.coverFileKey,
+        file.key
+      );
+
+      return {
+        uploadedBy: metadata.userId,
+        clubId: metadata.clubId,
+        fileKey: file.key,
+        fileUrl: file.ufsUrl,
+        persisted: true,
+      };
+    }),
 
   // 3. Documentos de solicitudes de membresía
   membershipDocumentUploader: f({
@@ -318,13 +386,13 @@ export const ourFileRouter = {
         },
         select: {
           id: true,
-          status: true,
+          status: true, deletedAt:true,
         },
       });
 
       // Si ya existe un documento, solamente puede
       // reemplazarse cuando fue rechazado.
-      if (existing && existing.status !== "REJECTED") {
+      if (existing && !existing.deletedAt && existing.status !== "REJECTED" && existing.status !== "PENDING") {
         throw new UploadThingError({
           code: "BAD_REQUEST",
           message:
@@ -400,11 +468,7 @@ export const ourFileRouter = {
                 requirementId: metadata.requirementId,
               },
             },
-            select: {
-              id: true,
-              status: true,
-              fileKey: true,
-            },
+
           });
 
         // CASO 1: Primera subida.
@@ -417,7 +481,7 @@ export const ourFileRouter = {
                 fileUrl: file.ufsUrl,
                 fileKey: file.key,
                 fileName: file.name,
-                mimeType: "application/pdf",
+                mimeType: "application/pdf", fileSizeBytes:file.size,
                 status: "PENDING",
               },
             });
@@ -432,7 +496,7 @@ export const ourFileRouter = {
         }
 
         // CASO 2: Solo se reemplazan documentos rechazados.
-        if (existing.status !== "REJECTED") {
+        if (!existing.deletedAt && existing.status === "APPROVED") {
           throw new UploadThingError({
             code: "BAD_REQUEST",
             message:
@@ -442,11 +506,12 @@ export const ourFileRouter = {
 
         // Actualización condicional para evitar que
         // dos reemplazos sobrescriban el mismo documento.
+        await prisma.$transaction(async tx => {
         const updated =
-          await prisma.membershipDocument.updateMany({
+          await tx.membershipDocument.updateMany({
             where: {
-              id: existing.id,
-              status: "REJECTED",
+              id: existing.id, version:existing.version,
+              status: existing.status,
               application: {
                 userId: metadata.userId,
                 status: {
@@ -463,10 +528,10 @@ export const ourFileRouter = {
               },
             },
             data: {
-              fileUrl: file.ufsUrl,
+              version:{increment:1}, deletedAt:null, uploadedAt:new Date(), fileUrl: file.ufsUrl,
               fileKey: file.key,
               fileName: file.name,
-              mimeType: "application/pdf",
+              mimeType: "application/pdf", fileSizeBytes:file.size,
               status: "PENDING",
               rejectionReason: null,
               reviewedAt: null,
@@ -482,13 +547,9 @@ export const ourFileRouter = {
           });
         }
 
-        // PostgreSQL ya apunta al PDF nuevo.
-        // Intentamos eliminar el PDF rechazado anterior.
-        await cleanupOldFile(
-          existing.fileKey,
-          file.key
-        );
-
+          const {id,applicationId,requirementId,deletedAt,...snapshot}=existing;
+          await tx.membershipDocumentVersion.create({data:{...snapshot,documentId:id}});
+        });
         return {
           persisted: true,
           replaced: true,

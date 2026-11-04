@@ -14,7 +14,7 @@ export async function GET(
         name: true,
         slug: true,
         description: true,
-        logoUrl: true,
+        logoUrl: true,address:true,googleMapsUrl:true,coverUrl:true,
       },
     });
     if (!club)
@@ -31,7 +31,7 @@ export async function GET(
         type: true,
         price: true,
         durationValue: true,
-        durationUnit: true,
+        durationUnit: true,billingMode:true,
         requiresDocumentation: true,
         benefits: true,
         documentRequirements: {

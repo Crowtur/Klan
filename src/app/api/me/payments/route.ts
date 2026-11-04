@@ -1,3 +1,4 @@
+import {paymentCsv} from "@/lib/clubs/payment-csv";
 
 import { prisma } from "@/lib/prisma";
 import { requireAuth } from "@/lib/auth/auth";
@@ -69,15 +70,20 @@ export async function GET(request: Request) {
     }
 
     // 5. Filtrar siempre por el usuario autenticado.
+    const year=searchParams.get("year");
+    if(year && !/^\d{4}$/.test(year))return NextResponse.json({success:false},{status:400});
     const where: Prisma.PaymentWhereInput = {
       userId: user.id,
+      ...(year && {createdAt:{gte:new Date(Date.UTC(+year,0)),lt:new Date(Date.UTC(+year+1,0))}}),
+      ...(searchParams.get("clubId") ? { clubId: searchParams.get("clubId")! } : {}),
       ...(statusParam !== null && {
         status: statusParam as PaymentStatus,
       }),
     };
 
     // 6. Consultar los pagos y su cantidad total.
-    const [payments, total] = await prisma.$transaction([
+    if(new URL(request.url).searchParams.get("format")==="csv") return paymentCsv(where);
+    const [payments, total, paid, lastPaid, pendingByClub] = await prisma.$transaction([
       prisma.payment.findMany({
         where,
         orderBy: [
@@ -126,12 +132,15 @@ export async function GET(request: Request) {
       }),
 
       prisma.payment.count({ where }),
+      prisma.payment.aggregate({where:{userId:user.id,status:"PAID",paidAt:{gte:new Date(Date.UTC(Number(year||new Date().getUTCFullYear()),0)),lt:new Date(Date.UTC(Number(year||new Date().getUTCFullYear())+1,0))}},_sum:{amount:true},_count:true}),
+      prisma.payment.findFirst({where:{userId:user.id,status:"PAID"},orderBy:{paidAt:"desc"},select:{id:true,amount:true,paidAt:true,club:{select:{name:true}}}}),
+      prisma.paymentObligation.groupBy({by:["clubId"],orderBy:{clubId:"asc"},where:{userId:user.id,status:"OPEN",...(where.clubId && {clubId:String(where.clubId)})},_sum:{amount:true}}),
     ]);
 
     // 7. Devolver el historial paginado.
     return NextResponse.json({
       success: true,
-      payments,
+      payments,summary:{paid,lastPaid,pendingByClub},
       pagination: {
         page,
         limit,

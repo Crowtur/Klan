@@ -20,12 +20,13 @@ export async function GET(
         clubId,
       },
       include: {
+        subscriptions:{where:{status:"ACTIVE",expiresAt:{gt:new Date()}},select:{expiresAt:true,plan:{select:{id:true,name:true}}}},
         user: {
           select: {
             id: true,
             firstName: true,
             lastName: true,
-            email: true,
+            email: true,avatarUrl:true,
           },
         },
       },
@@ -39,7 +40,7 @@ export async function GET(
       user: membership.user,
       role: membership.role,
       status: membership.status,
-      joinedAt: membership.joinedAt,
+      joinedAt: membership.joinedAt,plans:membership.subscriptions,finishedAt:membership.finishedAt,removedAt:membership.removedAt,
     }));
 
     return NextResponse.json({

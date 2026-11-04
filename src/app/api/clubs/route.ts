@@ -1,3 +1,4 @@
+import {activeMember} from "@/lib/clubs/active";
 import { prisma } from "@/lib/prisma";
 import { requireAuth } from "@/lib/auth/auth";
 import { NextResponse } from "next/server";
@@ -9,14 +10,13 @@ export async function GET(request: Request) {
 
     const memberships = await prisma.clubMembership.findMany({
       where: {
-        userId: user.id,
-        status: "ACTIVE",
+        userId: user.id, ...activeMember(),
         club: {
           status: "ACTIVE",
         },
       },
       include: {
-        club: true,
+        club: {include:{_count:{select:{memberships:{where:activeMember()}}}}},
       },
       orderBy: {
         joinedAt: "asc",
@@ -28,7 +28,9 @@ export async function GET(request: Request) {
       name: membership.club.name,
       slug: membership.club.slug,
       description: membership.club.description,
+      logoUrl: membership.club.logoUrl, coverUrl: membership.club.coverUrl, address: membership.club.address,
       status: membership.club.status,
+      memberCount: membership.club._count.memberships,
       role: membership.role,
       membershipStatus: membership.status,
       joinedAt: membership.joinedAt,
@@ -72,7 +74,7 @@ export async function POST(request: Request) {
 
     const { name, slug, description } = body;
 
-    if (!name || !slug) {
+    if (typeof name !== "string" || !name.trim() || name.trim().length > 50 || typeof slug !== "string" || slug.length > 80 || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug) || (description != null && (typeof description !== "string" || description.length > 200))) {
       return NextResponse.json(
         {
           success: false,
@@ -82,6 +84,8 @@ export async function POST(request: Request) {
       );
     }
 
+    const {address,googleMapsUrl}=body;
+    if((address!=null && (typeof address!=="string"||address.length>2048))||(googleMapsUrl!=null && (typeof googleMapsUrl!=="string"||googleMapsUrl.length>2048||!/^https:\/\//i.test(googleMapsUrl))))return NextResponse.json({error:"Dirección inválida"},{status:400});
     const existingClub = await prisma.club.findUnique({
       where: {
         slug,
@@ -100,13 +104,13 @@ export async function POST(request: Request) {
 
     const club = await prisma.club.create({
       data: {
-        name,
+        name: name.trim(),address,googleMapsUrl,
         slug,
         description,
         memberships: {
           create: {
             userId: user.id,
-            role: "CLUB_ADMIN",
+            role: "CLUB_ADMIN",events:{create:{eventKey:crypto.randomUUID(),type:"JOINED",newRole:"CLUB_ADMIN",newStatus:"ACTIVE",actorId:user.id}},
           },
         },
       },

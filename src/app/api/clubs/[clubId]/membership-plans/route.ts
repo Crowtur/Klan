@@ -102,11 +102,11 @@ export async function POST(
       );
     }
 
-    if (durationUnit !== "MONTH" && durationUnit !== "YEAR") {
+    if (durationUnit !== "MONTH" && durationUnit !== "DAY" && durationUnit !== "YEAR") {
       return NextResponse.json(
         {
           success: false,
-          message: "durationUnit debe ser MONTH o YEAR",
+          message: "durationUnit debe ser DAY, MONTH o YEAR",
         },
         { status: 400 }
       );
@@ -138,6 +138,7 @@ export async function POST(
         price,
         durationValue,
         durationUnit,
+        billingMode: durationUnit === "DAY" ? "ONE_TIME" : "RECURRING",
         requiresDocumentation: requiresDocumentation ?? false,
         ...(benefits !== undefined && { benefits }),
       },

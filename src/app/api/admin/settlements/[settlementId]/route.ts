@@ -150,7 +150,7 @@ export async function PATCH(
       );
     }
 
-    const updatedSettlement = await prisma.clubSettlement.update({
+    const updatedSettlement = await prisma.$transaction(async tx=>{const updated=await tx.clubSettlement.update({
       where: { id: settlementId },
       data: {
         status,
@@ -174,6 +174,9 @@ export async function PATCH(
       },
     });
 
+    const admins=await tx.clubMembership.findMany({where:{clubId:updated.clubId,role:"CLUB_ADMIN",status:"ACTIVE"},select:{userId:true}});
+    await tx.notification.createMany({data:admins.map(m=>({recipientId:m.userId,clubId:updated.clubId,type:"SETTLEMENT_UPDATED",eventKey:"settlement:"+settlementId+":"+status,entityType:"settlement",entityId:settlementId,title:"Liquidación actualizada",targetPath:"/app?view=club&club="+updated.clubId})),skipDuplicates:true});
+    return updated;});
     return NextResponse.json({
       success: true,
       currency: "USD",

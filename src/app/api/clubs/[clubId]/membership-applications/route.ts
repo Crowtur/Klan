@@ -106,7 +106,8 @@ export async function POST(
     }
 
     // Crear solicitud
-    const application = await prisma.membershipApplication.create({
+    const application = await prisma.$transaction(async tx => {
+    const created = await tx.membershipApplication.create({
       data: {
         userId: user.id,
         planId,
@@ -129,6 +130,10 @@ export async function POST(
       },
     });
 
+    const admins = await tx.clubMembership.findMany({where:{clubId,role:"CLUB_ADMIN",status:"ACTIVE"},select:{userId:true}});
+    await tx.notification.createMany({data:admins.map(admin=>({recipientId:admin.userId,clubId,type:"APPLICATION_SUBMITTED",eventKey:"apply:"+created.id,title:"Nueva solicitud de ingreso",entityType:"application",entityId:created.id,targetPath:"/app?view=club&club="+clubId})),skipDuplicates:true});
+    return created;
+    });
     return NextResponse.json(
       {
         success: true,

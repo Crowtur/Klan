@@ -1,3 +1,4 @@
+import {paymentCsv} from "@/lib/clubs/payment-csv";
 import { prisma } from "@/lib/prisma";
 import { requireAuth } from "@/lib/auth/auth";
 import { requireClubAdmin } from "@/lib/auth/authorization";
@@ -21,6 +22,7 @@ export async function GET(
     const year = searchParams.get("year");
     const month = searchParams.get("month");
 
+    if((status&&!Object.values(PaymentStatus).includes(status as PaymentStatus))||(year&&!/^\d{4}$/.test(year))||(month&&(!year||!/^([1-9]|1[0-2])$/.test(month))))return NextResponse.json({error:"Filtros inválidos"},{status:400});
     // Lógica para acotar el rango exacto de fechas (gte: inicio del período, lt: inicio del siguiente período)
     let createdAtFilter: { gte?: Date; lt?: Date } | undefined = undefined;
 
@@ -46,8 +48,12 @@ export async function GET(
       ...(createdAtFilter ? { createdAt: createdAtFilter } : {}),
     };
 
+    if(new URL(request.url).searchParams.get("format")==="csv") return paymentCsv(where);
+    const page=Number(searchParams.get("page")??1),limit=Number(searchParams.get("limit")??50);
+    if(!Number.isSafeInteger(page)||page<1||page>10000||!Number.isSafeInteger(limit)||limit<1||limit>100)return NextResponse.json({success:false},{status:400});
+    const total=await prisma.payment.count({where});
     const payments = await prisma.payment.findMany({
-      where,
+      where,skip:(page-1)*limit,take:limit,
       include: {
         user: {
           select: {
@@ -89,7 +95,7 @@ export async function GET(
         year: year || null,
         month: month || null,
       },
-      payments,
+      payments,pagination:{page,limit,total,totalPages:Math.ceil(total/limit)},
     });
   } catch (error) {
     console.error("Get club payments error:", error);

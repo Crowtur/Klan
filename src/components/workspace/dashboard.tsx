@@ -1,4 +1,5 @@
 "use client";
+import { GlobalFinances } from "./global-finances";
 import { PageHeading, Icon } from "@/components/ui";
 import { useState } from "react";
 import Link from "next/link";
@@ -248,17 +249,18 @@ export function Dashboard({ club }: {
                 setPeriod(e.target.value);
         }}/>
         </label>
-        <button onClick={() => setV(v + 1)}>Actualizar</button>
+
       </div>
-      {section === "finances" && (<p>
+      {!club && section === "finances" && <GlobalFinances year={year} month={month} version={v} onDone={() => setV(v + 1)}/>}
+      {club && section === "finances" && (<p>
           Importes en USD. Las comisiones son estimadas; las liquidaciones
           reflejan los registros del período.
         </p>)}
-      <Status state={state}>
+      {(club || section !== "finances") && <Status state={state}>
         <div className="dashboard-grid">{state.data &&
-            allowed
-                .filter((k) => state.data?.[k] !== undefined)
-                .map((k) => (<Panel key={k} title={names[k] || k}>
+                allowed
+                    .filter((k) => state.data?.[k] !== undefined)
+                    .map((k) => (<Panel key={k} title={names[k] || k}>
                 <Facts value={state.data?.[k]}/>
               </Panel>))}
         </div>{!club && section === "finances" && (<Panel title="Liquidaciones del período">
@@ -269,7 +271,7 @@ export function Dashboard({ club }: {
                 </Link>
               </p>))}
           </Panel>)}
-      </Status>
+      </Status>}
     </>);
 }
 export function GlobalClubs() {
@@ -355,7 +357,7 @@ export function Settlement({ id }: {
       <Status state={state}>
         {state.data && (<>
             <Panel title={state.data.settlement.club?.name}>
-              <Facts value={state.data.settlement}/>
+              <div className="metrics-grid">{[["Bruto", state.data.settlement.grossAmount], ["Comisiones", state.data.settlement.totalFees], ["Neto a abonar", state.data.settlement.netAmount]].map(([k, v]) => <dl className="metric-card" key={k}><dt>{k}</dt><dd>{money(v)}</dd></dl>)}</div><p><Badge value={state.data.settlement.status}/> · {state.data.settlement.month}/{state.data.settlement.year}</p><p>Referencia: {state.data.settlement.paymentReference || "Pendiente de registrar"}</p><p>{state.data.settlement.notes}</p>
             </Panel>
             <p>Registrar el estado no realiza una transferencia bancaria.</p>
             <Form url={`/api/admin/settlements/${id}`} method="PATCH" initial={state.data.settlement} fields={[

@@ -311,6 +311,7 @@ export async function GET(request: Request) {
     // 7. Distribución de suscripciones
     const subscriptionsByStatus = {
       PENDING_PAYMENT: 0,
+      FINISHED: 0,
       ACTIVE: 0,
       EXPIRED: 0,
       CANCELLED: 0,

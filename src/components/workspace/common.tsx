@@ -63,6 +63,7 @@ export function href(view: string, params: Record<string, string | number> = {})
         }));
 }
 export const labels: Record<string, string> = {
+    FINISHED: "Finalizada", DAY: "Días", ONE_TIME: "Pago único", RECURRING: "Recurrente",
     ACTIVE: "Activa",
     INACTIVE: "Inactiva",
     SUSPENDED: "Suspendida",
@@ -162,10 +163,12 @@ export function Action({ children, url, method = "POST", body, confirm, onDone, 
     const dialog = useRef<HTMLDialogElement>(null);
     const trigger = useRef<HTMLButtonElement>(null);
     const destructive = /DELETE/.test(method) || /cancel|suspend|retir/i.test(url) || (typeof children === "string" && /cancel|suspend|elimin|desactiv/i.test(children));
-    useEffect(() => { if (confirming)
-        dialog.current?.showModal();
-    else
-        dialog.current?.close(); }, [confirming]);
+    useEffect(() => {
+        if (confirming)
+            dialog.current?.showModal();
+        else
+            dialog.current?.close();
+    }, [confirming]);
     const close = () => { setConfirming(false); trigger.current?.focus(); };
     async function run() {
         if (busy)
@@ -209,6 +212,8 @@ export function Form({ fields, url, method = "POST", initial = {}, onDone, submi
     submit?: string;
     transform?: (d: Row) => unknown;
 }) {
+    const [slug, setSlug] = useState(initial.slug || "");
+    const [decision, setDecision] = useState(initial.status || "APPROVED");
     const [busy, setBusy] = useState(false), [error, setError] = useState("");
     async function send(e: FormEvent<HTMLFormElement>) {
         e.preventDefault();
@@ -228,6 +233,9 @@ export function Form({ fields, url, method = "POST", initial = {}, onDone, submi
                             : Number(v)
                         : String(v ?? "").trim();
         }
+        if ("googleMapsUrl" in body && !body.googleMapsUrl) body.googleMapsUrl=null;
+        if ("benefits" in body)
+            body.benefits = body.benefits.split("\n").map((s: string) => s.trim()).filter(Boolean);
         try {
             const d = await api(url, method, transform ? transform(body) : body);
             setError(d.message || "Guardado correctamente.");
@@ -242,13 +250,19 @@ export function Form({ fields, url, method = "POST", initial = {}, onDone, submi
     }
     return (<form className="editor" onSubmit={send}>
       <fieldset disabled={busy}>
-        {fields.map((f) => (<label key={f.name}>
+        {fields.filter(f => f.name !== "rejectionReason" || decision === "REJECTED").map((f) => (<label key={f.name}>
             {f.label}
-            {f.type === "textarea" ? (<textarea name={f.name} defaultValue={initial[f.name] ?? ""} required={f.required} maxLength={f.max}/>) : f.options ? (<select name={f.name} defaultValue={String(initial[f.name] ?? f.options[0]?.value ?? "")} required={f.required}>
+            {f.type === "textarea" ? (<textarea name={f.name} defaultValue={Array.isArray(initial[f.name]) ? initial[f.name].join("\n") : initial[f.name] ?? ""} required={f.required} maxLength={f.max}/>) : f.options ? (<select onChange={e => { if (f.name === "status")
+                setDecision(e.target.value); }} name={f.name} defaultValue={String(initial[f.name] ?? f.options[0]?.value ?? "")} required={f.required}>
                 {f.options.map((o) => (<option key={o.value} value={o.value}>
                     {o.label}
                   </option>))}
-              </select>) : f.type === "checkbox" ? (<input type="checkbox" name={f.name} defaultChecked={Boolean(initial[f.name])}/>) : (<input type={f.type || "text"} name={f.name} defaultValue={initial[f.name] ?? ""} required={f.required} min={f.min} max={f.max} step={f.step} maxLength={f.type !== "number" ? f.max : undefined}/>)}
+              </select>) : f.type === "checkbox" ? (<input type="checkbox" name={f.name} defaultChecked={Boolean(initial[f.name])}/>) : (<input onInput={e => { if (f.name === "slug") {
+                const input = e.currentTarget;
+                input.value = input.value.toLowerCase().replace(/[^a-z0-9-]/g, "");
+                setSlug(input.value);
+            } }} type={f.type || "text"} name={f.name} defaultValue={Array.isArray(initial[f.name]) ? initial[f.name].join("\n") : initial[f.name] ?? ""} required={f.required} min={f.min} max={f.max} step={f.step} maxLength={f.type !== "number" ? f.max : undefined}/>)}
+            {f.name === "slug" && <small>Slug · {slug || "tu-club"}</small>}
           </label>))}
       </fieldset>
       <button disabled={busy}>{busy ? "Guardando…" : submit}</button>
@@ -263,22 +277,24 @@ export function NavLink({ view, params, children, }: {
     return <Link href={href(view, params)}>{children}</Link>;
 }
 export const clubFields: Field[] = [
-    { name: "name", label: "Nombre", required: true },
+    { name: "name", label: "Nombre", required: true, max: 50 },
     {
         name: "slug",
-        label: "Nombre en la dirección (sin espacios)",
+        label: "Slug del club",
         required: true,
     },
-    { name: "description", label: "Descripción", type: "textarea" },
+    { name: "description", label: "Descripción", type: "textarea", max: 200 },
+    { name: "address", label: "Dirección del club" }, { name: "googleMapsUrl", label: "Enlace de Google Maps", type: "url" },
 ];
 export const facilityFields: Field[] = [
-    { name: "name", label: "Nombre", required: true },
+    { name: "name", label: "Nombre", required: true, max: 50 },
     { name: "description", label: "Descripción", type: "textarea" },
     { name: "location", label: "Ubicación" },
     { name: "capacity", label: "Capacidad", type: "number", min: 1 },
 ];
 export const planFields: Field[] = [
-    { name: "name", label: "Nombre", required: true },
+    { name: "benefits", label: "Beneficios (uno por línea)", type: "textarea" },
+    { name: "name", label: "Nombre", required: true, max: 50 },
     { name: "description", label: "Descripción", type: "textarea" },
     {
         name: "type",
@@ -307,6 +323,7 @@ export const planFields: Field[] = [
         name: "durationUnit",
         label: "Unidad",
         options: [
+            { value: "DAY", label: "Días · pago único" },
             { value: "MONTH", label: "Meses" },
             { value: "YEAR", label: "Años" },
         ],

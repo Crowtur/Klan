@@ -1,3 +1,4 @@
+import {activeMember} from "@/lib/clubs/active";
 
 import { prisma } from "@/lib/prisma";
 import { requireAuth } from "@/lib/auth/auth";
@@ -54,7 +55,7 @@ export async function GET(request: Request) {
         memberships: {
           some: {
             userId: user.id,
-            status: "ACTIVE" as const,
+            ...activeMember(),
           },
         },
       },

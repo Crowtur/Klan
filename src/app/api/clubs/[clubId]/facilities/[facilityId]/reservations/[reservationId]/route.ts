@@ -220,7 +220,7 @@ export async function PATCH(
     }
 
     // 7. Actualización condicional y atómica
-    const result = await prisma.reservation.updateMany({
+    const result = await prisma.$transaction(async tx=>{const result=await tx.reservation.updateMany({
       where: {
         id: reservationId,
         facilityId,
@@ -233,10 +233,15 @@ export async function PATCH(
           : {}),
       },
       data: {
-        status: "CANCELLED",
+        status: "CANCELLED",cancelledAt:new Date(),cancelledById:user.id,
       },
     });
 
+    if(result.count){
+      const owner=await tx.clubMembership.findUniqueOrThrow({where:{id:reservation.clubMembershipId},select:{userId:true}});
+      await tx.notification.create({data:{recipientId:owner.userId,clubId,type:"RESERVATION_CANCELLED",eventKey:"cancel:"+reservationId,entityType:"reservation",entityId:reservationId,title:"Reserva cancelada",targetPath:"/app?view=club&club="+clubId}});
+    }
+    return result;});
     // Si otra solicitud canceló la reserva primero,
     // la actualización no afectará ninguna fila.
     if (result.count === 0) {

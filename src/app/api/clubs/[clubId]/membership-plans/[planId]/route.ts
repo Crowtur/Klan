@@ -125,7 +125,7 @@ export async function PATCH(
       type,
       price,
       durationValue,
-      durationUnit,
+      durationUnit,benefits,
       requiresDocumentation,
       isActive,
     } = body;
@@ -210,12 +210,12 @@ export async function PATCH(
     if (
       durationUnit !== undefined &&
       durationUnit !== "MONTH" &&
-      durationUnit !== "YEAR"
+      durationUnit !== "DAY" && durationUnit !== "YEAR"
     ) {
       return NextResponse.json(
         {
           success: false,
-          message: "durationUnit debe ser MONTH o YEAR",
+          message: "durationUnit debe ser DAY, MONTH o YEAR",
         },
         { status: 400 }
       );
@@ -271,12 +271,14 @@ export async function PATCH(
           price,
         }),
 
+        ...(benefits !== undefined && {benefits}),
         ...(durationValue !== undefined && {
           durationValue,
         }),
 
         ...(durationUnit !== undefined && {
           durationUnit,
+        billingMode: durationUnit === "DAY" ? "ONE_TIME" : "RECURRING",
         }),
 
         ...(requiresDocumentation !== undefined && {

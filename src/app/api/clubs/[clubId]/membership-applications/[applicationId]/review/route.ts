@@ -10,8 +10,9 @@ import { NextResponse } from "next/server";
 function calculateExpirationDate(
   startDate: Date,
   durationValue: number,
-  durationUnit: "MONTH" | "YEAR"
+  durationUnit: "MONTH" | "YEAR" | "DAY"
 ): Date {
+  if (durationUnit === "DAY") return new Date(startDate.getTime() + durationValue * 86400000);
   const year = startDate.getUTCFullYear();
   const month = startDate.getUTCMonth();
   const day = startDate.getUTCDate();
@@ -111,11 +112,11 @@ export async function PATCH(
             type: true,
             price: true,
             durationValue: true,
-            durationUnit: true,
+            durationUnit: true, billingMode: true,
             isActive: true,
           },
         },
-        documents: {
+        documents: { where:{deletedAt:null},
           include: {
             requirement: {
               select: {
@@ -275,7 +276,7 @@ export async function PATCH(
                 type: true,
                 price: true,
                 durationValue: true,
-                durationUnit: true,
+                durationUnit: true, billingMode: true,
               },
             },
           },
@@ -331,6 +332,7 @@ export async function PATCH(
           }
         }
 
+        const previousStatus=membership?.status ?? null;
         if (!membership) {
           membership = await tx.clubMembership.create({
             data: {
@@ -360,6 +362,7 @@ export async function PATCH(
               clubMembershipId: membership.id,
               planId: updatedApp.planId,
               status: "ACTIVE",
+              firstActivatedAt: startedAt, billingMode: updatedApp.plan.billingMode,
               startedAt,
               expiresAt,
               gracePeriodEndsAt: null,
@@ -371,6 +374,7 @@ export async function PATCH(
             data: { status: "ACTIVE" },
           });
 
+          await tx.membershipEvent.create({data:{clubMembershipId:membership.id,type:previousStatus?"REACTIVATED":"JOINED",previousStatus,newStatus:"ACTIVE",newRole:membership.role,eventKey:"application:"+applicationId,actorId:user.id}});
           subscriptionId = subscription.id;
         }
 
@@ -393,6 +397,7 @@ export async function PATCH(
               data: {
                 clubMembershipId: membership.id,
                 planId: updatedApp.planId,
+                billingMode: updatedApp.plan.billingMode, priceSnapshot: updatedApp.plan.price, durationValueSnapshot: updatedApp.plan.durationValue, durationUnitSnapshot: updatedApp.plan.durationUnit, planNameSnapshot: updatedApp.plan.name, currencySnapshot: "usd",
                 status: "PENDING_PAYMENT",
                 startedAt: null,
                 expiresAt: null,
@@ -406,10 +411,10 @@ export async function PATCH(
           await tx.clubMembership.updateMany({
             where: {
               id: membership.id,
-              status: "ACTIVE",
+              role:"MEMBER",status:{in:["ACTIVE","FINISHED","REMOVED"]},
             },
             data: {
-              status: "SUSPENDED",
+              removedAt:null,finishedAt:null,status: "SUSPENDED",
             },
           });
 
@@ -417,6 +422,8 @@ export async function PATCH(
         }
       }
 
+      await tx.notification.create({data: { recipientId: updatedApp.userId, clubId, type: status === "APPROVED" ? "APPLICATION_APPROVED" : "APPLICATION_REJECTED", eventKey: "review:"+applicationId, title: status === "APPROVED" ? "Solicitud aprobada" : "Solicitud rechazada", targetPath: "/app?view=applications", entityType: "application", entityId: applicationId }});
+      await tx.notification.updateMany({where:{clubId,entityId:applicationId,type:"APPLICATION_SUBMITTED"},data:{resolvedAt:new Date()}});
       return {
         application: updatedApp,
         subscriptionId,

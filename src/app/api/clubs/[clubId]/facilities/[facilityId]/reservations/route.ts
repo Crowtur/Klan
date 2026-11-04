@@ -5,7 +5,7 @@ import { NextResponse } from "next/server";
 import { DayOfWeek, Prisma } from "@prisma/client";
 
 // Configuración de zona horaria y mapeo de días
-const CLUB_TIME_ZONE = "America/Guayaquil";
+
 
 const dayNames: Record<string, DayOfWeek> = {
   Mon: "MONDAY",
@@ -33,9 +33,9 @@ class ReservationError extends Error {
 /**
  * Convierte una fecha UTC al día y hora local en la zona horaria del club.
  */
-function getLocalDateTime(date: Date) {
+function getLocalDateTime(date: Date,timeZone:string) {
   const parts = new Intl.DateTimeFormat("en-US", {
-    timeZone: CLUB_TIME_ZONE,
+    timeZone,
     year: "numeric",
     month: "2-digit",
     day: "2-digit",
@@ -173,6 +173,7 @@ export async function GET(
         id: true,
         facilityId: true,
         clubMembershipId: true,
+        ...(membership.role==="CLUB_ADMIN" && {clubMembership:{select:{user:{select:{id:true,firstName:true,lastName:true,avatarUrl:true}}}}}),
         startAt: true,
         endAt: true,
         status: true,
@@ -295,7 +296,7 @@ export async function POST(
       },
     });
 
-    if (activeSubscriptions.length === 0) {
+    if (membership.role !== "CLUB_ADMIN" && activeSubscriptions.length === 0) {
       return NextResponse.json(
         {
           success: false,
@@ -324,7 +325,7 @@ export async function POST(
       },
     });
 
-    if (planAccesses.length === 0) {
+    if (membership.role !== "CLUB_ADMIN" && planAccesses.length === 0) {
       return NextResponse.json(
         {
           success: false,
@@ -440,8 +441,8 @@ export async function POST(
     }
 
     // 7. Convertir las fechas a la zona horaria del club
-    const localStart = getLocalDateTime(startDate);
-    const localEnd = getLocalDateTime(endDate);
+    const localStart = getLocalDateTime(startDate,membership.club.timeZone);
+    const localEnd = getLocalDateTime(endDate,membership.club.timeZone);
 
     // No permitir reservas que atraviesen días
     if (localStart.date !== localEnd.date) {
@@ -498,7 +499,7 @@ export async function POST(
     }
 
     // 9. Verificar el máximo permitido por el plan
-    const maxAllowedMinutes = Math.max(
+    const maxAllowedMinutes = membership.role === "CLUB_ADMIN" ? 1440 : Math.max(
       ...planAccesses.map(
         (access) => access.maxReservationMinutesPerDay
       )
@@ -517,7 +518,7 @@ export async function POST(
 
     // 10. Límites del día local
     const dayStart = new Date(
-      `${localStart.date}T00:00:00-05:00`
+      `${localStart.date}T00:00:00${membership.club.timeZone==="Pacific/Galapagos"?"-06:00":"-05:00"}`
     );
 
     const nextDayStart = new Date(
@@ -559,7 +560,7 @@ export async function POST(
               },
             },
             select: {
-              id: true,
+              id: true, role: true,
             },
           });
 
@@ -582,7 +583,7 @@ export async function POST(
                 lte: transactionNow,
               },
               expiresAt: {
-                gt: transactionNow,
+                gte: endDate,
               },
               plan: {
                 clubId,
@@ -594,7 +595,7 @@ export async function POST(
             },
           });
 
-        if (currentSubscriptions.length === 0) {
+        if (currentMembership.role !== "CLUB_ADMIN" && currentSubscriptions.length === 0) {
           throw new ReservationError(
             403,
             "No tienes una suscripción vigente"
@@ -619,14 +620,14 @@ export async function POST(
             },
           });
 
-        if (currentPlanAccesses.length === 0) {
+        if (currentMembership.role !== "CLUB_ADMIN" && currentPlanAccesses.length === 0) {
           throw new ReservationError(
             403,
             "Tu plan ya no permite reservar esta instalación"
           );
         }
 
-        const currentMaxAllowedMinutes = Math.max(
+        const currentMaxAllowedMinutes = currentMembership.role === "CLUB_ADMIN" ? 1440 : Math.max(
           ...currentPlanAccesses.map(
             (access) => access.maxReservationMinutesPerDay
           )
@@ -744,7 +745,7 @@ export async function POST(
         }
 
         // Crear la reserva
-        return tx.reservation.create({
+        const booking=await tx.reservation.create({
           data: {
             facilityId,
             clubMembershipId: membership.id,
@@ -753,6 +754,8 @@ export async function POST(
             status: "CONFIRMED",
           },
         });
+        await tx.notification.create({data:{clubId,recipientId:user.id,entityType:"reservation",entityId:booking.id,eventKey:"reserved:"+booking.id,type:"RESERVATION_CREATED",title:"Reserva confirmada",targetPath:"/app?view=club&club="+clubId}});
+        return booking;
       },
       {
         maxWait: 10000,

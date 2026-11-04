@@ -17,8 +17,8 @@ export async function GET(request: Request) {
             id: true,
             name: true,
             clubId: true,
-            requiresDocumentation: true,
-            club: { select: { id: true, name: true } },
+            requiresDocumentation: true, billingMode:true,price:true,
+            club: { select: { id: true, name: true,logoUrl:true } },
             documentRequirements: {
               where: { isActive: true },
               select: {
@@ -30,19 +30,19 @@ export async function GET(request: Request) {
             },
           },
         },
-        documents: {
+        documents: { where:{deletedAt:null},
           select: {
             id: true,
             requirementId: true,
             fileUrl: true,
-            fileName: true,
+            fileName: true, fileSizeBytes:true,mimeType:true,version:true,uploadedAt:true,reviewedAt:true,
             status: true,
             rejectionReason: true,
           },
         },
       },
     });
-    return NextResponse.json({ success: true, applications });
+    return NextResponse.json({ success: true, applications:applications.map(app=>({...app,missing:app.plan.documentRequirements.filter(r=>r.isRequired&&!app.documents.some(d=>d.requirementId===r.id)).map(r=>r.id),rejected:app.documents.filter(d=>d.status==="REJECTED").map(d=>d.requirementId)})) });
   } catch (e) {
     const unauthorized = e instanceof Error && e.message === "UNAUTHORIZED";
     return NextResponse.json(

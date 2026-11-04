@@ -22,7 +22,7 @@ export async function GET(request: Request) {
         role: true,
         status: true,
         joinedAt: true,
-        removedAt: true,
+        removedAt: true, finishedAt: true,
         removalReason: true,
 
         club: {
@@ -32,7 +32,7 @@ export async function GET(request: Request) {
             slug: true,
             description: true,
             status: true,
-            logoUrl: true,
+            logoUrl: true, coverUrl: true, address: true,
           },
         },
       },

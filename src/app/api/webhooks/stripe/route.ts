@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { stripe } from "@/lib/stripe";
-import { DurationUnit } from "@prisma/client";
+import { Prisma, DurationUnit } from "@prisma/client";
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
 
@@ -123,8 +123,8 @@ function resolveExpirationDate(
   );
 }
 
-async function isClubSuspensionBlocked(clubId: string): Promise<boolean> {
-  const club = await prisma.club.findUnique({
+async function isClubSuspensionBlocked(db:Prisma.TransactionClient,clubId: string): Promise<boolean> {
+  const club = await db.club.findUnique({
     where: { id: clubId },
     select: { status: true },
   });
@@ -183,12 +183,19 @@ export async function POST(request: Request) {
   }
 
   try {
+    return await prisma.$transaction(async db => {
+      await db.$queryRaw`SELECT pg_advisory_xact_lock(hashtextextended(${event.id},0))::text`;
+      const existing=await db.stripeWebhookEvent.findUnique({where:{id:event.id}});
+      if(existing?.status==="PROCESSED") return NextResponse.json({success:true,duplicate:true});
+      const run=<T,>(work:(tx:Prisma.TransactionClient)=>Promise<T>)=>work(db);
+      const handle=async()=>{
     switch (event.type) {
       /**
        * =========================================================
        * 1. CHECKOUT COMPLETADO (Pago Inicial)
        * =========================================================
        */
+      case "checkout.session.async_payment_succeeded":
       case "checkout.session.completed": {
         const session = event.data.object as Stripe.Checkout.Session;
 
@@ -217,7 +224,7 @@ export async function POST(request: Request) {
           });
         }
 
-        const payment = await prisma.payment.findUnique({
+        const payment = await db.payment.findUnique({
           where: {
             id: paymentId,
           },
@@ -243,6 +250,22 @@ export async function POST(request: Request) {
           );
         }
 
+        if (payment.subscriptionId !== subscriptionId || session.currency !== "usd" || session.amount_total !== Math.round(Number(payment.amount)*100)) throw new Error("Checkout inconsistente");
+        if (payment.subscription.billingMode === "ONE_TIME") {
+          if (session.mode !== "payment" || payment.stripeCheckoutSessionId !== session.id) throw new Error("Sesión del pase inválida");
+          const paidAt = new Date(event.created * 1000);
+          const days = payment.subscription.durationValueSnapshot ?? payment.subscription.plan.durationValue;
+          const expiresAt = new Date(+paidAt + days * 86400000);
+          await run(async tx => {
+            const claimed = await tx.payment.updateMany({where:{id:payment.id,status:{in:["PENDING","PROCESSING"]}},data:{status:"PAID",paidAt,stripePaymentIntentId:extractId(session.payment_intent)}});
+            if (!claimed.count) return;
+            if (payment.obligationId) await tx.paymentObligation.update({where:{id:payment.obligationId},data:{status:"PAID",paidAt}});
+            const activated = await tx.subscription.updateMany({where:{id:subscriptionId,status:"PENDING_PAYMENT",firstActivatedAt:null,clubMembership:{status:{not:"REMOVED"},club:{status:"ACTIVE"}}},data:{status:"ACTIVE",startedAt:paidAt,firstActivatedAt:paidAt,expiresAt}});
+            if (activated.count) await tx.membershipEvent.create({data:{clubMembershipId:payment.subscription.clubMembershipId,type:"REACTIVATED",previousStatus:payment.subscription.clubMembership.status,newStatus:"ACTIVE",newRole:payment.subscription.clubMembership.role,eventKey:"activation:"+subscriptionId}});
+            if (activated.count) await tx.clubMembership.update({where:{id:payment.subscription.clubMembershipId},data:{status:"ACTIVE",finishedAt:null}});
+          });
+          break;
+        }
         if (payment.status === "PAID" && payment.stripePaymentIntentId) {
           return NextResponse.json({
             success: true,
@@ -250,7 +273,7 @@ export async function POST(request: Request) {
           });
         }
 
-        const clubBlocked = await isClubSuspensionBlocked(
+        const clubBlocked = await isClubSuspensionBlocked(db,
           payment.subscription.clubMembership.clubId
         );
 
@@ -326,7 +349,7 @@ export async function POST(request: Request) {
           }
         );
 
-        await prisma.$transaction(async (tx) => {
+        await run(async (tx) => {
           await tx.payment.update({
             where: {
               id: payment.id,
@@ -334,20 +357,22 @@ export async function POST(request: Request) {
             data: {
               status: "PAID",
               paidAt: now,
+              ...(payment.obligationId && {obligation:{update:{status:"PAID",paidAt:now}}}),
               stripePaymentIntentId: paymentIntentId,
               stripeSubscriptionId,
               ...(stripeInvoiceId ? { stripeInvoiceId } : {}),
             },
           });
 
-          if (!clubBlocked) {
+          if (!clubBlocked && payment.subscription.clubMembership.status!=="REMOVED" && !["CANCELLED","FINISHED"].includes(payment.subscription.status)) {
+            await tx.membershipEvent.createMany({data:[{clubMembershipId:payment.subscription.clubMembershipId,type:"REACTIVATED",previousStatus:payment.subscription.clubMembership.status,newStatus:"ACTIVE",newRole:payment.subscription.clubMembership.role,eventKey:"activation:"+subscriptionId}],skipDuplicates:true});
             await tx.subscription.update({
               where: {
                 id: payment.subscriptionId,
               },
               data: {
                 status: "ACTIVE",
-                startedAt,
+                startedAt, firstActivatedAt: payment.subscription.firstActivatedAt ?? startedAt, nextBillingAt: expiresAt,
                 expiresAt,
                 stripeSubscriptionId,
                 gracePeriodEndsAt: null,
@@ -402,7 +427,7 @@ export async function POST(request: Request) {
           break;
         }
 
-        const subscription = await prisma.subscription.findUnique({
+        const subscription = await db.subscription.findUnique({
           where: { stripeSubscriptionId },
           include: {
             plan: true,
@@ -411,10 +436,7 @@ export async function POST(request: Request) {
         });
 
         if (!subscription) {
-          console.error(
-            `Subscription local no encontrada para Stripe Subscription ${stripeSubscriptionId}`
-          );
-          break;
+          throw new Error("Suscripción aún no vinculada: reintentar evento");
         }
 
         const paymentIntentId = extractId(invoice.payment_intent);
@@ -447,12 +469,12 @@ export async function POST(request: Request) {
         const currency = invoice.currency || "usd";
 
         // Buscar primero por factura y después por PaymentIntent.
-        let existingPayment = await prisma.payment.findFirst({
+        let existingPayment = await db.payment.findFirst({
           where: { stripeInvoiceId: invoice.id },
         });
 
         if (!existingPayment && paymentIntentId) {
-          existingPayment = await prisma.payment.findUnique({
+          existingPayment = await db.payment.findUnique({
             where: { stripePaymentIntentId: paymentIntentId },
           });
         }
@@ -469,7 +491,7 @@ export async function POST(request: Request) {
             subscription.gracePeriodEndsAt <= now
           );
 
-        const clubBlocked = await isClubSuspensionBlocked(
+        const clubBlocked = await isClubSuspensionBlocked(db,
           subscription.clubMembership.clubId
         );
 
@@ -484,7 +506,9 @@ export async function POST(request: Request) {
             )
           );
 
-        await prisma.$transaction(async (tx) => {
+        await run(async (tx) => {
+          const obligationKey=existingPayment?.obligationId ? undefined : "invoice:"+invoice.id;
+          const obligation=await tx.paymentObligation.upsert({where:existingPayment?.obligationId?{id:existingPayment.obligationId}:{obligationKey},update:{status:"PAID",stripeInvoiceId:invoice.id,paidAt:now},create:{obligationKey:obligationKey!,subscriptionId:subscription.id,userId:subscription.clubMembership.userId,clubId:subscription.clubMembership.clubId,amount,currency,stripeInvoiceId:invoice.id,status:"PAID",paidAt:now}});
           if (existingPayment) {
             // Recuperar el registro existente, incluso si estaba FAILED.
             await tx.payment.update({
@@ -495,7 +519,7 @@ export async function POST(request: Request) {
                 amount,
                 currency,
                 stripeSubscriptionId,
-                stripeInvoiceId: invoice.id,
+                stripeInvoiceId: invoice.id, obligationId:obligation.id,
                 ...(paymentIntentId
                   ? { stripePaymentIntentId: paymentIntentId }
                   : {}),
@@ -513,7 +537,7 @@ export async function POST(request: Request) {
                 status: "PAID",
                 paidAt: now,
                 stripeSubscriptionId,
-                stripeInvoiceId: invoice.id,
+                stripeInvoiceId: invoice.id, obligationId:obligation.id,
                 stripePaymentIntentId: paymentIntentId,
               },
             });
@@ -537,7 +561,7 @@ export async function POST(request: Request) {
                 ],
               },
               data: {
-                status: "ACTIVE",
+                status: "ACTIVE", nextBillingAt:expiresAt,
                 expiresAt,
                 gracePeriodEndsAt: null,
               },
@@ -578,7 +602,7 @@ export async function POST(request: Request) {
           break;
         }
 
-        const subscription = await prisma.subscription.findUnique({
+        const subscription = await db.subscription.findUnique({
           where: { stripeSubscriptionId },
           include: {
             clubMembership: true,
@@ -586,13 +610,10 @@ export async function POST(request: Request) {
         });
 
         if (!subscription) {
-          console.error(
-            `Subscription local no encontrada para Stripe Subscription ${stripeSubscriptionId}`
-          );
-          break;
+          throw new Error("Suscripción aún no vinculada: reintentar evento");
         }
 
-        const clubBlocked = await isClubSuspensionBlocked(
+        const clubBlocked = await isClubSuspensionBlocked(db,
           subscription.clubMembership.clubId
         );
 
@@ -628,12 +649,12 @@ export async function POST(request: Request) {
 
         const now = new Date();
 
-        let existingPayment = await prisma.payment.findFirst({
+        let existingPayment = await db.payment.findFirst({
           where: { stripeInvoiceId: invoice.id },
         });
 
         if (!existingPayment && paymentIntentId) {
-          existingPayment = await prisma.payment.findUnique({
+          existingPayment = await db.payment.findUnique({
             where: {
               stripePaymentIntentId: paymentIntentId,
             },
@@ -687,7 +708,9 @@ export async function POST(request: Request) {
             failureDate.getTime() + SEVEN_DAYS_IN_MS
           );
 
-        await prisma.$transaction(async (tx) => {
+        await run(async (tx) => {
+          const obligationKey=existingPayment?.obligationId ? undefined : "invoice:"+invoice.id;
+          const obligation=await tx.paymentObligation.upsert({where:existingPayment?.obligationId?{id:existingPayment.obligationId}:{obligationKey},update:{status:"OPEN",stripeInvoiceId:invoice.id,paidAt:null},create:{obligationKey:obligationKey!,subscriptionId:subscription.id,userId:subscription.clubMembership.userId,clubId:subscription.clubMembership.clubId,amount,currency,stripeInvoiceId:invoice.id,status:"OPEN",paidAt:null}});
           if (existingPayment) {
             await tx.payment.update({
               where: {
@@ -695,7 +718,7 @@ export async function POST(request: Request) {
               },
               data: {
                 status: "FAILED",
-                stripeInvoiceId: invoice.id,
+                stripeInvoiceId: invoice.id, obligationId:obligation.id,
                 stripeSubscriptionId,
                 ...(paymentIntentId
                   ? { stripePaymentIntentId: paymentIntentId }
@@ -715,7 +738,7 @@ export async function POST(request: Request) {
 
                 stripePaymentIntentId: paymentIntentId,
                 stripeSubscriptionId,
-                stripeInvoiceId: invoice.id,
+                stripeInvoiceId: invoice.id, obligationId:obligation.id,
               },
             });
           }
@@ -749,7 +772,7 @@ export async function POST(request: Request) {
         const eventSubscription =
           event.data.object as unknown as StripeSubscriptionPayload;
 
-        const localSubscription = await prisma.subscription.findUnique({
+        const localSubscription = await db.subscription.findUnique({
           where: {
             stripeSubscriptionId: eventSubscription.id,
           },
@@ -766,7 +789,7 @@ export async function POST(request: Request) {
           break;
         }
 
-        const clubBlocked = await isClubSuspensionBlocked(
+        const clubBlocked = await isClubSuspensionBlocked(db,
           localSubscription.clubMembership.clubId
         );
 
@@ -825,10 +848,10 @@ export async function POST(request: Request) {
               break;
             }
 
-            await prisma.subscription.update({
+            await db.subscription.update({
               where: { id: localSubscription.id },
               data: {
-                status: "ACTIVE",
+                status: "ACTIVE", nextBillingAt:expiresAt,
                 expiresAt,
                 gracePeriodEndsAt: null,
               },
@@ -859,7 +882,7 @@ export async function POST(request: Request) {
               break;
             }
 
-            await prisma.subscription.update({
+            await db.subscription.update({
               where: { id: localSubscription.id },
               data: {
                 status: "PENDING_PAYMENT",
@@ -888,7 +911,7 @@ export async function POST(request: Request) {
               break;
             }
 
-            await prisma.subscription.updateMany({
+            await db.subscription.updateMany({
               where: {
                 id: localSubscription.id,
                 status: {
@@ -905,7 +928,7 @@ export async function POST(request: Request) {
           }
 
           case "incomplete_expired": {
-            await prisma.subscription.updateMany({
+            await db.subscription.updateMany({
               where: {
                 id: localSubscription.id,
                 status: {
@@ -939,7 +962,7 @@ export async function POST(request: Request) {
               break;
             }
 
-            await prisma.subscription.update({
+            await db.subscription.update({
               where: { id: localSubscription.id },
               data: {
                 status: "SUSPENDED",
@@ -967,7 +990,7 @@ export async function POST(request: Request) {
         const eventSubscription =
           event.data.object as unknown as StripeSubscriptionPayload;
 
-        const localSubscription = await prisma.subscription.findUnique({
+        const localSubscription = await db.subscription.findUnique({
           where: {
             stripeSubscriptionId: eventSubscription.id,
           },
@@ -1033,7 +1056,7 @@ export async function POST(request: Request) {
         }
 
         // Cancelación efectiva sin periodo de gracia pendiente.
-        await prisma.subscription.updateMany({
+        await db.subscription.updateMany({
           where: {
             id: localSubscription.id,
             status: {
@@ -1072,6 +1095,12 @@ export async function POST(request: Request) {
       success: true,
       received: true,
     });
+      };
+      const response=await handle();
+      if(!response.ok)throw new Error("Evento pendiente de reintento");
+      await db.stripeWebhookEvent.upsert({where:{id:event.id},update:{status:"PROCESSED",processedAt:new Date(),attempts:{increment:1}},create:{id:event.id,type:event.type,stripeCreatedAt:new Date(event.created*1000),status:"PROCESSED",processedAt:new Date(),attempts:1}});
+      return response;
+    },{timeout:30000});
   } catch (error) {
     console.error(
       "Stripe webhook processing error:",

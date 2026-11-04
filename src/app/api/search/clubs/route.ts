@@ -1,3 +1,4 @@
+import {activeMember} from "@/lib/clubs/active";
 
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
@@ -99,7 +100,8 @@ export async function GET(request: Request) {
           name: true,
           slug: true,
           description: true,
-          logoUrl: true,
+          logoUrl: true, address: true, coverUrl: true,
+          _count: { select: { memberships: { where: activeMember() } } },
           createdAt: true,
         },
       }),
@@ -110,7 +112,7 @@ export async function GET(request: Request) {
     return NextResponse.json({
       success: true,
       query,
-      clubs,
+      clubs:clubs.map(club=>({...club,memberCount:club._count.memberships})),
       pagination: {
         page,
         limit,

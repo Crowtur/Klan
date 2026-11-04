@@ -1,4 +1,5 @@
 "use client";
+import { NoticeCount } from "./notice-count";
 import { useState } from "react";
 import Link from "next/link";
 import { Icon, PageHeading, PLACEHOLDER_IMAGE } from "@/components/ui";
@@ -8,7 +9,7 @@ export function ClubCard({ club, destination }: {
     club: Row;
     destination: string;
 }) {
-    return <article className="club-card"><img className="club-cover" src={PLACEHOLDER_IMAGE} alt="" loading="lazy"/><div className="club-card-body"><div className="row"><span className="avatar">{safeUrl(club.logoUrl) ? <img src={safeUrl(club.logoUrl)} alt=""/> : <Icon name="users" size={25}/>}</span><h2>{club.name}</h2></div><p>{club.description || "Conoce este club y encuentra tu próxima comunidad."}</p><Link className="btn btn-outline" href={destination}>Ver club <Icon name="arrow" size={17}/></Link></div></article>;
+    return <article className="club-card"><img className="club-cover" src={safeUrl(club.coverUrl) || "/brand/klubo-icon.png"} alt="" loading="lazy"/><div className="club-card-body"><div className="row"><span className="avatar">{safeUrl(club.logoUrl) ? <img src={safeUrl(club.logoUrl)} alt=""/> : <Icon name="users" size={25}/>}</span><h2>{club.name}</h2>{club.role && <NoticeCount club={club.id}/>}</div><p>{club.description || "Conoce este club y encuentra tu próxima comunidad."}</p><p className="club-meta">{club.address || "Ubicación por confirmar"} · {club.memberCount ?? club._count?.memberships ?? "—"} miembros</p>{club.role === "CLUB_ADMIN" ? <small>Administrador</small> : club.planName && <small>{club.planName}</small>}<Link className="btn btn-outline" href={destination}>Ver club <Icon name="arrow" size={17}/></Link></div></article>;
 }
 export function BrowseClubs({ authenticated = false, initialQuery = "" }: {
     authenticated?: boolean;

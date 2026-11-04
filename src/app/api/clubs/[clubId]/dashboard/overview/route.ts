@@ -1,3 +1,4 @@
+import {activeMember} from "@/lib/clubs/active";
 
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
@@ -133,8 +134,7 @@ export async function GET(
 
       prisma.clubMembership.count({
         where: {
-          clubId,
-          status: "ACTIVE",
+          clubId,...activeMember(),
         },
       }),
 
@@ -219,7 +219,7 @@ export async function GET(
         endAtExclusive: periodEnd.toISOString(),
       },
       members: {
-        total: totalMembers,
+        total: activeMembers,historicalTotal:totalMembers,
         active: activeMembers,
         inactive: totalMembers - activeMembers,
       },

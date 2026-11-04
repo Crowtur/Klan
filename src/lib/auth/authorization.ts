@@ -1,3 +1,4 @@
+import {activeMember} from "@/lib/clubs/active";
 import { prisma } from "@/lib/prisma";
 import { ClubRole } from "@prisma/client";
 
@@ -36,6 +37,7 @@ export async function requireClubMembership(
     throw new Error("FORBIDDEN");
   }
 
+  if(membership.role==="MEMBER" && !await prisma.clubMembership.count({where:{id:membership.id,...activeMember()}})) throw new Error("FORBIDDEN");
   return membership;
 }
 

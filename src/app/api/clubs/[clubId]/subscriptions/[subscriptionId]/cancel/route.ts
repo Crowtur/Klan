@@ -130,6 +130,7 @@ export async function POST(
     // Se mantiene ACTIVE hasta finalizar
     // el período contratado.
 
+    await prisma.subscription.update({where:{id:subscription.id},data:{cancelAtPeriodEnd:true,nextBillingAt:null}});
     return NextResponse.json({
       success: true,
       message:

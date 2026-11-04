@@ -23,6 +23,7 @@ export async function GET(request: Request) {
         id: true,
         status: true,
 
+        billingMode:true, firstActivatedAt:true, finishedAt:true, nextBillingAt:true, priceSnapshot:true, obligations:{where:{status:"OPEN"},select:{amount:true,dueAt:true}},
         startedAt: true,
         expiresAt: true,
         gracePeriodEndsAt: true,
@@ -63,10 +64,13 @@ export async function GET(request: Request) {
       },
     });
 
+    const rank=(status:string)=>status==="PENDING_PAYMENT"?0:status==="ACTIVE"?1:2;
+    subscriptions.sort((a,b)=>rank(a.status)-rank(b.status));
     // 3. Devolver las suscripciones.
     return NextResponse.json({
       success: true,
       subscriptions,
+      activeCount:subscriptions.filter(s=>s.status==="ACTIVE"&&s.billingMode==="RECURRING").length,
       total: subscriptions.length,
     });
   } catch (error) {

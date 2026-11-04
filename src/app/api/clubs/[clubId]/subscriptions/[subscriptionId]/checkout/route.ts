@@ -160,7 +160,11 @@ export async function POST(
       );
     }
 
-    const amount = Number(subscription.plan.price);
+    const oneTime = subscription.billingMode === "ONE_TIME";
+    const price = subscription.priceSnapshot ?? subscription.plan.price;
+    const unit = subscription.durationUnitSnapshot ?? subscription.plan.durationUnit;
+    const duration = subscription.durationValueSnapshot ?? subscription.plan.durationValue;
+    const amount = Number(price);
 
     if (!Number.isFinite(amount) || amount <= 0) {
       return NextResponse.json(
@@ -175,7 +179,7 @@ export async function POST(
     if (
       !Number.isInteger(subscription.plan.durationValue) ||
       subscription.plan.durationValue <= 0 ||
-      !["MONTH", "YEAR"].includes(subscription.plan.durationUnit)
+      !(oneTime ? unit === "DAY" : ["MONTH", "YEAR"].includes(unit))
     ) {
       return NextResponse.json(
         {
@@ -192,6 +196,8 @@ export async function POST(
       throw new Error("NEXT_PUBLIC_APP_URL no está configurada");
     }
 
+    const obligationKey = "initial:" + subscription.id;
+    const obligation = await prisma.paymentObligation.upsert({ where: { obligationKey }, update: {}, create: { obligationKey, subscriptionId, clubId, userId: user.id, amount: price } });
     // Buscar un Payment pendiente existente
     const existingPayment = await prisma.payment.findFirst({
       where: {
@@ -206,6 +212,7 @@ export async function POST(
     });
 
     let payment = existingPayment;
+    if(payment && !payment.obligationId) await prisma.payment.update({where:{id:payment.id},data:{obligationId:obligation.id}});
 
     if (payment?.stripeCheckoutSessionId) {
       try {
@@ -258,21 +265,26 @@ export async function POST(
 
     // Si no existe un pago pendiente válido, creamos uno nuevo
     if (!payment) {
-      payment = await prisma.payment.create({
+      payment = await prisma.$transaction(async tx=>{
+        await tx.$queryRaw`SELECT "id" FROM "Subscription" WHERE "id"=${subscriptionId} FOR UPDATE`;
+        const pending=await tx.payment.findFirst({where:{subscriptionId,status:{in:["PENDING","PROCESSING"]}},orderBy:{createdAt:"desc"}});
+        if(pending)return pending;
+        return tx.payment.create({
         data: {
           clubId,
           userId: user.id,
           subscriptionId: subscription.id,
-          amount: subscription.plan.price,
+          obligationId: obligation.id, amount: price,
           currency: "usd",
           status: "PENDING",
         },
+      });
       });
     }
 
     try {
       const interval =
-        subscription.plan.durationUnit === "MONTH"
+        unit === "MONTH"
           ? "month"
           : "year";
 
@@ -282,7 +294,7 @@ export async function POST(
       const checkoutSession =
         await stripe.checkout.sessions.create(
           {
-            mode: "subscription",
+            mode: oneTime ? "payment" : "subscription",
 
             line_items: [
               {
@@ -300,11 +312,11 @@ export async function POST(
                       `Membresía de ${subscription.clubMembership.club.name}`,
                   },
 
-                  recurring: {
+                  ...(!oneTime && { recurring: {
                     interval,
                     interval_count:
-                      subscription.plan.durationValue,
-                  },
+                      duration,
+                  } }),
                 },
               },
             ],
@@ -318,13 +330,13 @@ export async function POST(
               userId: user.id,
             },
 
-            subscription_data: {
+            ...(!oneTime && { subscription_data: {
               metadata: {
                 subscriptionId: subscription.id,
                 clubId,
                 userId: user.id,
               },
-            },
+            } }),
 
             success_url:
               `${appUrl}/payment/success?session_id={CHECKOUT_SESSION_ID}`,

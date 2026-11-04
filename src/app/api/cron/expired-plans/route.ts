@@ -38,6 +38,15 @@ export async function POST(request: Request) {
     // 2. SUSCRIPCIONES ACTIVAS VENCIDAS (SOLO MANUALES / SIN STRIPE)
     // =====================================================
 
+    const passes = await prisma.subscription.findMany({where:{billingMode:"ONE_TIME",status:"ACTIVE",expiresAt:{lte:now}}});
+    for (const pass of passes) {
+      await prisma.$transaction(async tx => {
+        const changed = await tx.subscription.updateMany({where:{id:pass.id,status:"ACTIVE",expiresAt:{lte:now}},data:{status:"FINISHED",finishedAt:pass.expiresAt}});
+        if (!changed.count) return;
+        const member = await tx.clubMembership.updateMany({where:{id:pass.clubMembershipId,role:"MEMBER",status:"ACTIVE",subscriptions:{none:{OR:[{status:"ACTIVE",expiresAt:{gt:now}},{status:"PENDING_PAYMENT",gracePeriodEndsAt:{gt:now}}]}}},data:{status:"FINISHED",finishedAt:pass.expiresAt}});
+        if(member.count) await tx.membershipEvent.create({data:{clubMembershipId:pass.clubMembershipId,type:"FINISHED",previousStatus:"ACTIVE",newStatus:"FINISHED",newRole:"MEMBER",eventKey:"finished:"+pass.id}});
+      });
+    }
     const expiredActiveSubscriptions =
       await prisma.subscription.findMany({
         where: {
@@ -45,7 +54,7 @@ export async function POST(request: Request) {
           expiresAt: {
             lt: now,
           },
-          stripeSubscriptionId: null,
+          stripeSubscriptionId: null, billingMode:"RECURRING",
         },
         select: {
           id: true,
@@ -67,7 +76,7 @@ export async function POST(request: Request) {
           expiresAt: {
             lt: now,
           },
-          stripeSubscriptionId: null,
+          stripeSubscriptionId: null, billingMode:"RECURRING",
         },
         data: {
           status: "EXPIRED",
