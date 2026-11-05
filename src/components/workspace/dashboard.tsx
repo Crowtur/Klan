@@ -1,9 +1,11 @@
 "use client";
+import {Bars,Pie} from "./activity";
+import {UploadDropzone} from "@/lib/uploadthing";
 import { GlobalFinances } from "./global-finances";
 import { PageHeading, Icon } from "@/components/ui";
 import { useState } from "react";
 import Link from "next/link";
-import { Badge, useData, Panel, Status, Action, Form, Pager, href, date, label, money, type Row, } from "./common";
+import { Badge, useData, Panel, Status, Action, Form, Pager, href, date, label, money, safeUrl, type Row, } from "./common";
 const names: Record<string, string> = {
     summary: "Resumen",
     total: "Total",
@@ -257,13 +259,13 @@ export function Dashboard({ club }: {
           reflejan los registros del período.
         </p>)}
       {(club || section !== "finances") && <Status state={state}>
-        <div className="dashboard-grid">{state.data &&
+        {!club && section==="overview" && state.data ? <GlobalOverview data={state.data} year={year} month={month}/> : <div className="dashboard-grid">{state.data &&
                 allowed
                     .filter((k) => state.data?.[k] !== undefined)
                     .map((k) => (<Panel key={k} title={names[k] || k}>
                 <Facts value={state.data?.[k]}/>
               </Panel>))}
-        </div>{!club && section === "finances" && (<Panel title="Liquidaciones del período">
+        </div>}{!club && section === "finances" && (<Panel title="Liquidaciones del período">
             {state.data?.settlements?.records?.map((r: Row) => (<p key={r.id}>
                 <Link href={href("settlement", { id: r.id })}>
                   {r.club?.name || r.clubName || "Liquidación"} ·{" "}
@@ -284,7 +286,7 @@ export function GlobalClubs() {
             ...(status ? { status } : {}),
         }), v);
     return (<>
-      <PageHeading eyebrow="Administración global" title="Clubes de la plataforma" description="Supervisa tus comunidades y gestiona sus liquidaciones."/>
+      <PageHeading eyebrow="Administración global" title="Clubes de la plataforma" description="Supervisa y administra las comunidades de la plataforma."/>
       <div className="actions">
         <label>
           Buscar
@@ -315,33 +317,10 @@ export function GlobalClubs() {
               </Action>) : (<Action url={`/api/clubs/${c.id}/reactivate`} confirm={`¿Reactivar ${c.name}? Esto no reactiva automáticamente todas las membresías.`} onDone={() => setV(v + 1)}>
                 Reactivar
               </Action>)}
-            <Link href={href("globalPosts", { club: c.id })}>
+            <Link className="btn btn-outline" href={href("globalPosts", { club: c.id })}>
               Publicaciones
             </Link>
-            <details>
-              <summary>Generar liquidación</summary>
-              <Form fields={[
-                {
-                    name: "year",
-                    label: "Año",
-                    type: "number",
-                    required: true,
-                    min: 2000,
-                    max: 2100,
-                },
-                {
-                    name: "month",
-                    label: "Mes",
-                    type: "number",
-                    required: true,
-                    min: 1,
-                    max: 12,
-                },
-            ]} initial={{
-                year: new Date().getFullYear(),
-                month: new Date().getMonth() + 1,
-            }} url="/api/admin/settlements" transform={(d) => ({ ...d, clubId: c.id })} onDone={() => setV(v + 1)} submit="Generar liquidación"/>
-            </details>
+            <div className="actions"><Link className="btn btn-outline" href={href("club",{club:c.id})}>Visitar Club (Admin)</Link><Link className="btn btn-outline" href={href("publicClub",{club:c.id})}>Visitar Club (Visitante)</Link></div>
           </Panel>))}
         <Pager data={state.data} page={page} onPage={setPage}/>
       </Status>
@@ -351,6 +330,7 @@ export function Settlement({ id }: {
     id: string;
 }) {
     const [v, setV] = useState(0);
+    const [uploadError,setUploadError]=useState("");
     const state = useData(`/api/admin/settlements/${id}`, v);
     return (<>
       <PageHeading eyebrow="Administración global" title="Detalle de liquidación" description="Importes y seguimiento de transferencias del club en USD." action={<Link className="btn btn-outline" href={href("admin")}>Volver al panel <Icon name="arrow" size={16}/></Link>}/>
@@ -359,6 +339,7 @@ export function Settlement({ id }: {
             <Panel title={state.data.settlement.club?.name}>
               <div className="metrics-grid">{[["Bruto", state.data.settlement.grossAmount], ["Comisiones", state.data.settlement.totalFees], ["Neto a abonar", state.data.settlement.netAmount]].map(([k, v]) => <dl className="metric-card" key={k}><dt>{k}</dt><dd>{money(v)}</dd></dl>)}</div><p><Badge value={state.data.settlement.status}/> · {state.data.settlement.month}/{state.data.settlement.year}</p><p>Referencia: {state.data.settlement.paymentReference || "Pendiente de registrar"}</p><p>{state.data.settlement.notes}</p>
             </Panel>
+            <Panel title="Comprobante de pago">{safeUrl(state.data.settlement.receiptUrl)&&<a className="btn btn-outline" target="_blank" rel="noreferrer" href={safeUrl(state.data.settlement.receiptUrl)}>Ver comprobante: {state.data.settlement.receiptFileName}</a>}<UploadDropzone endpoint="settlementReceiptUploader" input={{settlementId:id}} config={{mode:"auto"}} content={{label:"Arrastra el comprobante o haz clic para elegir",allowedContent:"Un PDF o imagen · Máximo 8 MB",button:"Subir comprobante"}} onClientUploadComplete={()=>setV(v=>v+1)} onUploadError={e=>setUploadError(e.message)}/>{uploadError&&<p role="alert">{uploadError}</p>}</Panel>
             <p>Registrar el estado no realiza una transferencia bancaria.</p>
             <Form url={`/api/admin/settlements/${id}`} method="PATCH" initial={state.data.settlement} fields={[
                 {
@@ -376,4 +357,10 @@ export function Settlement({ id }: {
           </>)}
       </Status>
     </>);
+}
+
+function GlobalOverview({data:d,year,month}:{data:Row;year:string;month:string}){
+ const finance=useData(`/api/admin/dashboard/finances?year=${year}&month=${Number(month)}`);
+ const statusValues=(v:Row)=>Object.entries(v).map(([key,value])=>({label:names[key]||label(key),value:Number(value)}));
+ return <><div className="charts-grid"><Pie title="Clubes" values={statusValues({active:d.clubs.active,inactive:d.clubs.inactive,suspended:d.clubs.suspended})}/><Pie title="Usuarios" values={statusValues({active:d.users.active,inactive:d.users.inactive,suspended:d.users.suspended})}/><Pie title="Membresías" values={[{label:"Activas",value:d.memberships.active},{label:"No activas",value:Math.max(0,d.memberships.total-d.memberships.active)}]}/><Pie title="Suscripciones" values={statusValues(d.subscriptions.byStatus)}/><Pie title="Reservas" values={statusValues({confirmed:d.reservations.confirmed,cancelled:d.reservations.cancelled})}/><Status state={finance}><Pie title="Finanzas · ingresos por club (USD)" values={(finance.data?.financesByClub||[]).map((c:Row)=>({label:c.clubName,value:Number(c.grossRevenue)}))}/></Status></div><Bars grouped title="Evolución mensual" series={["Nuevos clubes","Nuevos usuarios"]} rows={d.monthlyGrowth.map((r:Row)=>({label:r.label,values:[r.newClubs,r.newUsers]}))}/></>;
 }

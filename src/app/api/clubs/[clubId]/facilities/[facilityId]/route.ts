@@ -24,7 +24,7 @@ export async function GET(
       },
     });
 
-    if (!membership) {
+    if (!membership && user.globalRole !== "SUPER_ADMIN") {
       return NextResponse.json(
         {
           success: false,
@@ -103,7 +103,7 @@ export async function PATCH(
       },
     });
 
-    if (!membership) {
+    if (!membership && user.globalRole !== "SUPER_ADMIN") {
       return NextResponse.json(
         {
           success: false,
@@ -263,7 +263,7 @@ export async function DELETE(
       },
     });
 
-    if (!membership) {
+    if (!membership && user.globalRole !== "SUPER_ADMIN") {
       return NextResponse.json(
         {
           success: false,

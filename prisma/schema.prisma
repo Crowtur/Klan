@@ -455,6 +455,9 @@ model ClubSettlement {
 
   paidAt           DateTime?
   paymentReference String?
+  receiptUrl       String?
+  receiptFileKey   String?
+  receiptFileName  String?
   notes            String?
 
   createdAt DateTime @default(now())

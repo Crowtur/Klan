@@ -1,21 +1,13 @@
 "use client";
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import { api, date, type Row } from "./common";
-export function Notifications() {
-    const [data, setData] = useState<Row>({ notifications: [] }), [open, setOpen] = useState(false), [error, setError] = useState("");
-    const router = useRouter();
-    useEffect(() => { let live = true; const refresh = () => api("/api/me/notifications").then(d => { if (live)
-        setData(d); }).catch(() => { }); void refresh(); const timer = setInterval(refresh, 30000); return () => { live = false; clearInterval(timer); }; }, []);
-    return <div className="notification-box"><button aria-expanded={open} onClick={() => setOpen(!open)}>Notificaciones {data.unread > 0 && <b className="notification-count">{data.unread}</b>}</button>{open && <section className="notification-list" aria-label="Notificaciones"><h3>Tus novedades</h3>{error && <p role="alert">{error}</p>}{!data.notifications.length && <p>Estás al día.</p>}{data.notifications.map((n: Row) => <button key={n.id} className={n.readAt ? "secondary" : "unread"} onClick={async () => { try {
-        await api("/api/me/notifications", "PATCH", { id: n.id });
-        setData(await api("/api/me/notifications"));
-        window.dispatchEvent(new Event("klubo-notifications"));
-        setOpen(false);
-        if (n.targetPath?.startsWith("/app"))
-            router.push(n.targetPath);
-    }
-    catch (e) {
-        setError((e as Error).message);
-    } }}><strong>{n.title}</strong><small>{date(n.createdAt)}</small></button>)}</section>}</div>;
+import {useEffect,useRef,useState} from "react";
+import {useRouter,usePathname,useSearchParams} from "next/navigation";
+import {api,type Row} from "./common";
+import {notificationDestination,notificationTitle,relativeTime} from "@/lib/notification-routing";
+export function Notifications(){
+ const [data,setData]=useState<Row>({notifications:[]}),[open,setOpen]=useState(false),[error,setError]=useState(""),[page,setPage]=useState(1),[,tick]=useState(0);
+ const box=useRef<HTMLDivElement>(null),trigger=useRef<HTMLButtonElement>(null),router=useRouter(),path=usePathname(),query=useSearchParams().toString();
+ useEffect(()=>{setOpen(false)},[path,query]);
+ useEffect(()=>{const outside=(e:PointerEvent)=>{if(!box.current?.contains(e.target as Node))setOpen(false)};const key=(e:KeyboardEvent)=>{if(e.key==="Escape"){setOpen(false);trigger.current?.focus()}};document.addEventListener("pointerdown",outside);document.addEventListener("keydown",key);return()=>{document.removeEventListener("pointerdown",outside);document.removeEventListener("keydown",key)}},[]);
+ useEffect(()=>{let live=true;const refresh=()=>api(`/api/me/notifications?page=${page}`).then(d=>{if(live){setData(d);tick(n=>n+1)}}).catch(()=>{});void refresh();const timer=setInterval(refresh,30000);window.addEventListener("klubo-notifications",refresh);return()=>{live=false;clearInterval(timer);window.removeEventListener("klubo-notifications",refresh)}},[page]);
+ return <div className="notification-box" ref={box}><button className="notification-trigger" ref={trigger} aria-label="Notificaciones" aria-expanded={open} onClick={()=>setOpen(!open)}><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><rect x="3" y="3" width="18" height="13" rx="2"/><path d="M8 21h8M12 16v5"/></svg>{data.unread>0&&<b className="notification-count">{data.unread}</b>}</button>{open&&<section className="notification-list" aria-label="Notificaciones"><h3>Tus novedades</h3>{error&&<p role="alert">{error}</p>}{!data.notifications.length&&<p>Estás al día.</p>}{data.notifications.map((n:Row)=><button key={n.id} className={n.readAt?"notification-item":"notification-item unread"} onClick={async()=>{try{await api("/api/me/notifications","PATCH",{id:n.id});window.dispatchEvent(new Event("klubo-notifications"));setOpen(false);router.push(notificationDestination(n as any).path)}catch(e){setError((e as Error).message)}}}><strong>{notificationTitle(n as any)}</strong>{n.message&&<span>{n.message}</span>}<small>{relativeTime(n.createdAt)}</small></button>)}<div className="notification-pages"><button disabled={page===1} onClick={()=>setPage(p=>p-1)}>Anterior</button><span>{page}</span><button disabled={page*25>=data.total} onClick={()=>setPage(p=>p+1)}>Siguiente</button></div></section>}</div>
 }

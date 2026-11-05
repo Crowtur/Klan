@@ -2,7 +2,7 @@
 import { AvatarUpload } from "./avatar-upload";
 import { Notifications } from "./workspace/notifications";
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { UploadButton } from "@/lib/uploadthing";
 import { Brand, Icon } from "./ui";
@@ -84,9 +84,8 @@ export default function MemberHeader() {
       <div className={s.headerInner}>
       <Brand href={user ? "/app" : "/"}/>
       {user ? (<>
-          <Link className={s.headerLink} href="/app">Inicio</Link>
-          <Link className={s.headerLink} href="/app?view=search">Buscar clubes</Link>
-          <Notifications /><div ref={box} style={{ position: "relative" }}>
+
+          <Suspense fallback={null}><Notifications /></Suspense><div ref={box} style={{ position: "relative" }}>
             <button ref={button} className={s.avatarButton} aria-label="Abrir perfil" aria-expanded={open} aria-controls="profile-panel" onClick={() => setOpen(!open)}>
               <span className="avatar">{user.avatarUrl ? (<img src={user.avatarUrl} alt="Tu foto" width={36} height={36} style={{ borderRadius: "50%", objectFit: "cover" }}/>) : (user.firstName.slice(0, 1) + user.lastName.slice(0, 1))}</span><Icon name="chevron" size={16}/>
             </button>

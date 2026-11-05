@@ -40,7 +40,8 @@ async function verifyClubAdmin(userId: string, clubId: string) {
  * en algún registro de la plataforma.
  */
 async function isFileReferenced(fileKey: string) {
-  const [users, clubs, documents, posts, versions] = await Promise.all([
+  const [receipts, users, clubs, documents, versions, posts] = await Promise.all([
+    prisma.clubSettlement.count({where:{receiptFileKey:fileKey}}),
     prisma.user.count({
       where: { avatarFileKey: fileKey },
     }),
@@ -59,7 +60,7 @@ async function isFileReferenced(fileKey: string) {
     }),
   ]);
 
-  return users + clubs + documents + posts + versions > 0;
+  return users + clubs + documents + posts + versions + receipts > 0;
 }
 
 /**
@@ -121,6 +122,37 @@ async function cleanupFailedUpload(fileKey: string) {
 }
 
 export const ourFileRouter = {
+  postComposerUploader: f({image:{maxFileSize:"4MB",maxFileCount:1}})
+    .input(z.object({clubId:z.string().uuid(),postId:z.string().uuid().optional(),requestKey:z.string().uuid(),title:z.string().max(150),content:z.string().trim().min(1).max(5000)}))
+    .middleware(async({req,input})=>{const user=await getAuthenticatedUser(req);await verifyClubAdmin(user.id,input.clubId);return {...input,userId:user.id};})
+    .onUploadComplete(async({metadata,file})=>{
+      try {
+        await verifyClubAdmin(metadata.userId,metadata.clubId);
+        const club=await prisma.club.findUnique({where:{id:metadata.clubId},select:{status:true}});
+        if(club?.status!=="ACTIVE")throw new UploadThingError("El club no está activo");
+        const previous=metadata.postId?await prisma.post.findFirst({where:{id:metadata.postId,clubId:metadata.clubId}}):null;
+        if(metadata.postId&&!previous)throw new UploadThingError("Publicación no encontrada");
+        const data={title:metadata.title.trim()||null,content:metadata.content,imageUrl:file.ufsUrl,imageFileKey:file.key};
+        const post=metadata.postId?await prisma.post.update({where:{id:metadata.postId,clubId:metadata.clubId},data}):await prisma.post.upsert({where:{id:metadata.requestKey},create:{id:metadata.requestKey,clubId:metadata.clubId,authorId:metadata.userId,...data},update:{}});
+        if(post.clubId!==metadata.clubId||(!metadata.postId&&post.authorId!==metadata.userId))throw new UploadThingError("Identificador de publicación no válido");
+        if(previous)await cleanupOldFile(previous.imageFileKey,file.key);
+        if(post.imageFileKey!==file.key)await cleanupFailedUpload(file.key);
+        return {persisted:true,postId:post.id};
+      }catch(error){await cleanupFailedUpload(file.key);throw error;}
+    }),
+  settlementReceiptUploader: f({pdf:{maxFileSize:"8MB",maxFileCount:1},image:{maxFileSize:"8MB",maxFileCount:1}})
+    .input(z.object({settlementId:z.string().uuid()}))
+    .middleware(async({req,input,files})=>{const user=await getAuthenticatedUser(req);if(user.globalRole!=="SUPER_ADMIN"||files.length!==1)throw new UploadThingError("Carga no autorizada");const settlement=await prisma.clubSettlement.findUnique({where:{id:input.settlementId}});if(!settlement)throw new UploadThingError("Liquidación no encontrada");return {...input,userId:user.id};})
+    .onUploadComplete(async({metadata,file})=>{
+      try{
+        const user=await prisma.user.findUnique({where:{id:metadata.userId}});if(user?.globalRole!=="SUPER_ADMIN"||user.status!=="ACTIVE")throw new UploadThingError("Carga no autorizada");
+        const old=await prisma.clubSettlement.findUniqueOrThrow({where:{id:metadata.settlementId}});
+        const saved=await prisma.clubSettlement.updateMany({where:{id:old.id,receiptFileKey:old.receiptFileKey},data:{receiptUrl:file.ufsUrl,receiptFileKey:file.key,receiptFileName:file.name}});
+        if(saved.count!==1)throw new UploadThingError("El comprobante cambió durante la subida. Actualiza e intenta nuevamente.");
+        await cleanupOldFile(old.receiptFileKey,file.key);return {persisted:true};
+      }catch(error){await cleanupFailedUpload(file.key);throw error;}
+    }),
+
   // 1. Fotografía de perfil
   userAvatarUploader: f({
     image: {

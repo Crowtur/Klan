@@ -11,7 +11,7 @@ export async function GET(req:Request) {
     const [notifications,total,unread,byClub]=await prisma.$transaction([
       prisma.notification.findMany({where,orderBy:[{createdAt:"desc"},{id:"desc"}],skip:(page-1)*25,take:25}),
       prisma.notification.count({where}),prisma.notification.count({where:{...where,readAt:null}}),
-      prisma.notification.groupBy({by:["clubId","type"],orderBy:{clubId:"asc"},where:{...where,readAt:null,resolvedAt:null},_count:true})
+      prisma.notification.groupBy({by:["clubId","type"],orderBy:{clubId:"asc"},where:{...where,readAt:null},_count:true})
     ]);
     return Response.json({success:true,notifications,total,page,unread,byClub});
   }catch(e){return fail(e);}

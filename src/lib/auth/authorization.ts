@@ -23,6 +23,14 @@ export async function requireClubMembership(
   userId: string,
   clubId: string
 ) {
+  const actor=await prisma.user.findUnique({where:{id:userId},select:{globalRole:true,status:true}});
+  if(actor?.globalRole==="SUPER_ADMIN"&&actor.status==="ACTIVE"){
+    const club=await prisma.club.findUnique({where:{id:clubId}});
+    if(!club)throw new Error("FORBIDDEN");
+    const own=await getClubMembership(userId,clubId);
+    // Empty id explicitly represents an administrative context, never a stored membership.
+    return {id:own?.status==="ACTIVE"?own.id:"",userId,clubId,role:ClubRole.CLUB_ADMIN,status:"ACTIVE" as const,joinedAt:own?.joinedAt??club.createdAt,removedAt:null,removedById:null,removalReason:null,club};
+  }
   const membership = await getClubMembership(userId, clubId);
 
   if (!membership) {

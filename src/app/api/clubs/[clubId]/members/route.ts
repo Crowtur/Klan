@@ -20,7 +20,7 @@ export async function GET(
         clubId,
       },
       include: {
-        subscriptions:{where:{status:"ACTIVE",expiresAt:{gt:new Date()}},select:{expiresAt:true,plan:{select:{id:true,name:true}}}},
+        subscriptions:{where:{startedAt:{lte:new Date()},OR:[{status:"ACTIVE",expiresAt:{gt:new Date()}},{status:"PENDING_PAYMENT",gracePeriodEndsAt:{gt:new Date()}}]},select:{expiresAt:true,plan:{select:{id:true,name:true}}}},
         user: {
           select: {
             id: true,

@@ -500,7 +500,7 @@ export async function GET(
       maxMinutesPerDay - usedMinutes
     );
 
-    const canReserve =
+    const canReserve = !!membership.id &&
       (membership.role === "CLUB_ADMIN" || hasActiveSubscription) &&
       hasFacilityAccess &&
       remainingMinutes > 0;

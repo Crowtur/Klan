@@ -1,11 +1,14 @@
 "use client";
+import {Requirements} from "./requirements";
+import {PostComposer} from "./post-composer";
+import {Location} from "./location";
 import { NoticeCount } from "./notice-count";
 import { Activity, Bars } from "./activity";
 import { EditorModal } from "./modal";
-import { Icon } from "@/components/ui";
+import { Icon, PLACEHOLDER_IMAGE } from "@/components/ui";
 import { useState } from "react";
 import Link from "next/link";
-import { UploadButton } from "@/lib/uploadthing";
+import { UploadDropzone } from "@/lib/uploadthing";
 import { Badge, useData, Panel, Status, Form, Action, Empty, Pager, href, label, date, money, safeUrl, clubFields, planFields, requirementFields, postFields, type Row, } from "./common";
 import { Facilities, Reservations } from "./facilities";
 import { Dashboard } from "./dashboard";
@@ -18,7 +21,7 @@ export function Club({ club, tab = "posts", admin, }: {
     const state = useData(`/api/clubs/${club}`, version);
     const base = `/api/clubs/${club}`;
     return (<>
-      {safeUrl(state.data?.club.coverUrl) && <img className="identity-cover" src={safeUrl(state.data?.club.coverUrl)} alt="Portada del club"/>}<div className="club-identity"><span className="avatar">{safeUrl(state.data?.club.logoUrl) ? <img src={safeUrl(state.data?.club.logoUrl)} alt=""/> : <Icon name="users" size={30}/>}</span><div><p className="eyebrow">{admin ? "Administración del club" : "Tu comunidad"}</p><h1>{state.data?.club.name || "Club"}</h1><p>{state.data?.club.description}</p>{state.data?.club.address && <p>{state.data.club.address}</p>}{safeUrl(state.data?.club.googleMapsUrl) && <a className="text-link" href={safeUrl(state.data?.club.googleMapsUrl)} target="_blank" rel="noreferrer">Ver en Google Maps ↗</a>}</div></div>
+      <img className="identity-cover" src={safeUrl(state.data?.club.coverUrl)||PLACEHOLDER_IMAGE} alt="Portada del club"/><div className="club-identity"><span className="avatar">{safeUrl(state.data?.club.logoUrl) ? <img src={safeUrl(state.data?.club.logoUrl)} alt=""/> : <Icon name="users" size={30}/>}</span><div><p className="eyebrow">{admin ? "Administración del club" : "Tu comunidad"}</p><h1>{state.data?.club.name || "Club"}</h1><p>{state.data?.club.description}</p><Location value={state.data?.club.address}/>{safeUrl(state.data?.club.googleMapsUrl) && <a className="text-link" href={safeUrl(state.data?.club.googleMapsUrl)} target="_blank" rel="noreferrer">Ver en Google Maps ↗</a>}</div></div>
       <Status state={state}>
         <nav className="tabs" aria-label="Secciones del club">
           {[
@@ -36,7 +39,7 @@ export function Club({ club, tab = "posts", admin, }: {
                 ]
                 : []),
         ].map(([key, title]) => (<Link key={key} aria-current={tab === key ? "page" : undefined} href={href("club", { club, tab: key })}>
-              {title}{(key === "applications" || key === "reservations") && <NoticeCount club={club} kind={key}/>}
+              {title}{(["applications","reservations","overview","members"].includes(key)) && <NoticeCount club={club} kind={key as "applications" | "reservations" | "overview" | "members"}/>}
             </Link>))}
         </nav>
         {tab === "posts" && <Posts club={club} admin={admin}/>}
@@ -47,14 +50,13 @@ export function Club({ club, tab = "posts", admin, }: {
         {admin && tab === "applications" && <Applications club={club}/>}
         {admin && tab === "payments" && <ClubPayments club={club}/>}
         {admin && tab === "overview" && <Activity club={club}/>}
-        {admin && tab === "settings" && state.data && (<Panel title="Configuración del club">
+        {admin && tab === "settings" && state.data && (<div className="club-settings"><Panel title="Editar perfil del club">
             <Form fields={clubFields} initial={state.data.club} url={base} onDone={() => setVersion(v => v + 1)} method="PATCH"/>
-            <h3>Portada</h3>{state.data.club.coverUrl && <Action url={base} method="PATCH" body={{ clearCover: true }} confirm="¿Quitar la portada?" onDone={() => setVersion(v => v + 1)}>Quitar portada</Action>}<UploadFeedback endpoint="clubCoverUploader" input={{ clubId: club }} onDone={() => setVersion(v => v + 1)}/><h3>Logotipo</h3>{state.data.club.logoUrl && <Action url={base} method="PATCH" body={{ clearLogo: true }} confirm="¿Quitar el logotipo?" onDone={() => setVersion(v => v + 1)}>Quitar logotipo</Action>}
-            <UploadFeedback endpoint="clubLogoUploader" input={{ clubId: club }} onDone={() => setVersion(v => v + 1)}/>
+            <div className="club-image-settings">{(["logo","cover"] as const).map(kind=><section key={kind}>{safeUrl(state.data?.club[kind+"Url"])&&<img className={kind==="logo"?"settings-logo":"settings-cover"} src={safeUrl(state.data?.club[kind+"Url"])} alt={kind==="logo"?"Logotipo actual":"Portada actual"}/>}<UploadFeedback endpoint={kind==="logo"?"clubLogoUploader":"clubCoverUploader"} input={{clubId:club}} onDone={()=>setVersion(v=>v+1)}/><h3>{kind==="logo"?"Logotipo":"Portada"}</h3>{state.data?.club[kind+"Url"]&&<Action url={base} method="PATCH" body={kind==="logo"?{clearLogo:true}:{clearCover:true}} confirm="¿Quitar esta imagen?" onDone={()=>setVersion(v=>v+1)}>Quitar imagen</Action>}</section>)}</div>
             <Action url={`${base}/suspend`} confirm="¿Suspender el club y sus membresías? Se intentará cancelar las suscripciones recurrentes. Solo la administración global puede reactivarlo.">
               Suspender club
             </Action>
-          </Panel>)}
+          </Panel></div>)}
       </Status>
     </>);
 }
@@ -68,7 +70,7 @@ export function UploadFeedback({ endpoint, input, onDone, }: {
 }) {
     const [msg, setMsg] = useState("");
     return (<>
-      <UploadButton endpoint={endpoint} input={input as {
+      <UploadDropzone content={{label:"Arrastra una imagen o haz clic para elegir",allowedContent:"Imagen · Máximo 4 MB",button:"Guardar imagen"}} config={{mode:"auto"}} endpoint={endpoint} input={input as {
             clubId: string;
             postId: string;
         }} onClientUploadComplete={() => {
@@ -83,15 +85,11 @@ export function Posts({ club, admin, canUpload = admin, }: {
     admin: boolean;
     canUpload?: boolean;
 }) {
-    const [created, setCreated] = useState<string | null>(null);
     const [v, setV] = useState(0), [page, setPage] = useState(1);
     const base = `/api/clubs/${club}/posts`;
     const state = useData(`${base}?page=${page}&limit=10`, v);
     return (<>
-      <h2>Publicaciones</h2>
-      {admin && (<EditorModal title="Crear publicación">
-          {created ? <><p>Publicación creada. Añade su imagen.</p><UploadFeedback endpoint="postImageUploader" input={{ clubId: club, postId: created }} onDone={() => setV(v => v + 1)}/><button className="secondary" onClick={() => setCreated(null)}>Crear otra publicación</button></> : <Form fields={postFields} url={base} onDone={d => { setCreated(d.post.id); setV(v => v + 1); }}/>}
-        </EditorModal>)}
+      <div className="list-heading"><h2>Publicaciones</h2>{admin&&<EditorModal title="Crear publicación"><PostComposer club={club} onDone={()=>setV(v=>v+1)}/></EditorModal>}</div>
       <Status state={state}>
         <Empty rows={state.data?.posts || []}/>
         {state.data?.posts.map((p: Row) => (<Panel key={p.id} title={p.title || "Publicación"}>
@@ -99,9 +97,7 @@ export function Posts({ club, admin, canUpload = admin, }: {
             {safeUrl(p.imageUrl) && (<img src={safeUrl(p.imageUrl)} alt={p.title || "Publicación"}/>)}
             <small>{date(p.updatedAt)}</small>
             {admin && (<EditorModal title="Editar publicación e imagen">
-                <Form fields={postFields} initial={p} url={`${base}/${p.id}`} method="PATCH" onDone={() => setV(v + 1)}/>
-                {canUpload && (<UploadFeedback endpoint="postImageUploader" input={{ clubId: club, postId: p.id }} onDone={() => setV(v + 1)}/>)}
-                {p.imageUrl && <Action url={`${base}/${p.id}`} method="PATCH" body={{ removeImage: true }} confirm="¿Quitar la imagen de esta publicación?" onDone={() => setV(v + 1)}>Quitar imagen</Action>}
+                <PostComposer club={club} post={p} onDone={()=>setV(v=>v+1)}/>
                 <Action url={`${base}/${p.id}`} method="DELETE" confirm="¿Eliminar esta publicación definitivamente?" onDone={() => setV(v + 1)}>
                   Eliminar publicación
                 </Action>
@@ -118,13 +114,13 @@ function Plans({ club }: {
     const base = `/api/clubs/${club}/membership-plans`;
     const state = useData(base, v);
     return (<>
-      <h2>Planes de membresía</h2>
+      <div className="list-heading"><h2>Planes de membresía</h2>
       <EditorModal title="Crear plan">
         <Form fields={planFields} initial={{ price: 0, durationValue: 1 }} url={base} onDone={() => setV(v + 1)}/>
-      </EditorModal>
+      </EditorModal></div>
       <Status state={state}>
         <Empty rows={state.data?.plans || []}/>
-        <div className="grid">
+        <div className="grid equal-cards plan-cards">
         {state.data?.plans.map((p: Row) => (<Panel key={p.id} title={p.name}>
             <p>
               {money(p.price)} / {p.durationValue} {label(p.durationUnit)} ·{" "}
@@ -132,7 +128,7 @@ function Plans({ club }: {
             </p>
             <p>{p.description}</p>{Array.isArray(p.benefits) && <ul className="plan-benefits">{p.benefits.map((b: string) => <li key={b}>{b}</li>)}</ul>}
             <EditorModal title="Editar plan">
-              <Form fields={planFields} initial={p} url={`${base}/${p.id}`} method="PATCH" onDone={() => setV(v + 1)}/>
+              <Form key={String(p.updatedAt)+String(p.requiresDocumentation)} fields={planFields} initial={p} url={`${base}/${p.id}`} method="PATCH" onDone={() => setV(v + 1)}/>
             </EditorModal>
             {p.isActive && (<Action url={`${base}/${p.id}`} method="DELETE" confirm="¿Desactivar este plan?" onDone={() => setV(v + 1)}>
                 Desactivar
@@ -140,38 +136,17 @@ function Plans({ club }: {
 
           </Panel>))}
         </div>
-        <section className="requirements-section"><h2>Requisitos documentales</h2><p>Selecciona un plan y administra los documentos necesarios para ingresar.</p>
-        {state.data?.plans.map((p: Row) => <section className="panel" key={p.id}><h3>{p.name}</h3><Requirements base={`${base}/${p.id}/document-requirements`}/></section>)}</section>
+        <Requirements club={club} plans={state.data?.plans||[]} onChanged={()=>setV(v=>v+1)}/>
       </Status>
     </>);
-}
-function Requirements({ base }: {
-    base: string;
-}) {
-    const [v, setV] = useState(0);
-    const state = useData(base, v);
-    return (<section>
-      <Form fields={requirementFields} initial={{ isRequired: true }} url={base} submit="Añadir requisito" onDone={() => setV(v + 1)}/>
-      <Status state={state}>
-        {state.data?.requirements.map((r: Row) => (<Panel key={r.id} title={r.name}>
-            <p>
-              {r.description} · {r.isRequired ? "Obligatorio" : "Opcional"}
-            </p>
-            <Form fields={requirementFields} initial={r} url={`${base}/${r.id}`} method="PATCH" onDone={() => setV(v + 1)}/>
-            <Action url={`${base}/${r.id}`} method="DELETE" confirm="¿Desactivar este requisito?" onDone={() => setV(v + 1)}>
-              Desactivar requisito
-            </Action>
-          </Panel>))}
-      </Status>
-    </section>);
 }
 function Members({club}:{club:string}){
  const [version,setVersion]=useState(0);
  const state=useData(`/api/clubs/${club}/members`,version);
  const members:Row[]=state.data?.members||[];
  const current=(m:Row)=>m.status==="ACTIVE"&&(m.role==="CLUB_ADMIN"||m.plans?.length>0);
- return <><h2>Miembros del club</h2><Status state={state}>{[true,false].map(active=><section key={String(active)}><h3>{active?"Miembros activos":"Historial de miembros"}</h3><div className="grid">{members.filter(m=>Boolean(current(m))===active).map(m=><Panel key={m.membershipId} title={m.user.firstName+" "+m.user.lastName}>
- {safeUrl(m.user.avatarUrl)&&<img className="member-photo" src={safeUrl(m.user.avatarUrl)} alt=""/>}<p>{m.user.email}</p><p>{label(m.role)} · <Badge value={m.status}/></p><p>{m.role==="CLUB_ADMIN"?"Administrador":m.plans?.map((p:Row)=>p.plan.name).join(", ")||"Sin plan vigente"}</p>
+ return <><h2>Miembros del club</h2><Status state={state}>{[true,false].map(active=><section className="member-section" key={String(active)}><h3>{active?"Miembros activos":"Historial de miembros"}</h3><div className="grid equal-cards member-cards">{members.filter(m=>Boolean(current(m))===active).map(m=><Panel key={m.membershipId} title={m.user.firstName+" "+m.user.lastName}>
+ <span className="member-avatar">{safeUrl(m.user.avatarUrl)?<img src={safeUrl(m.user.avatarUrl)} alt=""/>:m.user.firstName.slice(0,1)+m.user.lastName.slice(0,1)}</span><p>{m.user.email}</p><p>{label(m.role)} · <Badge value={m.status}/></p>{m.role!=="CLUB_ADMIN"&&<p>{m.plans?.map((p:Row)=>p.plan.name).join(", ")||"Sin plan vigente"}</p>}
  {active&&m.role==="MEMBER"&&<EditorModal title="Retirar del club"><p>Confirma el retiro de {m.user.firstName}.</p><Form fields={[{name:"reason",label:"Motivo",type:"textarea"}]} url={`/api/clubs/${club}/members/${m.user.id}`} method="DELETE" submit="Confirmar retiro" onDone={()=>setVersion(v=>v+1)}/></EditorModal>}
  </Panel>)}</div>{!members.some(m=>Boolean(current(m))===active)&&<p>No hay miembros en esta sección.</p>}</section>)}</Status></>;
 }
@@ -254,7 +229,7 @@ function ClubPayments({ club }: {
             }
         }}/>
       </label>
-      <Status state={activity}><Bars title="Ingresos diarios (USD)" series={["Pagos confirmados"]} rows={Object.entries(activity.data?.series || {}).map(([label, r]) => ({ label, values: [Object.values((r as Row).incomeCents).reduce((sum: number, v) => sum + Number(v), 0) / 100] }))}/></Status>
+
       <Status state={summary}>
         {summary.data && (<Panel title="Resumen del período">
             <div className="metrics-grid">{[["Ingresos brutos", summary.data.summary.grossAmount], ["Comisiones", summary.data.summary.totalFees], ["Neto del club", summary.data.summary.netAmount]].map(([title, value]) => <dl className="metric-card" key={String(title)}><dt>{title}</dt><dd>{money(value)}</dd></dl>)}</div>
@@ -264,6 +239,7 @@ function ClubPayments({ club }: {
             </small>
           </Panel>)}
       </Status>
+      <Status state={activity}><Bars title="Ingresos diarios (USD)" series={["Pagos confirmados"]} rows={Object.entries(activity.data?.series || {}).map(([label, r]) => ({ label, values: [Object.values((r as Row).incomeCents).reduce((sum: number, v) => sum + Number(v), 0) / 100] }))}/></Status>
       <Status state={state}>
         <Empty rows={state.data?.payments || []}/>
         <div className="grid">

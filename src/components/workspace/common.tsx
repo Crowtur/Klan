@@ -30,9 +30,12 @@ export function useData(url: string | null, version = 0) {
         loading: boolean;
     }>({ data: null, error: "", loading: true });
     const router = useRouter();
+    const previousUrl=useRef<string|null>(null);
     useEffect(() => {
         let live = true;
-        set({ data: null, error: "", loading: true });
+        const sameUrl=previousUrl.current===url;
+        previousUrl.current=url;
+        set(previous=>sameUrl&&previous.data?{...previous,error:"",loading:false}:{data:null,error:"",loading:true});
         if (!url) {
             set({ data: null, error: "", loading: false });
             return;
@@ -63,7 +66,7 @@ export function href(view: string, params: Record<string, string | number> = {})
         }));
 }
 export const labels: Record<string, string> = {
-    FINISHED: "Finalizada", DAY: "Días", ONE_TIME: "Pago único", RECURRING: "Recurrente",
+    RESERVATION_EXPIRED: "Expirada", FINISHED: "Finalizada", DAY: "Días", ONE_TIME: "Pago único", RECURRING: "Recurrente",
     ACTIVE: "Activa",
     INACTIVE: "Inactiva",
     SUSPENDED: "Suspendida",

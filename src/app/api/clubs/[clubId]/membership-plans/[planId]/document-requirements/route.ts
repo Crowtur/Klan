@@ -75,8 +75,10 @@ export async function POST(
       );
     }
 
-    const requirement =
-      await prisma.planDocumentRequirement.create({
+    const requirement = await prisma.$transaction(async tx=>{
+      await tx.membershipPlan.update({where:{id:planId},data:{requiresDocumentation:true}});
+      const created =
+      await tx.planDocumentRequirement.create({
         data: {
           planId,
           name: name.trim(),
@@ -89,6 +91,9 @@ export async function POST(
           isActive: true,
         },
       });
+
+      return created;
+    });
 
     return NextResponse.json(
       {

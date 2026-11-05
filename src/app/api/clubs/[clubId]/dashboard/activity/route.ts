@@ -1,3 +1,4 @@
+import {activeMembershipsAt} from "@/lib/membership-history";
 import {prisma} from "@/lib/prisma";
 import {requireAuth} from "@/lib/auth/auth";
 import {requireClubAdmin} from "@/lib/auth/authorization";
@@ -21,25 +22,29 @@ export async function GET(req:Request,ctx:{params:Promise<{clubId:string}>}) {
     if(unit!=="day"&&unit!=="month")return Response.json({error:"Agrupación inválida"},{status:400});
     const [bounds]=await prisma.$queryRaw<{since:Date;until:Date}[]>`SELECT (${start}::date::timestamp AT TIME ZONE ${club.timeZone}) AS since, ((${end}::date+1)::timestamp AT TIME ZONE ${club.timeZone}) AS until`;
     const range={gte:bounds.since,lt:bounds.until};
-    const [plans,activations,payments,reservations,events,settlements]=await prisma.$transaction([
+    const [plans,activations,payments,reservations,events,settlements,memberHistory]=await prisma.$transaction([
       prisma.membershipPlan.findMany({where:{clubId},select:{id:true,name:true,isActive:true}}),
       prisma.subscription.findMany({where:{plan:{clubId},billingMode:"RECURRING",firstActivatedAt:range},select:{planId:true,firstActivatedAt:true}}),
       prisma.payment.findMany({where:{clubId,status:"PAID",currency:"usd",paidAt:range},select:{amount:true,paidAt:true,subscription:{select:{planId:true}}}}),
       prisma.reservation.findMany({where:{facility:{clubId},startAt:range},select:{startAt:true,status:true,facilityId:true}}),
       prisma.membershipEvent.findMany({where:{clubMembership:{clubId},occurredAt:range},select:{occurredAt:true,type:true}}),
-      prisma.clubSettlement.findMany({where:{clubId},orderBy:[{year:"asc"},{month:"asc"}],select:{year:true,month:true,status:true,netAmount:true}})
+      prisma.clubSettlement.findMany({where:{clubId},orderBy:[{year:"asc"},{month:"asc"}],select:{year:true,month:true,status:true,netAmount:true}}),
+      prisma.clubMembership.findMany({where:{clubId,joinedAt:{lt:bounds.until}},select:{joinedAt:true,removedAt:true,finishedAt:true,status:true,role:true,subscriptions:{select:{startedAt:true,firstActivatedAt:true,expiresAt:true,gracePeriodEndsAt:true,finishedAt:true}},events:{orderBy:{occurredAt:"asc"},select:{occurredAt:true,newStatus:true,previousStatus:true,newRole:true,previousRole:true}}}})
     ]);
     const key=(day:string)=>unit==="month"?day.slice(0,7):day;
-    const series:Record<string,{activations:Record<string,number>;incomeCents:Record<string,number>;reservations:Record<string,number>;members:Record<string,number>}>={};
+    const series:Record<string,{activations:Record<string,number>;incomeCents:Record<string,number>;reservations:Record<string,number>;members:Record<string,number>;activeMembers:number}>={};
     for(let t=Date.parse(start);t<=Date.parse(end);t+=dayMs){
       const k=key(new Date(t).toISOString().slice(0,10));
-      series[k]??={activations:Object.fromEntries(plans.map(p=>[p.id,0])),incomeCents:Object.fromEntries(plans.map(p=>[p.id,0])),reservations:{},members:{}};
+      series[k]??={activations:Object.fromEntries(plans.map(p=>[p.id,0])),incomeCents:Object.fromEntries(plans.map(p=>[p.id,0])),reservations:{},members:{},activeMembers:0};
     }
     for(const s of activations)series[key(local.format(s.firstActivatedAt!))].activations[s.planId]++;
     for(const p of payments)series[key(local.format(p.paidAt!))].incomeCents[p.subscription.planId]+=p.amount.mul(100).toNumber();
     const hour=new Intl.DateTimeFormat("en-GB",{timeZone:club.timeZone,hour:"2-digit",hourCycle:"h23"});
     for(const r of reservations){const bucket=series[key(local.format(r.startAt))].reservations;const k=[r.facilityId,hour.format(r.startAt),r.status].join("/");bucket[k]=(bucket[k]??0)+1;}
     for(const e of events){const bucket=series[key(local.format(e.occurredAt))].members;bucket[e.type]=(bucket[e.type]??0)+1;}
+    const bucketDays=Object.keys(series).map(k=>unit==="day"?k:new Date(Date.UTC(Number(k.slice(0,4)),Number(k.slice(5,7)),0)).toISOString().slice(0,10)).map(day=>day>end?end:day);
+    const cutoffs=await prisma.$queryRaw<{day:string;cutoff:Date}[]>`SELECT day::text AS day, ((day::date+1)::timestamp AT TIME ZONE ${club.timeZone}) AS cutoff FROM unnest(${bucketDays}::text[]) AS day`;
+    const now=new Date();Object.keys(series).forEach((k,i)=>{const cutoff=cutoffs.find(c=>c.day===bucketDays[i])!.cutoff;series[k].activeMembers=activeMembershipsAt(memberHistory,cutoff>now?now:cutoff);});
     const monthlySettlements=[];
     const firstMonth=local.format(club.createdAt).slice(0,7)+"-01";
     const lastMonth=local.format(new Date()).slice(0,7)+"-01";

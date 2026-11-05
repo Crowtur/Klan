@@ -226,3 +226,5 @@
     gap: 8px;
   }
 }
+
+.photoAction{display:flex;align-items:center;gap:12px;width:100%;padding:12px 16px;border:0;background:transparent;color:#334155;font:inherit;text-align:left;cursor:pointer;border-radius:8px}.photoAction:hover{background:#e8f5ed;color:#136336}

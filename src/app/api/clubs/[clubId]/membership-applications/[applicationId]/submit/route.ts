@@ -13,7 +13,7 @@ export async function POST(req:Request,ctx:{params:Promise<{applicationId:string
       await tx.membershipApplication.update({where:{id:app.id,status:app.status},data:{status:"DOCUMENTATION_REVIEW"}});
       const admins=await tx.clubMembership.findMany({where:{clubId,role:"CLUB_ADMIN",status:"ACTIVE"},select:{userId:true}});
       const eventKey="submitted:"+app.id+":"+app.documents.map(d=>d.id+"."+d.version).sort().join(",");
-      await tx.notification.createMany({data:admins.map(m=>({clubId,recipientId:m.userId,type:"DOCUMENTS_SUBMITTED",eventKey,title:"Documentación enviada",entityType:"application",entityId:app.id,targetPath:"/app?view=club&club="+clubId})),skipDuplicates:true});
+      await tx.notification.createMany({data:admins.map(m=>({clubId,recipientId:m.userId,type:"DOCUMENTS_SUBMITTED",eventKey,title:app.documents.length?"Documentación recibida para revisión":"Solicitud recibida para revisión",entityType:"application",entityId:app.id,targetPath:"/app?view=club&club="+clubId})),skipDuplicates:true});
       return Response.json({success:true,status:"DOCUMENTATION_REVIEW"});
     },{isolationLevel:"Serializable"});
   }catch(e){return Response.json({success:false},{status:e instanceof Error&&e.message==="UNAUTHORIZED"?401:500});}

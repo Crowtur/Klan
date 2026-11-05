@@ -42,7 +42,7 @@ export async function PUT(
       },
     });
 
-    if (!membership) {
+    if (!membership && user.globalRole !== "SUPER_ADMIN") {
       return NextResponse.json(
         {
           success: false,
@@ -266,7 +266,7 @@ export async function GET(
       },
     });
 
-    if (!membership) {
+    if (!membership && user.globalRole !== "SUPER_ADMIN") {
       return NextResponse.json(
         {
           success: false,

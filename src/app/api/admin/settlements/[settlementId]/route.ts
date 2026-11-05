@@ -127,7 +127,7 @@ export async function PATCH(
     const currentStatus = settlement.status;
 
     const validTransition =
-      (currentStatus === "PENDING" && status === "PROCESSING") ||
+      (currentStatus === "PENDING" && (status === "PROCESSING" || status === "PAID")) ||
       (currentStatus === "PROCESSING" && status === "PAID");
 
     if (!validTransition) {
@@ -140,7 +140,7 @@ export async function PATCH(
       );
     }
 
-    if (status === "PAID" && !paymentReference) {
+    if (status === "PAID" && (typeof paymentReference!=="string" || !paymentReference.trim())) {
       return NextResponse.json(
         {
           success: false,
@@ -150,8 +150,8 @@ export async function PATCH(
       );
     }
 
-    const updatedSettlement = await prisma.$transaction(async tx=>{const updated=await tx.clubSettlement.update({
-      where: { id: settlementId },
+    const updatedSettlement = await prisma.$transaction(async tx=>{const changed=await tx.clubSettlement.updateMany({
+      where: { id: settlementId, status:currentStatus },
       data: {
         status,
         ...(status === "PAID"
@@ -164,15 +164,9 @@ export async function PATCH(
               notes: notes ?? settlement.notes,
             }),
       },
-      include: {
-        club: {
-          select: {
-            id: true,
-            name: true,
-          },
-        },
-      },
     });
+    if(changed.count!==1)throw new Error("CONFLICT");
+    const updated=await tx.clubSettlement.findUniqueOrThrow({where:{id:settlementId},include:{club:{select:{id:true,name:true}}}});
 
     const admins=await tx.clubMembership.findMany({where:{clubId:updated.clubId,role:"CLUB_ADMIN",status:"ACTIVE"},select:{userId:true}});
     await tx.notification.createMany({data:admins.map(m=>({recipientId:m.userId,clubId:updated.clubId,type:"SETTLEMENT_UPDATED",eventKey:"settlement:"+settlementId+":"+status,entityType:"settlement",entityId:settlementId,title:"Liquidación actualizada",targetPath:"/app?view=club&club="+updated.clubId})),skipDuplicates:true});
@@ -183,6 +177,7 @@ export async function PATCH(
       settlement: updatedSettlement,
     });
   } catch (error) {
+    if(error instanceof Error && error.message==="CONFLICT")return NextResponse.json({success:false,message:"La liquidación cambió. Recarga antes de continuar."},{status:409});
     console.error("Update settlement error:", error);
 
     if (error instanceof Error) {

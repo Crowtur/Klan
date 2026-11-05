@@ -247,6 +247,7 @@ export async function POST(
 
     // 2. Membresía activa y club activo
     const membership = await requireClubMembership(user.id, clubId);
+    if(!membership.id)return NextResponse.json({success:false,message:"La visita administrativa no crea una membresía. Necesitas una membresía propia para reservar."},{status:403});
 
     // 3. Instalación válida y activa
     const facility = await prisma.facility.findFirst({

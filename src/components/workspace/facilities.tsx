@@ -1,4 +1,5 @@
 "use client";
+import {Location} from "./location";
 import { EditorModal } from "./modal";
 import { useState } from "react";
 import Link from "next/link";
@@ -29,19 +30,19 @@ export function Facilities({ club, admin }: {
     const base = `/api/clubs/${club}/facilities`;
     const state = useData(base, v);
     return (<>
-      <h2>Instalaciones</h2>
+      <div className="list-heading"><h2>Instalaciones</h2>
       {admin && (<EditorModal title="Crear instalación">
           <Form fields={facilityFields} url={base} onDone={() => setV(v + 1)}/>
-        </EditorModal>)}
+        </EditorModal>)}</div>
       <Status state={state}>
         <Empty rows={state.data?.facilities || []}/>
         <div className="grid">
         {state.data?.facilities.map((f: Row) => (<Panel key={f.id} title={f.name}>
             <p>{f.description}</p>
             <p>
-              {f.location} · Capacidad: {f.capacity || "—"} · {label(f.status)}
+              <Location value={f.location}/> · Capacidad: {f.capacity || "—"} · {label(f.status)}
             </p>
-            <Link href={href("facility", { club, id: f.id })}>
+            <Link className="btn btn-outline" href={href("facility", { club, id: f.id })}>
               Consultar y reservar
             </Link>
           </Panel>))}
@@ -69,8 +70,8 @@ export function Reservations({ club, facility, admin = false, onChanged, }: {
             <p>
               {date(r.startAt)} — {date(r.endAt)} (Ecuador)
             </p>
-            <p><Badge value={r.status}/></p>{r.clubMembership?.user && <p>Reserva de {r.clubMembership.user.firstName} {r.clubMembership.user.lastName}</p>}
-            {r.status === "CONFIRMED" && (<Action method="PATCH" url={`${base}/facilities/${r.facilityId || facility}/reservations/${r.id}`} confirm="¿Cancelar esta reserva?" onDone={() => { setV(v + 1); onChanged?.(); }}>
+            <p><Badge value={r.status==="CONFIRMED" && Date.parse(r.endAt)<=Date.now()?"RESERVATION_EXPIRED":r.status}/></p>{r.clubMembership?.user && <p>Reserva de {r.clubMembership.user.firstName} {r.clubMembership.user.lastName}</p>}
+            {r.status === "CONFIRMED" && Date.parse(r.endAt)>Date.now() && (<Action method="PATCH" url={`${base}/facilities/${r.facilityId || facility}/reservations/${r.id}`} confirm="¿Cancelar esta reserva?" onDone={() => { setV(v + 1); onChanged?.(); }}>
                 Cancelar reserva
               </Action>)}
           </Panel>))}
@@ -91,15 +92,15 @@ export function Facility({ club, id, admin, }: {
     const identity=useData(`/api/clubs/${club}`);
     const f = state.data?.facility;
     return (<>
-      <Link href={href("club", { club, tab: "facilities" })}>
+      <Link className="btn btn-outline back-button" href={href("club", { club, tab: "facilities" })}>
         Volver al club
       </Link>
       {identity.data?.club&&<div className="club-identity"><span className="avatar">{safeUrl(identity.data.club.logoUrl)&&<img src={safeUrl(identity.data.club.logoUrl)} alt=""/>}</span><div><h2>{identity.data.club.name}</h2><p>{identity.data.club.description}</p></div></div>}
       <h1>{f?.name || "Instalación"}</h1>
       <Status state={state}>
         {f && (<>
-            <p>{f.description}</p>
-            <p>Ubicación: {f.location || "—"}</p>
+            <div className="facility-description"><div><p>{f.description}</p>
+            <Location value={f.location}/></div>
             {admin && (<EditorModal title="Editar instalación">
                 <Form fields={[
                     ...facilityFields,
@@ -115,7 +116,7 @@ export function Facility({ club, id, admin, }: {
                 <Action url={base} method="DELETE" confirm="¿Desactivar esta instalación?" onDone={() => setV(v + 1)}>
                   Desactivar
                 </Action>
-              </EditorModal>)}
+              </EditorModal>)}</div>
           </>)}
       </Status>
       <div className="facility-booking"><Panel title="Horarios">
@@ -160,9 +161,9 @@ export function Facility({ club, id, admin, }: {
         </Status>
       </Panel>
       </div>{admin && (<>
-          <ScheduleEditor key={`s${v}`} base={base} onDone={() => setV(v + 1)}/>
+          <div className="facility-tools"><ScheduleEditor key={`s${v}`} base={base} onDone={() => setV(v + 1)}/>
           <AccessEditor key={`a${v}`} club={club} base={base} onDone={() => setV(v + 1)}/>
-          <Reservations key={v} club={club} facility={id} admin onChanged={() => setV(v + 1)}/>
+          </div><Reservations key={v} club={club} facility={id} admin onChanged={() => setV(v + 1)}/>
         </>)}
       {!admin && <Reservations key={v} club={club} onChanged={() => setV(v + 1)}/>}
     </>);

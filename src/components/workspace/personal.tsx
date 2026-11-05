@@ -1,4 +1,5 @@
 "use client";
+import { Location } from "./location";
 import { CreateClub } from "./create-club";
 import { EditorModal } from "./modal";
 import { Icon, PageHeading, PLACEHOLDER_IMAGE } from "@/components/ui";
@@ -37,7 +38,7 @@ export function Personal({ view, q = "" }: {
         "?" +
         new URLSearchParams({ page: String(page), limit: "10", q: search }), version);
     const [history, setHistory] = useState(false);
-    const allRows: Row[] = state.data?.[key] || [];
+    const allRows: Row[] = (state.data?.[key] || []).map((r:Row)=>view==="subscriptions"?{...r,nextBillingAt:r.status==="ACTIVE"&&r.billingMode!=="ONE_TIME"&&r.plan?.type==="PAID"&&!r.cancelAtPeriodEnd?(r.nextBillingAt||r.expiresAt):null}:r);
     const rows: Row[] = view === "memberships" ? allRows.filter(r => r.status === "ACTIVE" && r.club.status === "ACTIVE") : view === "subscriptions" && !history ? allRows.filter(r => ["ACTIVE", "PENDING_PAYMENT"].includes(r.status)) : allRows;
     async function checkout(row: Row) {
         if (paying)
@@ -77,9 +78,9 @@ export function Personal({ view, q = "" }: {
           </label>
           <button>Buscar</button>
         </form>)}
-      {view === "clubs" && (<EditorModal title="Crear un club">
+      {view === "clubs" && (<div className="section-actions"><EditorModal title="Crear un club">
           <CreateClub />
-        </EditorModal>)}
+        </EditorModal></div>)}
 
       <Status state={state}>
         <Empty rows={rows}/>
@@ -88,7 +89,7 @@ export function Personal({ view, q = "" }: {
             actividad. <Link href={href("search")}>Explora clubes</Link>.
           </p>)}
         <div className={view === "clubs" ? "club-grid" : "personal-grid"}>
-        {rows.map((r: Row) => view === "memberships" ? <Link key={r.id} className="membership-medal" href={href("club", { club: r.club.id })}>{safeUrl(r.club.logoUrl) ? <img src={safeUrl(r.club.logoUrl)} alt=""/> : <Icon name="users" size={48}/>}<h2>{r.club.name}</h2><strong>{label(r.role)}</strong><small>Desde {date(r.joinedAt)}</small></Link> : view === "clubs" ? <ClubCard key={r.id} club={{ ...r, planName: myPlans.data?.subscriptions.filter((s: Row) => s.clubMembership.club.id === r.id && s.status === "ACTIVE").map((s: Row) => s.plan.name).join(", ") }} destination={href("club", { club: r.id })}/> : (<Panel key={r.id} title={r.club?.name ||
+        {rows.map((r: Row) => view === "memberships" ? <Link key={r.id} className="membership-medal" href={href("club", { club: r.club.id })}>{safeUrl(r.club.logoUrl) ? <img src={safeUrl(r.club.logoUrl)} alt=""/> : <span className="medal-placeholder"><Icon name="users" size={48}/></span>}<h2>{r.club.name}</h2><strong>{label(r.role)}</strong><small>Desde {date(r.joinedAt)}</small></Link> : view === "clubs" ? <ClubCard key={r.id} club={{ ...r, planName: myPlans.data?.subscriptions.filter((s: Row) => s.clubMembership.club.id === r.id && s.status === "ACTIVE").map((s: Row) => s.plan.name).join(", ") }} destination={href("club", { club: r.id })}/> : (<Panel key={r.id} title={r.club?.name ||
                 r.clubMembership?.club?.name ||
                 r.name ||
                 r.plan?.club?.name}>
@@ -106,7 +107,7 @@ export function Personal({ view, q = "" }: {
             {r.createdAt && <p>{date(r.createdAt)}</p>}
             {r.joinedAt && <p>Ingreso: {date(r.joinedAt)}</p>}
             {r.billingMode === "ONE_TIME" && <p className="notice">Pase de pago único · {r.plan.durationValue} días</p>}
-            {r.nextBillingAt && <p>Próximo cobro: {date(r.nextBillingAt)} · {money(r.priceSnapshot ?? r.plan.price)}</p>}
+            {r.nextBillingAt && <p>Próximo cobro{r.nextBillingEstimated ? " estimado" : ""}: {date(r.nextBillingAt)} · {money(r.priceSnapshot ?? r.plan.price)}</p>}
             {r.expiresAt && <p>Vencimiento: {date(r.expiresAt)}</p>}
             {r.amount !== undefined && <p>{money(r.amount, r.currency)}</p>}
             <div className="actions">
@@ -136,36 +137,7 @@ export function Personal({ view, q = "" }: {
             {view === "applications" && (<>
                 <div className="step-progress">{["Documentos", "Revisión", "Ingreso"].map((step, i) => <span className={(r.status === "APPROVED" || i === 0 || i === 1 && r.status === "DOCUMENTATION_REVIEW") ? "done" : ""} key={step}>{i + 1}. {step}</span>)}</div>
                 <p>{r.rejectionReason}</p>
-                {["PENDING", "DOCUMENTATION_REVIEW"].includes(r.status) && (<>
-                    <Action url={`/api/clubs/${r.plan.clubId}/membership-applications/${r.id}/submit`} onDone={() => refresh(v => v + 1)}>Enviar a revisión</Action>
-                    <Action url={`/api/clubs/${r.plan.clubId}/membership-applications/${r.id}`} method="PATCH" confirm="¿Cancelar esta solicitud?" onDone={() => refresh((v) => v + 1)}>
-                      Cancelar solicitud
-                    </Action>
-                    <p className="muted">Documentos PDF. El área de carga muestra el tamaño máximo permitido.</p>
-                    {r.plan.requiresDocumentation &&
-                        r.plan.documentRequirements.map((req: Row) => {
-                            const doc = r.documents.find((d: Row) => d.requirementId === req.id);
-                            return (<Panel key={req.id} title={req.name}>
-                            <p>
-                              {req.description}{" "}
-                              {req.isRequired ? "(Obligatorio)" : "(Opcional)"}
-                            </p>
-                            {doc && (<>
-                                <p>
-                                  {label(doc.status)} · {doc.rejectionReason}
-                                </p>
-                                <small>{doc.fileName} · {doc.fileSizeBytes ? Math.ceil(doc.fileSizeBytes / 1024) + " KB" : ""}</small><a className="btn btn-outline" href={safeUrl(doc.fileUrl)} target="_blank" rel="noreferrer">
-                                  Ver documento
-                                </a><Action method="DELETE" url={`/api/clubs/${r.plan.clubId}/membership-applications/${r.id}/documents/${doc.id}`} confirm="¿Retirar este documento?" onDone={() => refresh(v => v + 1)}>Retirar archivo</Action>
-                              </>)}
-                            {(!doc || doc.status === "REJECTED" || doc.status === "PENDING") && (<UploadDropzone endpoint="membershipDocumentUploader" input={{
-                                        clubId: r.plan.clubId,
-                                        applicationId: r.id,
-                                        requirementId: req.id,
-                                    }} onClientUploadComplete={() => refresh((v) => v + 1)} onUploadError={(e) => setMessage(e.message)}/>)}
-                          </Panel>);
-                        })}
-                  </>)}
+                {["PENDING", "DOCUMENTATION_REVIEW"].includes(r.status)&&<><ApplicationDocuments application={r} onDone={()=>refresh(v=>v+1)}/><Action url={`/api/clubs/${r.plan.clubId}/membership-applications/${r.id}`} method="PATCH" confirm="¿Cancelar esta solicitud?" onDone={()=>refresh(v=>v+1)}>Cancelar solicitud</Action></>}
                 {r.status === "APPROVED" && (<Link href={href("subscriptions")}>
                     Consultar suscripción y pago
                   </Link>)}
@@ -184,11 +156,11 @@ export function PublicClub({ club }: {
     const posts = useData(`/api/clubs/${club}/posts?page=${version + 1}&limit=10`);
     const router = useRouter();
     return (<>
-      <div className="public-club"><div className="club-banner"><img src={safeUrl(state.data?.club.coverUrl) || "/brand/klubo-icon.png"} alt=""/></div><div className="club-identity"><span className="avatar">{safeUrl(state.data?.club.logoUrl) ? <img src={safeUrl(state.data?.club.logoUrl)} alt=""/> : <Icon name="users" size={30}/>}</span><div><p className="eyebrow">Encuentra tu comunidad</p><h1>{state.data?.club.name || "Club"}</h1><p>{state.data?.club.description}</p></div></div></div>
+      <div className="public-club"><div className="club-banner"><img src={safeUrl(state.data?.club.coverUrl) || PLACEHOLDER_IMAGE} alt=""/></div><div className="club-identity"><span className="avatar">{safeUrl(state.data?.club.logoUrl) ? <img src={safeUrl(state.data?.club.logoUrl)} alt=""/> : <Icon name="users" size={30}/>}</span><div><p className="eyebrow">Encuentra tu comunidad</p><h1>{state.data?.club.name || "Club"}</h1><p>{state.data?.club.description}</p><Location value={state.data?.club.address}/>{safeUrl(state.data?.club.googleMapsUrl)&&<a href={safeUrl(state.data?.club.googleMapsUrl)} target="_blank" rel="noreferrer">Ver en Google Maps ↗</a>}</div></div></div>
       <Status state={state}>
         <h2>Planes disponibles</h2>
         <Empty rows={state.data?.plans || []}/>
-        <div className="grid">{state.data?.plans.map((p: Row) => (<Panel key={p.id} title={p.name}>
+        <div className="grid equal-cards plan-cards">{state.data?.plans.map((p: Row) => (<Panel key={p.id} title={p.name}>
             <p>{p.description}</p>{Array.isArray(p.benefits) && <ul>{p.benefits.map((b: string) => <li key={b}>{b}</li>)}</ul>}
             <p className="plan-price">{p.type === "FREE" ? "Gratuito" : money(p.price)} <small>/ {p.durationValue} {label(p.durationUnit)}</small></p>
             {p.requiresDocumentation && (<p>
@@ -232,4 +204,13 @@ export function Payment({ id }: {
           </Panel>)}
       </Status>
     </>);
+}
+
+function ApplicationDocuments({application:r,onDone}:{application:Row;onDone:()=>void}){
+ const [error,setError]=useState("");
+ const base=`/api/clubs/${r.plan.clubId}/membership-applications/${r.id}`;
+ const requirements:Row[]=r.plan.requiresDocumentation ? r.plan.documentRequirements||[] : [];
+ const submit=<Action url={`${base}/submit`} onDone={onDone}>Enviar a revisión</Action>;
+ if(!requirements.length)return submit;
+ return <EditorModal title="Administrar documentos"><p>Adjunta los documentos solicitados. PDF · Máximo 8 MB por archivo.</p>{error&&<p role="alert">{error}</p>}{requirements.map(req=>{const doc=r.documents?.find((d:Row)=>d.requirementId===req.id&&!d.deletedAt);return <Panel key={req.id} title={req.name}><p>{req.description} · {req.isRequired?"Obligatorio":"Opcional"}</p>{doc&&<><p><Badge value={doc.status}/> {doc.rejectionReason}</p><small>{doc.fileName} · {doc.fileSizeBytes?Math.ceil(doc.fileSizeBytes/1024)+" KB":""}</small><div className="actions"><a className="btn btn-outline" href={safeUrl(doc.fileUrl)} target="_blank" rel="noreferrer">Ver documento</a>{doc.status!=="APPROVED"&&<Action url={`${base}/documents/${doc.id}`} method="DELETE" confirm="¿Retirar este archivo?" onDone={onDone}>Retirar archivo</Action>}</div></>}{(!doc||["PENDING","REJECTED"].includes(doc.status))&&<UploadDropzone endpoint="membershipDocumentUploader" input={{clubId:r.plan.clubId,applicationId:r.id,requirementId:req.id}} content={{label:"Arrastra tu documento o haz clic para elegir",allowedContent:"PDF · Máximo 8 MB",button:"Subir documento"}} onClientUploadComplete={onDone} onUploadError={e=>setError(e.message)}/>}</Panel>})}{submit}</EditorModal>;
 }

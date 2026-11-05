@@ -23,7 +23,7 @@ export async function GET(request: Request) {
         id: true,
         status: true,
 
-        billingMode:true, firstActivatedAt:true, finishedAt:true, nextBillingAt:true, priceSnapshot:true, obligations:{where:{status:"OPEN"},select:{amount:true,dueAt:true}},
+        cancelAtPeriodEnd:true, billingMode:true, firstActivatedAt:true, finishedAt:true, nextBillingAt:true, priceSnapshot:true, obligations:{where:{status:"OPEN"},select:{amount:true,dueAt:true}},
         startedAt: true,
         expiresAt: true,
         gracePeriodEndsAt: true,
@@ -69,7 +69,7 @@ export async function GET(request: Request) {
     // 3. Devolver las suscripciones.
     return NextResponse.json({
       success: true,
-      subscriptions,
+      subscriptions: subscriptions.map(s=>({...s,nextBillingAt:s.status==="ACTIVE"&&s.billingMode==="RECURRING"&&s.plan.type==="PAID"&&!s.cancelAtPeriodEnd ? (s.nextBillingAt??s.expiresAt):null,nextBillingEstimated:!s.nextBillingAt})),
       activeCount:subscriptions.filter(s=>s.status==="ACTIVE"&&s.billingMode==="RECURRING").length,
       total: subscriptions.length,
     });

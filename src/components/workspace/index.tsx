@@ -16,7 +16,7 @@ export default function Workspace() {
     const q = useSearchParams(), view = q.get("view") || "feed", club = q.get("club") || "", id = q.get("id") || "", tab = q.get("tab") || "posts";
     const user = useData("/api/auth/me"), memberships = useData(`/api/me/memberships?context=${encodeURIComponent(club)}`);
     const member = memberships.data?.memberships.find((m: Row) => m.club.id === club && m.status === "ACTIVE" && m.club.status === "ACTIVE");
-    const admin = member?.role === "CLUB_ADMIN";
+    const admin = member?.role === "CLUB_ADMIN" || user.data?.user.globalRole === "SUPER_ADMIN";
     const global = user.data?.user.globalRole === "SUPER_ADMIN";
     const context = ["club", "facility"].includes(view), globalView = ["admin", "globalClubs", "settlement", "globalPosts"].includes(view);
     return (<div className="workspace-shell">
@@ -26,7 +26,7 @@ export default function Workspace() {
       <main id="main-content" className="workspace">
       <Status state={user}>
         <Status state={memberships}>
-          {context && !member ? (<p className="notice">
+          {context && !member && !global ? (<p className="notice">
               No tienes una membresía habilitada en este club.{" "}
               <Link href={href("publicClub", { club })}>
                 Consultar información pública
@@ -34,7 +34,7 @@ export default function Workspace() {
               .
             </p>) : globalView && !global ? (<p className="error">
               No tienes acceso a la administración global.
-            </p>) : (<div key={view + club + id + tab}>
+            </p>) : (<div key={view + club + id}>
               {[
                 "clubs",
                 "memberships",
