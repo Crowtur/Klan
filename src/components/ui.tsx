@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
-export const PLACEHOLDER_IMAGE = "https://cdn.pixabay.com/photo/2020/09/02/14/07/dogs-5538401_1280.jpg";
+export const PLACEHOLDER_IMAGE = "https://zzfy7uc7kn.ufs.sh/f/6fXj4wSjS1d2UrFvuZOpoDmPWyTvaMHENCVG67fOI8tlwRQr";
 const paths: Record<string, ReactNode> = {
     home: <><path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1Z"/></>,
     search: <><circle cx="10.5" cy="10.5" r="7"/><path d="m16 16 5 5"/></>,

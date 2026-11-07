@@ -1,6 +1,7 @@
 import { createUploadthing, type FileRouter } from "uploadthing/next";
 import { UploadThingError } from "uploadthing/server";
 import { z } from "zod";
+import type { Prisma } from "@prisma/client";
 
 import { prisma } from "@/lib/prisma";
 import { requireAuth } from "@/lib/auth/auth";
@@ -41,20 +42,20 @@ async function verifyClubAdmin(userId: string, clubId: string) {
  */
 async function isFileReferenced(fileKey: string) {
   const [receipts, users, clubs, documents, versions, posts] = await Promise.all([
-    prisma.clubSettlement.count({where:{receiptFileKey:fileKey}}),
+    prisma.clubSettlement.count({ where: { receiptFileKey: fileKey } }),
     prisma.user.count({
       where: { avatarFileKey: fileKey },
     }),
 
     prisma.club.count({
-      where: { OR: [{logoFileKey:fileKey},{coverFileKey:fileKey}] },
+      where: { OR: [{ logoFileKey: fileKey }, { coverFileKey: fileKey }] },
     }),
 
     prisma.membershipDocument.count({
       where: { fileKey },
     }),
 
-    prisma.membershipDocumentVersion.count({where:{fileKey}}),
+    prisma.membershipDocumentVersion.count({ where: { fileKey } }),
     prisma.post.count({
       where: { imageFileKey: fileKey },
     }),
@@ -122,35 +123,35 @@ async function cleanupFailedUpload(fileKey: string) {
 }
 
 export const ourFileRouter = {
-  postComposerUploader: f({image:{maxFileSize:"4MB",maxFileCount:1}})
-    .input(z.object({clubId:z.string().uuid(),postId:z.string().uuid().optional(),requestKey:z.string().uuid(),title:z.string().max(150),content:z.string().trim().min(1).max(5000)}))
-    .middleware(async({req,input})=>{const user=await getAuthenticatedUser(req);await verifyClubAdmin(user.id,input.clubId);return {...input,userId:user.id};})
-    .onUploadComplete(async({metadata,file})=>{
+  postComposerUploader: f({ image: { maxFileSize: "4MB", maxFileCount: 1 } })
+    .input(z.object({ clubId: z.string().uuid(), postId: z.string().uuid().optional(), requestKey: z.string().uuid(), title: z.string().max(150), content: z.string().trim().min(1).max(5000) }))
+    .middleware(async ({ req, input }) => { const user = await getAuthenticatedUser(req); await verifyClubAdmin(user.id, input.clubId); return { ...input, userId: user.id }; })
+    .onUploadComplete(async ({ metadata, file }) => {
       try {
-        await verifyClubAdmin(metadata.userId,metadata.clubId);
-        const club=await prisma.club.findUnique({where:{id:metadata.clubId},select:{status:true}});
-        if(club?.status!=="ACTIVE")throw new UploadThingError("El club no está activo");
-        const previous=metadata.postId?await prisma.post.findFirst({where:{id:metadata.postId,clubId:metadata.clubId}}):null;
-        if(metadata.postId&&!previous)throw new UploadThingError("Publicación no encontrada");
-        const data={title:metadata.title.trim()||null,content:metadata.content,imageUrl:file.ufsUrl,imageFileKey:file.key};
-        const post=metadata.postId?await prisma.post.update({where:{id:metadata.postId,clubId:metadata.clubId},data}):await prisma.post.upsert({where:{id:metadata.requestKey},create:{id:metadata.requestKey,clubId:metadata.clubId,authorId:metadata.userId,...data},update:{}});
-        if(post.clubId!==metadata.clubId||(!metadata.postId&&post.authorId!==metadata.userId))throw new UploadThingError("Identificador de publicación no válido");
-        if(previous)await cleanupOldFile(previous.imageFileKey,file.key);
-        if(post.imageFileKey!==file.key)await cleanupFailedUpload(file.key);
-        return {persisted:true,postId:post.id};
-      }catch(error){await cleanupFailedUpload(file.key);throw error;}
+        await verifyClubAdmin(metadata.userId, metadata.clubId);
+        const club = await prisma.club.findUnique({ where: { id: metadata.clubId }, select: { status: true } });
+        if (club?.status !== "ACTIVE") throw new UploadThingError("El club no está activo");
+        const previous = metadata.postId ? await prisma.post.findFirst({ where: { id: metadata.postId, clubId: metadata.clubId } }) : null;
+        if (metadata.postId && !previous) throw new UploadThingError("Publicación no encontrada");
+        const data = { title: metadata.title.trim() || null, content: metadata.content, imageUrl: file.ufsUrl, imageFileKey: file.key };
+        const post = metadata.postId ? await prisma.post.update({ where: { id: metadata.postId, clubId: metadata.clubId }, data }) : await prisma.post.upsert({ where: { id: metadata.requestKey }, create: { id: metadata.requestKey, clubId: metadata.clubId, authorId: metadata.userId, ...data }, update: {} });
+        if (post.clubId !== metadata.clubId || (!metadata.postId && post.authorId !== metadata.userId)) throw new UploadThingError("Identificador de publicación no válido");
+        if (previous) await cleanupOldFile(previous.imageFileKey, file.key);
+        if (post.imageFileKey !== file.key) await cleanupFailedUpload(file.key);
+        return { persisted: true, postId: post.id };
+      } catch (error) { await cleanupFailedUpload(file.key); throw error; }
     }),
-  settlementReceiptUploader: f({pdf:{maxFileSize:"8MB",maxFileCount:1},image:{maxFileSize:"8MB",maxFileCount:1}})
-    .input(z.object({settlementId:z.string().uuid()}))
-    .middleware(async({req,input,files})=>{const user=await getAuthenticatedUser(req);if(user.globalRole!=="SUPER_ADMIN"||files.length!==1)throw new UploadThingError("Carga no autorizada");const settlement=await prisma.clubSettlement.findUnique({where:{id:input.settlementId}});if(!settlement)throw new UploadThingError("Liquidación no encontrada");return {...input,userId:user.id};})
-    .onUploadComplete(async({metadata,file})=>{
-      try{
-        const user=await prisma.user.findUnique({where:{id:metadata.userId}});if(user?.globalRole!=="SUPER_ADMIN"||user.status!=="ACTIVE")throw new UploadThingError("Carga no autorizada");
-        const old=await prisma.clubSettlement.findUniqueOrThrow({where:{id:metadata.settlementId}});
-        const saved=await prisma.clubSettlement.updateMany({where:{id:old.id,receiptFileKey:old.receiptFileKey},data:{receiptUrl:file.ufsUrl,receiptFileKey:file.key,receiptFileName:file.name}});
-        if(saved.count!==1)throw new UploadThingError("El comprobante cambió durante la subida. Actualiza e intenta nuevamente.");
-        await cleanupOldFile(old.receiptFileKey,file.key);return {persisted:true};
-      }catch(error){await cleanupFailedUpload(file.key);throw error;}
+  settlementReceiptUploader: f({ pdf: { maxFileSize: "8MB", maxFileCount: 1 }, image: { maxFileSize: "8MB", maxFileCount: 1 } })
+    .input(z.object({ settlementId: z.string().uuid() }))
+    .middleware(async ({ req, input, files }) => { const user = await getAuthenticatedUser(req); if (user.globalRole !== "SUPER_ADMIN" || files.length !== 1) throw new UploadThingError("Carga no autorizada"); const settlement = await prisma.clubSettlement.findUnique({ where: { id: input.settlementId } }); if (!settlement) throw new UploadThingError("Liquidación no encontrada"); return { ...input, userId: user.id }; })
+    .onUploadComplete(async ({ metadata, file }) => {
+      try {
+        const user = await prisma.user.findUnique({ where: { id: metadata.userId } }); if (user?.globalRole !== "SUPER_ADMIN" || user.status !== "ACTIVE") throw new UploadThingError("Carga no autorizada");
+        const old = await prisma.clubSettlement.findUniqueOrThrow({ where: { id: metadata.settlementId } });
+        const saved = await prisma.clubSettlement.updateMany({ where: { id: old.id, receiptFileKey: old.receiptFileKey }, data: { receiptUrl: file.ufsUrl, receiptFileKey: file.key, receiptFileName: file.name } });
+        if (saved.count !== 1) throw new UploadThingError("El comprobante cambió durante la subida. Actualiza e intenta nuevamente.");
+        await cleanupOldFile(old.receiptFileKey, file.key); return { persisted: true };
+      } catch (error) { await cleanupFailedUpload(file.key); throw error; }
     }),
 
   // 1. Fotografía de perfil
@@ -418,7 +419,7 @@ export const ourFileRouter = {
         },
         select: {
           id: true,
-          status: true, deletedAt:true,
+          version: true, status: true, deletedAt: true,
         },
       });
 
@@ -437,6 +438,7 @@ export const ourFileRouter = {
         clubId: input.clubId,
         applicationId: input.applicationId,
         requirementId: input.requirementId,
+        expectedVersion: existing?.version ?? 0,
       };
     })
     .onUploadComplete(async ({ metadata, file }) => {
@@ -503,6 +505,13 @@ export const ourFileRouter = {
 
           });
 
+        if (existing && !existing.deletedAt && existing.fileKey === file.key) {
+          return { persisted: true, documentId: existing.id, applicationId: existing.applicationId, requirementId: existing.requirementId };
+        }
+        if (metadata.expectedVersion !== undefined && metadata.expectedVersion !== (existing?.version ?? 0)) {
+          throw new UploadThingError({ code: "BAD_REQUEST", message: "El documento cambió durante la subida. Actualiza la solicitud." });
+        }
+
         // CASO 1: Primera subida.
         if (!existing) {
           const document =
@@ -513,7 +522,7 @@ export const ourFileRouter = {
                 fileUrl: file.ufsUrl,
                 fileKey: file.key,
                 fileName: file.name,
-                mimeType: "application/pdf", fileSizeBytes:file.size,
+                mimeType: "application/pdf", fileSizeBytes: file.size,
                 status: "PENDING",
               },
             });
@@ -538,49 +547,49 @@ export const ourFileRouter = {
 
         // Actualización condicional para evitar que
         // dos reemplazos sobrescriban el mismo documento.
-        await prisma.$transaction(async tx => {
-        const updated =
-          await tx.membershipDocument.updateMany({
-            where: {
-              id: existing.id, version:existing.version,
-              status: existing.status,
-              application: {
-                userId: metadata.userId,
-                status: {
-                  in: ["PENDING", "DOCUMENTATION_REVIEW"],
+        await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
+          const updated =
+            await tx.membershipDocument.updateMany({
+              where: {
+                id: existing.id, version: existing.version,
+                status: existing.status,
+                application: {
+                  userId: metadata.userId,
+                  status: {
+                    in: ["PENDING", "DOCUMENTATION_REVIEW"],
+                  },
+                  plan: {
+                    clubId: metadata.clubId,
+                    requiresDocumentation: true,
+                  },
                 },
-                plan: {
-                  clubId: metadata.clubId,
-                  requiresDocumentation: true,
+                requirement: {
+                  planId: application.planId,
+                  isActive: true,
                 },
               },
-              requirement: {
-                planId: application.planId,
-                isActive: true,
+              data: {
+                version: { increment: 1 }, deletedAt: null, uploadedAt: new Date(), fileUrl: file.ufsUrl,
+                fileKey: file.key,
+                fileName: file.name,
+                mimeType: "application/pdf", fileSizeBytes: file.size,
+                status: "PENDING",
+                rejectionReason: null,
+                reviewedAt: null,
+                reviewedById: null,
               },
-            },
-            data: {
-              version:{increment:1}, deletedAt:null, uploadedAt:new Date(), fileUrl: file.ufsUrl,
-              fileKey: file.key,
-              fileName: file.name,
-              mimeType: "application/pdf", fileSizeBytes:file.size,
-              status: "PENDING",
-              rejectionReason: null,
-              reviewedAt: null,
-              reviewedById: null,
-            },
-          });
+            });
 
-        if (updated.count !== 1) {
-          throw new UploadThingError({
-            code: "BAD_REQUEST",
-            message:
-              "El documento cambió de estado. Actualiza la solicitud antes de intentar nuevamente.",
-          });
-        }
+          if (updated.count !== 1) {
+            throw new UploadThingError({
+              code: "BAD_REQUEST",
+              message:
+                "El documento cambió de estado. Actualiza la solicitud antes de intentar nuevamente.",
+            });
+          }
 
-          const {id,applicationId,requirementId,deletedAt,...snapshot}=existing;
-          await tx.membershipDocumentVersion.create({data:{...snapshot,documentId:id}});
+          const { id, applicationId, requirementId, deletedAt, ...snapshot } = existing;
+          if (!deletedAt) await tx.membershipDocumentVersion.create({ data: { ...snapshot, documentId: id } });
         });
         return {
           persisted: true,

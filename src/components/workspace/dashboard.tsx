@@ -171,7 +171,7 @@ function Facts({ value, depth = 0 }: {
     const entries = Object.entries(value).filter(([k]) => !hidden.test(k));
     const simple = entries.filter(([, v]) => v === null || typeof v !== "object");
     const nested = entries.filter(([, v]) => v !== null && typeof v === "object");
-    return <><div className="facts-grid">{simple.map(([k, v]) => <dl className="fact" key={k}><dt>{names[k] || label(k).replace(/([a-z])([A-Z])/g, "$1 $2")}</dt><dd>{k === "status" ? <Badge value={v}/> : scalar(v, k)}</dd></dl>)}</div>{nested.map(([k, v]) => <section className="facts-section" key={k}><h3>{names[k] || label(k)}</h3><Facts value={v} depth={depth + 1}/></section>)}</>;
+    return <><div className="facts-grid">{simple.map(([k, v]) => <dl className="fact" key={k}><dt>{names[k] || label(k).replace(/([a-z])([A-Z])/g, "$1 $2")}</dt><dd className={typeof v==="number" || typeof v==="string" && monetary.test(k) ? "numeric":undefined}>{k === "status" ? <Badge value={v}/> : scalar(v, k)}</dd></dl>)}</div>{nested.map(([k, v]) => <section className="facts-section" key={k}><h3>{names[k] || label(k)}</h3><Facts value={v} depth={depth + 1}/></section>)}</>;
 }
 export function Dashboard({ club }: {
     club?: string;
@@ -312,15 +312,12 @@ export function GlobalClubs() {
         {state.data?.clubs.map((c: Row) => (<Panel key={c.id} title={c.name}>
             <p><Badge value={c.status}/></p>
             <Facts value={c.statistics}/>
-            {c.status === "ACTIVE" ? (<Action url={`/api/clubs/${c.id}/suspend`} confirm={`¿Suspender ${c.name} y sus membresías?`} onDone={() => setV(v + 1)}>
+            <div className="global-club-actions">{c.status === "ACTIVE" ? (<Action url={`/api/clubs/${c.id}/suspend`} confirm={`¿Suspender ${c.name} y sus membresías?`} onDone={() => setV(v + 1)}>
                 Suspender
               </Action>) : (<Action url={`/api/clubs/${c.id}/reactivate`} confirm={`¿Reactivar ${c.name}? Esto no reactiva automáticamente todas las membresías.`} onDone={() => setV(v + 1)}>
                 Reactivar
               </Action>)}
-            <Link className="btn btn-outline" href={href("globalPosts", { club: c.id })}>
-              Publicaciones
-            </Link>
-            <div className="actions"><Link className="btn btn-outline" href={href("club",{club:c.id})}>Visitar Club (Admin)</Link><Link className="btn btn-outline" href={href("publicClub",{club:c.id})}>Visitar Club (Visitante)</Link></div>
+<Link className="btn btn-outline" href={href("club",{club:c.id})}>Visitar Club (Admin)</Link><Link className="btn btn-outline" href={href("publicClub",{club:c.id})}>Visitar Club (Visitante)</Link></div>
           </Panel>))}
         <Pager data={state.data} page={page} onPage={setPage}/>
       </Status>
@@ -362,5 +359,5 @@ export function Settlement({ id }: {
 function GlobalOverview({data:d,year,month}:{data:Row;year:string;month:string}){
  const finance=useData(`/api/admin/dashboard/finances?year=${year}&month=${Number(month)}`);
  const statusValues=(v:Row)=>Object.entries(v).map(([key,value])=>({label:names[key]||label(key),value:Number(value)}));
- return <><div className="charts-grid"><Pie title="Clubes" values={statusValues({active:d.clubs.active,inactive:d.clubs.inactive,suspended:d.clubs.suspended})}/><Pie title="Usuarios" values={statusValues({active:d.users.active,inactive:d.users.inactive,suspended:d.users.suspended})}/><Pie title="Membresías" values={[{label:"Activas",value:d.memberships.active},{label:"No activas",value:Math.max(0,d.memberships.total-d.memberships.active)}]}/><Pie title="Suscripciones" values={statusValues(d.subscriptions.byStatus)}/><Pie title="Reservas" values={statusValues({confirmed:d.reservations.confirmed,cancelled:d.reservations.cancelled})}/><Status state={finance}><Pie title="Finanzas · ingresos por club (USD)" values={(finance.data?.financesByClub||[]).map((c:Row)=>({label:c.clubName,value:Number(c.grossRevenue)}))}/></Status></div><Bars grouped title="Evolución mensual" series={["Nuevos clubes","Nuevos usuarios"]} rows={d.monthlyGrowth.map((r:Row)=>({label:r.label,values:[r.newClubs,r.newUsers]}))}/></>;
+ return <><div className="charts-grid"><Pie title="Clubes" values={statusValues({active:d.clubs.active,inactive:d.clubs.inactive,suspended:d.clubs.suspended})}/><Pie title="Usuarios" values={statusValues({active:d.users.active,inactive:d.users.inactive,suspended:d.users.suspended})}/><Pie title="Membresías" values={[{label:"Activas",value:d.memberships.active},{label:"No activas",value:Math.max(0,d.memberships.total-d.memberships.active)}]}/><Pie title="Suscripciones" values={statusValues(d.subscriptions.byStatus)}/><Pie title="Reservas" values={statusValues({confirmed:d.reservations.confirmed,cancelled:d.reservations.cancelled})}/><Status state={finance}><Pie title="Finanzas · ingresos por club (USD)" values={(finance.data?.financesByClub||[]).map((c:Row)=>({label:c.clubName,value:Number(c.grossRevenue)}))}/></Status></div><Bars grouped title="Evolución mensual" yAxis="Altas" xAxis="Meses" calendar="month" series={["Nuevos clubes","Nuevos usuarios"]} rows={d.monthlyGrowth.map((r:Row)=>({label:r.year+"-"+String(r.month).padStart(2,"0"),values:[r.newClubs,r.newUsers]}))}/></>;
 }

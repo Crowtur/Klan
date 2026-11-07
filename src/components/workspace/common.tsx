@@ -296,7 +296,7 @@ export const facilityFields: Field[] = [
     { name: "capacity", label: "Capacidad", type: "number", min: 1 },
 ];
 export const planFields: Field[] = [
-    { name: "benefits", label: "Beneficios (uno por línea)", type: "textarea" },
+    { name: "benefits", label: "Ingresa cada beneficio en una nueva línea (se mostrarán automáticamente con un check ✓ en la tarjeta)", type: "textarea" },
     { name: "name", label: "Nombre", required: true, max: 50 },
     { name: "description", label: "Descripción", type: "textarea" },
     {

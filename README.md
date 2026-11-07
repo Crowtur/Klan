@@ -1,3 +1,25 @@
+# Klubo Parte 3
+
+## Actualizar desde la Parte 2
+
+Usa la configuración de PostgreSQL, autenticación, Stripe y UploadThing de tu instalación anterior. Desde la carpeta del proyecto, ejecuta:
+
+```bash
+npm ci
+npx prisma generate
+npx prisma migrate deploy
+npm run build
+npm start
+```
+
+La migración `20261105000100_queue_document_withdrawals` registra las eliminaciones pendientes de archivos. La retirada se intenta al confirmar la operación y el proceso programado existente `POST /api/cron/expired-plans` reintenta los fallos. Debe ejecutarse periódicamente con la cabecera `Authorization: Bearer <CRON_SECRET>`.
+
+Para desarrollo usa `npm run dev`. Para ejecutar las pruebas aisladas desde la raíz:
+
+```bash
+node --import tsx --test scripts/*.cjs scripts/test-plan-charts.tsx
+```
+
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
 ## Getting Started

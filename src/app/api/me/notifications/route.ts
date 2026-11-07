@@ -20,6 +20,20 @@ export async function PATCH(req:Request) {
   try {
     const user=await requireAuth(req);
     const body=await req.json().catch(()=>null);
+    if (body && typeof body.clubId === "string" && typeof body.tab === "string") {
+      const sections = {
+        applications: ["APPLICATION_SUBMITTED","DOCUMENTS_SUBMITTED"],
+        reservations: ["RESERVATION_CREATED","RESERVATION_CANCELLED"],
+        overview: ["SETTLEMENT_UPDATED"]
+      } as const;
+      if (!Object.hasOwn(sections, body.tab)) return Response.json({success:false},{status:400});
+      const types = sections[body.tab as keyof typeof sections];
+      const result = await prisma.notification.updateMany({
+        where:{recipientId:user.id, clubId:body.clubId, readAt:null, type:{in:[...types]}},
+        data:{readAt:new Date()}
+      });
+      return Response.json({success:true,updated:result.count});
+    }
     if(typeof body?.id!=="string")return Response.json({success:false},{status:400});
     const result=await prisma.notification.updateMany({where:{id:body.id,recipientId:user.id,readAt:null},data:{readAt:new Date()}});
     return Response.json({success:true,updated:result.count});

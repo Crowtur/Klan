@@ -139,6 +139,17 @@ export async function GET(
       );
     }
 
+    // The feed only needs one suggestion when the member has no booking history.
+    if (new URL(request.url).searchParams.get("summary") === "popular") {
+      const ranked = await prisma.reservation.groupBy({
+        by: ["facilityId"], where: {facility:{clubId},status:"CONFIRMED"},
+        _count:{facilityId:true}, orderBy:[{_count:{facilityId:"desc"}},{facilityId:"asc"}], take:1
+      });
+      const suggestion = await prisma.facility.findFirst({
+        where:{clubId, ...(ranked.length > 0 && {id:ranked[0].facilityId})}, orderBy:[{createdAt:"asc"},{id:"asc"}]
+      });
+      return NextResponse.json({success:true,facilities:suggestion?[suggestion]:[]});
+    }
     const facilities = await prisma.facility.findMany({
       where: {
         clubId,

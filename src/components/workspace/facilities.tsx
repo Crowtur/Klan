@@ -36,11 +36,11 @@ export function Facilities({ club, admin }: {
         </EditorModal>)}</div>
       <Status state={state}>
         <Empty rows={state.data?.facilities || []}/>
-        <div className="grid">
+        <div className="bounded-cards">
         {state.data?.facilities.map((f: Row) => (<Panel key={f.id} title={f.name}>
             <p>{f.description}</p>
             <p>
-              <Location value={f.location}/> · Capacidad: {f.capacity || "—"} · {label(f.status)}
+              <Location value={f.location}/></p><p>Capacidad: {f.capacity ?? "—"}</p><p>Estado: {label(f.status)}
             </p>
             <Link className="btn btn-outline" href={href("facility", { club, id: f.id })}>
               Consultar y reservar

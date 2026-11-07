@@ -683,3 +683,10 @@ model StripeWebhookEvent {
 
   @@index([status, receivedAt])
 }
+
+// Durable retries when storage is temporarily unavailable after a withdrawal.
+model PendingFileDeletion {
+  fileKey String @id
+  queuedAt DateTime @default(now())
+  @@index([queuedAt])
+}

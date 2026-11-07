@@ -1,3 +1,4 @@
+import { removeQueuedFile } from "@/lib/document-cleanup";
 
 import { prisma } from "@/lib/prisma";
 import { requireAuth } from "@/lib/auth/auth";
@@ -124,7 +125,9 @@ export async function PATCH(
     // Actualización condicional para evitar
     // que dos administradores revisen el mismo
     // documento simultáneamente.
-    const updated = await prisma.$transaction(async tx=>{const result=await tx.membershipDocument.updateMany({
+    const updated = await prisma.$transaction(async tx=>{
+      await tx.$queryRaw`SELECT "id" FROM "MembershipApplication" WHERE "id" = ${applicationId} FOR UPDATE`;
+      const result=await tx.membershipDocument.updateMany({
       where: {
         id: documentId,
         applicationId,
@@ -153,6 +156,14 @@ export async function PATCH(
     });
 
     if(result.count)await tx.notification.create({data:{recipientId:document.application.userId,clubId,entityType:"document",entityId:documentId,eventKey:"review:"+documentId+":"+document.version,type:status==="APPROVED"?"DOCUMENT_APPROVED":"DOCUMENT_REJECTED",title:status==="APPROVED"?"Documento aprobado":"Documento rechazado",targetPath:"/app?view=applications"}});
+    if (result.count && (status === "REJECTED" || await tx.membershipDocument.count({
+      where: {applicationId, deletedAt:null, status:"REJECTED"}
+    }))) {
+      await tx.membershipApplication.updateMany({
+        where: {id:applicationId, status:"DOCUMENTATION_REVIEW", documents:{none:{deletedAt:null,status:"PENDING"}}},
+        data: {status:"PENDING"}
+      });
+    }
     return result;});
     if (updated.count !== 1) {
       return NextResponse.json(
@@ -219,11 +230,37 @@ export async function PATCH(
   }
 }
 
-export async function DELETE(request:Request,context:RouteContext){
-  try{
-    const user=await requireAuth(request);
-    const {clubId,documentId,applicationId}=await context.params;
-    const result=await prisma.membershipDocument.updateMany({where:{id:documentId,applicationId,deletedAt:null,application:{userId:user.id,plan:{clubId},status:{in:["PENDING","DOCUMENTATION_REVIEW"]}}},data:{deletedAt:new Date()}});
-    return NextResponse.json({success:result.count===1},{status:result.count?200:404});
-  }catch(e){return NextResponse.json({success:false},{status:e instanceof Error&&e.message==="UNAUTHORIZED"?401:500});}
+export async function DELETE(request:Request, context:RouteContext) {
+  try {
+    const user = await requireAuth(request);
+    const {clubId, documentId, applicationId} = await context.params;
+    const version = new URL(request.url).searchParams.get("version");
+    const withdrawn = await prisma.$transaction(async tx => {
+      await tx.$queryRaw`SELECT "id" FROM "MembershipApplication" WHERE "id" = ${applicationId} FOR UPDATE`;
+      const doc = await tx.membershipDocument.findFirst({
+        where: {id:documentId, applicationId, application:{userId:user.id, plan:{clubId},status:{in:["PENDING","DOCUMENTATION_REVIEW"]}}}
+      });
+      if (!doc) return {status:404, fileKey:null};
+      if (doc.deletedAt) return {status:200,fileKey:null};
+      if (doc.status==="APPROVED" || version!==null && Number(version)!==doc.version) return {status:409,fileKey:null};
+      const updated = await tx.membershipDocument.updateMany({
+        where: {id:doc.id,version:doc.version,deletedAt:null,status:doc.status},
+        data: {deletedAt:new Date(),version:{increment:1},fileKey:null,fileUrl:""}
+      });
+      if (!updated.count) return {status:409,fileKey:null};
+      if (doc.fileKey) await tx.pendingFileDeletion.upsert({
+        where: {fileKey:doc.fileKey}, create:{fileKey:doc.fileKey}, update:{}
+      });
+      await tx.membershipApplication.updateMany({
+        where:{id:applicationId,status:"DOCUMENTATION_REVIEW",documents:{none:{deletedAt:null,status:"PENDING"}}},
+        data:{status:"PENDING"}
+      });
+      return {status:200,fileKey:doc.fileKey};
+    });
+    if (withdrawn.status!==200) return NextResponse.json({success:false,message:"El documento cambió o ya no está disponible."},{status:withdrawn.status});
+    const removed = !withdrawn.fileKey || await removeQueuedFile(withdrawn.fileKey);
+    return NextResponse.json({success:true,message:removed?"Archivo retirado.":"Archivo retirado. La eliminación en el almacenamiento está pendiente de reintento."});
+  } catch(error) {
+    return NextResponse.json({success:false},{status:error instanceof Error && error.message==="UNAUTHORIZED"?401:500});
+  }
 }

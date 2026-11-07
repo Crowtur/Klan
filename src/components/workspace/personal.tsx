@@ -1,4 +1,5 @@
 "use client";
+import {PlanCard} from "./plan-card";
 import { Location } from "./location";
 import { CreateClub } from "./create-club";
 import { EditorModal } from "./modal";
@@ -40,6 +41,8 @@ export function Personal({ view, q = "" }: {
     const [history, setHistory] = useState(false);
     const allRows: Row[] = (state.data?.[key] || []).map((r:Row)=>view==="subscriptions"?{...r,nextBillingAt:r.status==="ACTIVE"&&r.billingMode!=="ONE_TIME"&&r.plan?.type==="PAID"&&!r.cancelAtPeriodEnd?(r.nextBillingAt||r.expiresAt):null}:r);
     const rows: Row[] = view === "memberships" ? allRows.filter(r => r.status === "ACTIVE" && r.club.status === "ACTIVE") : view === "subscriptions" && !history ? allRows.filter(r => ["ACTIVE", "PENDING_PAYMENT"].includes(r.status)) : allRows;
+    const nextCharge = allRows.filter(row => row.nextBillingAt)
+        .sort((a, b) => Date.parse(a.nextBillingAt) - Date.parse(b.nextBillingAt))[0];
     async function checkout(row: Row) {
         if (paying)
             return;
@@ -65,7 +68,7 @@ export function Personal({ view, q = "" }: {
     }
     return (<>
       <PageHeading eyebrow="Tu espacio personal" title={title} description={{ clubs: "Un espacio para cada una de tus comunidades.", memberships: "Tu participación y tu historia en cada club.", subscriptions: "Tus planes, fechas de vigencia y renovaciones.", payments: "Revisa tus movimientos y el estado de cada pago.", applications: "Sigue tus solicitudes de ingreso y completa tus documentos." }[view] || "Todas tus novedades, en un solo lugar."}/>
-      {view === "subscriptions" && <><div className="metrics-grid">{[["Suscripciones activas", allRows.filter(r => r.status === "ACTIVE" && r.billingMode !== "ONE_TIME").length], ["Pendiente", money(allRows.reduce((sum, r) => sum + (r.obligations || []).reduce((s: number, o: Row) => s + Number(o.amount), 0), 0))], ["Próximo cobro", date(allRows.filter(r => r.nextBillingAt).sort((a, b) => Date.parse(a.nextBillingAt) - Date.parse(b.nextBillingAt))[0]?.nextBillingAt)]].map(([k, v]) => <dl className="metric-card" key={String(k)}><dt>{k}</dt><dd>{v}</dd></dl>)}</div><label><input type="checkbox" checked={history} onChange={e => setHistory(e.target.checked)}/> Mostrar historial de suscripciones y pases</label></>}
+      {view === "subscriptions" && <><div className="metrics-grid">{[["Suscripciones activas", allRows.filter(r => r.status === "ACTIVE" && r.billingMode !== "ONE_TIME").length], ["Pendiente", money(allRows.reduce((sum, r) => sum + (r.obligations || []).reduce((s: number, o: Row) => s + Number(o.amount), 0), 0))], ["Próximo cobro", nextCharge ? money(nextCharge.priceSnapshot ?? nextCharge.plan.price) : "—"]].map(([k, v]) => <dl className="metric-card" key={String(k)}><dt>{k}</dt><dd>{v}{k==="Próximo cobro" && nextCharge && <small>{new Date(nextCharge.nextBillingAt).toLocaleDateString("es-EC",{timeZone:"America/Guayaquil",dateStyle:"long"})}</small>}</dd></dl>)}</div><label><input type="checkbox" checked={history} onChange={e => setHistory(e.target.checked)}/> Mostrar historial de suscripciones y pases</label></>}
       {message && <p role="alert">{message}</p>}
       {view === "search" && (<form className="actions" onSubmit={(e) => {
                 e.preventDefault();
@@ -88,7 +91,7 @@ export function Personal({ view, q = "" }: {
             Las publicaciones aparecerán cuando pertenezcas a un club con
             actividad. <Link href={href("search")}>Explora clubes</Link>.
           </p>)}
-        <div className={view === "clubs" ? "club-grid" : "personal-grid"}>
+        <div className={view === "clubs" ? "club-grid" : view === "memberships" ? "bounded-cards" : "personal-grid"}>
         {rows.map((r: Row) => view === "memberships" ? <Link key={r.id} className="membership-medal" href={href("club", { club: r.club.id })}>{safeUrl(r.club.logoUrl) ? <img src={safeUrl(r.club.logoUrl)} alt=""/> : <span className="medal-placeholder"><Icon name="users" size={48}/></span>}<h2>{r.club.name}</h2><strong>{label(r.role)}</strong><small>Desde {date(r.joinedAt)}</small></Link> : view === "clubs" ? <ClubCard key={r.id} club={{ ...r, planName: myPlans.data?.subscriptions.filter((s: Row) => s.clubMembership.club.id === r.id && s.status === "ACTIVE").map((s: Row) => s.plan.name).join(", ") }} destination={href("club", { club: r.id })}/> : (<Panel key={r.id} title={r.club?.name ||
                 r.clubMembership?.club?.name ||
                 r.name ||
@@ -138,7 +141,7 @@ export function Personal({ view, q = "" }: {
                 <div className="step-progress">{["Documentos", "Revisión", "Ingreso"].map((step, i) => <span className={(r.status === "APPROVED" || i === 0 || i === 1 && r.status === "DOCUMENTATION_REVIEW") ? "done" : ""} key={step}>{i + 1}. {step}</span>)}</div>
                 <p>{r.rejectionReason}</p>
                 {["PENDING", "DOCUMENTATION_REVIEW"].includes(r.status)&&<><ApplicationDocuments application={r} onDone={()=>refresh(v=>v+1)}/><Action url={`/api/clubs/${r.plan.clubId}/membership-applications/${r.id}`} method="PATCH" confirm="¿Cancelar esta solicitud?" onDone={()=>refresh(v=>v+1)}>Cancelar solicitud</Action></>}
-                {r.status === "APPROVED" && (<Link href={href("subscriptions")}>
+                {r.status === "APPROVED" && (<Link className="btn btn-outline" href={href("subscriptions")}>
                     Consultar suscripción y pago
                   </Link>)}
               </>)}
@@ -160,17 +163,11 @@ export function PublicClub({ club }: {
       <Status state={state}>
         <h2>Planes disponibles</h2>
         <Empty rows={state.data?.plans || []}/>
-        <div className="grid equal-cards plan-cards">{state.data?.plans.map((p: Row) => (<Panel key={p.id} title={p.name}>
-            <p>{p.description}</p>{Array.isArray(p.benefits) && <ul>{p.benefits.map((b: string) => <li key={b}>{b}</li>)}</ul>}
-            <p className="plan-price">{p.type === "FREE" ? "Gratuito" : money(p.price)} <small>/ {p.durationValue} {label(p.durationUnit)}</small></p>
-            {p.requiresDocumentation && (<p>
-                Requiere documentos:{" "}
-                {p.documentRequirements.map((r: Row) => r.name).join(", ")}
-              </p>)}
+        <div className="bounded-cards">{state.data?.plans.map((p: Row) => (<PlanCard key={p.id} plan={p} showRequirements>
             <Action url={`/api/clubs/${club}/membership-applications`} body={{ planId: p.id }} onDone={() => router.push(href("applications"))}>
               Solicitar ingreso
             </Action>
-          </Panel>))}</div>
+          </PlanCard>))}</div>
       </Status>
       <h2 style={{ marginTop: 36 }}>Publicaciones</h2>
       <Status state={posts}>
@@ -212,5 +209,5 @@ function ApplicationDocuments({application:r,onDone}:{application:Row;onDone:()=
  const requirements:Row[]=r.plan.requiresDocumentation ? r.plan.documentRequirements||[] : [];
  const submit=<Action url={`${base}/submit`} onDone={onDone}>Enviar a revisión</Action>;
  if(!requirements.length)return submit;
- return <EditorModal title="Administrar documentos"><p>Adjunta los documentos solicitados. PDF · Máximo 8 MB por archivo.</p>{error&&<p role="alert">{error}</p>}{requirements.map(req=>{const doc=r.documents?.find((d:Row)=>d.requirementId===req.id&&!d.deletedAt);return <Panel key={req.id} title={req.name}><p>{req.description} · {req.isRequired?"Obligatorio":"Opcional"}</p>{doc&&<><p><Badge value={doc.status}/> {doc.rejectionReason}</p><small>{doc.fileName} · {doc.fileSizeBytes?Math.ceil(doc.fileSizeBytes/1024)+" KB":""}</small><div className="actions"><a className="btn btn-outline" href={safeUrl(doc.fileUrl)} target="_blank" rel="noreferrer">Ver documento</a>{doc.status!=="APPROVED"&&<Action url={`${base}/documents/${doc.id}`} method="DELETE" confirm="¿Retirar este archivo?" onDone={onDone}>Retirar archivo</Action>}</div></>}{(!doc||["PENDING","REJECTED"].includes(doc.status))&&<UploadDropzone endpoint="membershipDocumentUploader" input={{clubId:r.plan.clubId,applicationId:r.id,requirementId:req.id}} content={{label:"Arrastra tu documento o haz clic para elegir",allowedContent:"PDF · Máximo 8 MB",button:"Subir documento"}} onClientUploadComplete={onDone} onUploadError={e=>setError(e.message)}/>}</Panel>})}{submit}</EditorModal>;
+ return <EditorModal title="Administrar documentos"><p>Adjunta los documentos solicitados. PDF · Máximo 8 MB por archivo.</p>{error&&<p role="alert">{error}</p>}{requirements.map(req=>{const doc=r.documents?.find((d:Row)=>d.requirementId===req.id&&!d.deletedAt);return <Panel key={req.id} title={req.name}><p>{req.description} · {req.isRequired?"Obligatorio":"Opcional"}</p>{doc&&<><p><Badge value={doc.status}/> {doc.rejectionReason}</p><small>{doc.fileName} · {doc.fileSizeBytes?Math.ceil(doc.fileSizeBytes/1024)+" KB":""}</small><div className="actions"><a className="btn btn-outline" href={safeUrl(doc.fileUrl)} target="_blank" rel="noreferrer">Ver documento</a>{doc.status!=="APPROVED"&&<Action url={`${base}/documents/${doc.id}?version=${doc.version}`} method="DELETE" confirm="¿Retirar este archivo?" onDone={onDone}>Retirar archivo</Action>}</div></>}{(!doc||["PENDING","REJECTED"].includes(doc.status))&&<UploadDropzone endpoint="membershipDocumentUploader" input={{clubId:r.plan.clubId,applicationId:r.id,requirementId:req.id}} content={{label:"Arrastra tu documento o haz clic para elegir",allowedContent:"PDF · Máximo 8 MB",button:"Subir documento"}} onClientUploadComplete={onDone} onUploadError={e=>setError(e.message)}/>}</Panel>})}{submit}</EditorModal>;
 }

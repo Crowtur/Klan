@@ -55,7 +55,7 @@ test("expired pass is FINISHED and another valid access protects the membership"
     membershipEvent:{create:async()=>{events++;}}};
   const prisma={$transaction:fn=>fn(tx),subscription:{findMany:async q=>q.where.billingMode==="ONE_TIME"?[{id:"pass",clubMembershipId:"member",expiresAt:new Date(0)}]:[]}};
   const code=ts.transpileModule(fs.readFileSync("src/app/api/cron/expired-plans/route.ts","utf8"),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020}}).outputText;
-  vm.runInNewContext(code,{exports,console,process:{env:{CRON_SECRET:"fixture"}},require:k=>({"@/lib/prisma":{prisma},"@/lib/stripe":{stripe:{}},"next/server":{NextResponse:Response}})[k]});
+  vm.runInNewContext(code,{exports,console,process:{env:{CRON_SECRET:"fixture"}},require:k=>({"@/lib/document-cleanup":{retryDocumentCleanup:async()=>({removed:0,pending:0})},"@/lib/prisma":{prisma},"@/lib/stripe":{stripe:{}},"next/server":{NextResponse:Response}})[k]});
   const r=await exports.POST(new Request("http://localhost/cron",{method:"POST",headers:{authorization:"Bearer fixture"}}));
   assert.equal(r.status,200);
   assert.equal(passStatus,"FINISHED");

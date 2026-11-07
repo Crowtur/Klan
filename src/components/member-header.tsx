@@ -1,4 +1,5 @@
 "use client";
+import { ThemeToggle } from "./theme-toggle";
 import { AvatarUpload } from "./avatar-upload";
 import { Notifications } from "./workspace/notifications";
 import Link from "next/link";
@@ -85,7 +86,7 @@ export default function MemberHeader() {
       <Brand href={user ? "/app" : "/"}/>
       {user ? (<>
 
-          <Suspense fallback={null}><Notifications /></Suspense><div ref={box} style={{ position: "relative" }}>
+          <ThemeToggle /><Suspense fallback={null}><Notifications /></Suspense><div ref={box} style={{ position: "relative" }}>
             <button ref={button} className={s.avatarButton} aria-label="Abrir perfil" aria-expanded={open} aria-controls="profile-panel" onClick={() => setOpen(!open)}>
               <span className="avatar">{user.avatarUrl ? (<img src={user.avatarUrl} alt="Tu foto" width={36} height={36} style={{ borderRadius: "50%", objectFit: "cover" }}/>) : (user.firstName.slice(0, 1) + user.lastName.slice(0, 1))}</span><Icon name="chevron" size={16}/>
             </button>
@@ -94,14 +95,15 @@ export default function MemberHeader() {
                   {user.firstName} {user.lastName}
                 </strong>
                 <p style={{ overflowWrap: "anywhere" }}>{user.email}</p></div>
-                <AvatarUpload onDone={() => void refresh().catch(() => setError("Recarga para ver tu foto."))}/>
+
                 <nav className={s.profileNav} aria-label="Opciones personales">
+                <AvatarUpload onDone={() => void refresh().catch(() => setError("Recarga para ver tu foto."))}/>
                   {[
                     ["memberships", "Mis membresías"],
                     ["subscriptions", "Mis suscripciones"],
                     ["payments", "Mis pagos"],
                     ["applications", "Mis solicitudes"],
-                ].map(([v, label]) => (<Link key={v} href={"/app?view=" + v} onClick={() => setOpen(false)}>
+                ].map(([v, label]) => (<Link className={s.photoButton} key={v} href={"/app?view=" + v} onClick={() => setOpen(false)}>
                       <Icon name={v === "memberships" ? "shield" : v === "subscriptions" ? "refresh" : v === "payments" ? "wallet" : "document"}/> {label}
                     </Link>))}
                 </nav>

@@ -35,3 +35,75 @@ test('post completion revalidates admin permission after an upload',async()=>{co
 test('receipt upload forbids regular users before any settlement write',async()=>{const route=uploadRouter(uploadPrisma(),{id:'user',globalRole:'USER'}).settlementReceiptUploader;await assert.rejects(()=>route.guard({req:{},input:{settlementId:'s'},files:[{}]}),/no autorizada/)});
 test('receipt callback validates admin again and persists only server-issued file URL/key',async()=>{const prisma=uploadPrisma();let update;prisma.clubSettlement.findUniqueOrThrow=async()=>({id:'s',receiptFileKey:null});prisma.clubSettlement.updateMany=async q=>(update=q,{count:1});const route=uploadRouter(prisma).settlementReceiptUploader;const r=await route.complete({metadata:{settlementId:'s',userId:'admin'},file:{key:'receipt',ufsUrl:'https://files.test/receipt',name:'pago.pdf'}});assert.equal(r.persisted,true);assert.equal(update.where.receiptFileKey,null);assert.equal(update.data.receiptFileKey,'receipt');assert.equal(update.data.receiptFileName,'pago.pdf')});
 test('membership history excludes unpaid or expired access but includes administrators',()=>{const {activeMembershipsAt}=load('src/lib/membership-history.ts');const d=s=>new Date(s+'T00:00:00Z');const base={joinedAt:d('2026-01-01'),status:'ACTIVE',removedAt:null,events:[]};const access={startedAt:d('2026-01-02'),firstActivatedAt:d('2026-01-02'),expiresAt:d('2026-01-05'),gracePeriodEndsAt:null,finishedAt:null};const members=[{...base,role:'CLUB_ADMIN',subscriptions:[]},{...base,role:'MEMBER',subscriptions:[]},{...base,role:'MEMBER',subscriptions:[access]}];assert.equal(activeMembershipsAt(members,d('2026-01-04')),2);assert.equal(activeMembershipsAt(members,d('2026-01-06')),1)});
+
+test('reading a club tab scopes the update to its actor, club and event types', async () => {
+  let update;
+  const route = load('src/app/api/me/notifications/route.ts', {
+    '@/lib/auth/auth': { requireAuth: async () => ({ id: 'member' }) },
+    '@/lib/prisma': { prisma: { notification: { updateMany: async q => (update=q,{count:2}) } } }
+  });
+  const request = tab => ({ json: async () => ({ clubId:'club', tab, recipientId:'somebody-else' }) });
+  assert.equal((await route.PATCH(request('reservations'))).status,200);
+  assert.deepEqual(JSON.parse(JSON.stringify(update.where)), {
+    recipientId:'member',clubId:'club',readAt:null,type:{in:['RESERVATION_CREATED','RESERVATION_CANCELLED']}
+  });
+  assert.equal((await route.PATCH(request('__proto__'))).status,400);
+});
+
+test('withdrawal persists the deletion key and reopens review only when no documents are pending', async () => {
+  const calls=[];
+  const tx={
+    $queryRaw:async()=>{},
+    membershipDocument:{
+      findFirst:async q=>{assert.equal(q.where.application.userId,'member');return {id:'d',status:'PENDING',fileKey:'blob',version:2}},
+      updateMany:async q=>{assert.equal(q.where.version,2);assert.equal(q.data.fileKey,null);return {count:1}}
+    },
+    pendingFileDeletion:{upsert:async q=>calls.push(q.create.fileKey)},
+    membershipApplication:{updateMany:async q=>{assert.equal(q.where.documents.none.status,'PENDING');assert.equal(q.data.status,'PENDING')}}
+  };
+  const route=load('src/app/api/clubs/[clubId]/membership-applications/[applicationId]/documents/[documentId]/route.ts',{
+    '@/lib/prisma':{prisma:{$transaction:fn=>fn(tx)}},
+    '@/lib/auth/auth':{requireAuth:async()=>({id:'member'})},'@/lib/auth/authorization':{},
+    '@/lib/document-cleanup':{removeQueuedFile:async key=>{calls.push(key);return false}}
+  });
+  const ctx={params:Promise.resolve({clubId:'c',applicationId:'a',documentId:'d'})};
+  assert.equal((await route.DELETE(new Request('https://example.test/?version=1'),ctx)).status,409);
+  const answer=await route.DELETE(new Request('https://example.test/?version=2'),ctx);
+  assert.equal(answer.status,200);assert.deepEqual(calls,['blob','blob']);assert.match(answer.body.message,/reintento/);
+});
+
+test('cleanup retries failed files and acknowledges only successful storage deletes',async()=>{
+  let down=true;const handled=[];
+  const queue={findMany:async()=>[{fileKey:'blob'}],updateMany:async()=>handled.push('deferred'),deleteMany:async()=>handled.push('removed')};
+  const cleanup=load('src/lib/document-cleanup.ts',{
+    '@/lib/prisma':{prisma:{pendingFileDeletion:queue}},
+    '@/lib/uploadthing-server':{deleteUploadThingFile:async()=>{if(down)throw Error('offline')}}
+  });
+  assert.equal((await cleanup.retryDocumentCleanup()).pending,1);
+  down=false;assert.equal((await cleanup.retryDocumentCleanup()).removed,1);
+  assert.deepEqual(handled,['deferred','removed']);
+});
+
+test('approving the last pending document after a rejection sends the application back to Documentos', async()=>{
+  const applicationId='application';
+  const doc={id:'d',version:2,status:'PENDING',application:{userId:'member',status:'DOCUMENTATION_REVIEW'}};
+  let nextStatus;
+  const tx={
+    $queryRaw:async()=>{},
+    membershipDocument:{updateMany:async()=>({count:1}),count:async q=>{
+      assert.equal(q.where.status,'REJECTED');assert.equal(q.where.deletedAt,null);return 1;
+    }},
+    notification:{create:async()=>{}},
+    membershipApplication:{updateMany:async q=>{
+      assert.equal(q.where.documents.none.status,'PENDING');
+      assert.equal(q.where.id,applicationId);nextStatus=q.data.status;
+    }}
+  };
+  const prisma={$transaction:fn=>fn(tx),membershipDocument:{findFirst:async()=>doc,findUniqueOrThrow:async()=>doc}};
+  const route=load('src/app/api/clubs/[clubId]/membership-applications/[applicationId]/documents/[documentId]/route.ts',{
+    '@/lib/prisma':{prisma},'@/lib/auth/auth':{requireAuth:async()=>({id:'admin'})},
+    '@/lib/auth/authorization':{requireClubAdmin:async()=>{}},'@/lib/document-cleanup':{}
+  });
+  const result=await route.PATCH({json:async()=>({status:'APPROVED',version:2})},{params:{clubId:'club',applicationId,documentId:'d'}});
+  assert.equal(result.status,200);assert.equal(nextStatus,'PENDING');
+});

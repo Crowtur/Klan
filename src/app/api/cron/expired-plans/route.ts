@@ -1,3 +1,4 @@
+import { retryDocumentCleanup } from "@/lib/document-cleanup";
 import { prisma } from "@/lib/prisma";
 import { stripe } from "@/lib/stripe";
 import { NextResponse } from "next/server";
@@ -297,6 +298,7 @@ export async function POST(request: Request) {
     return NextResponse.json(
       {
         success: failedGraceResults.length === 0,
+        documentCleanup: await retryDocumentCleanup(),
         message:
           failedGraceResults.length > 0
             ? "Existen suscripciones que requieren conciliación o reintento"

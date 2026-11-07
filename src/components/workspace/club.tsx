@@ -1,4 +1,6 @@
 "use client";
+import { PlanCard } from "./plan-card";
+import { ClubSidebar } from "./club-sidebar";
 import {Requirements} from "./requirements";
 import {PostComposer} from "./post-composer";
 import {Location} from "./location";
@@ -9,7 +11,7 @@ import { Icon, PLACEHOLDER_IMAGE } from "@/components/ui";
 import { useState } from "react";
 import Link from "next/link";
 import { UploadDropzone } from "@/lib/uploadthing";
-import { Badge, useData, Panel, Status, Form, Action, Empty, Pager, href, label, date, money, safeUrl, clubFields, planFields, requirementFields, postFields, type Row, } from "./common";
+import { api, Badge, useData, Panel, Status, Form, Action, Empty, Pager, href, label, date, money, safeUrl, clubFields, planFields, requirementFields, postFields, type Row, } from "./common";
 import { Facilities, Reservations } from "./facilities";
 import { Dashboard } from "./dashboard";
 export function Club({ club, tab = "posts", admin, }: {
@@ -20,6 +22,15 @@ export function Club({ club, tab = "posts", admin, }: {
     const [version, setVersion] = useState(0);
     const state = useData(`/api/clubs/${club}`, version);
     const base = `/api/clubs/${club}`;
+    const [noticeError, setNoticeError] = useState("");
+    async function readTab(key:string) {
+      if (!["applications","overview","reservations"].includes(key)) return;
+      try {
+        await api("/api/me/notifications", "PATCH", {clubId:club,tab:key});
+        setNoticeError("");
+        window.dispatchEvent(new Event("klubo-notifications"));
+      } catch { setNoticeError("No se pudieron marcar las novedades como leídas."); }
+    }
     return (<>
       <img className="identity-cover" src={safeUrl(state.data?.club.coverUrl)||PLACEHOLDER_IMAGE} alt="Portada del club"/><div className="club-identity"><span className="avatar">{safeUrl(state.data?.club.logoUrl) ? <img src={safeUrl(state.data?.club.logoUrl)} alt=""/> : <Icon name="users" size={30}/>}</span><div><p className="eyebrow">{admin ? "Administración del club" : "Tu comunidad"}</p><h1>{state.data?.club.name || "Club"}</h1><p>{state.data?.club.description}</p><Location value={state.data?.club.address}/>{safeUrl(state.data?.club.googleMapsUrl) && <a className="text-link" href={safeUrl(state.data?.club.googleMapsUrl)} target="_blank" rel="noreferrer">Ver en Google Maps ↗</a>}</div></div>
       <Status state={state}>
@@ -38,11 +49,12 @@ export function Club({ club, tab = "posts", admin, }: {
                     ["settings", "Configuración"],
                 ]
                 : []),
-        ].map(([key, title]) => (<Link key={key} aria-current={tab === key ? "page" : undefined} href={href("club", { club, tab: key })}>
+        ].map(([key, title]) => (<Link key={key} onClick={()=>void readTab(key)} aria-current={tab === key ? "page" : undefined} href={href("club", { club, tab: key })}>
               {title}{(["applications","reservations","overview","members"].includes(key)) && <NoticeCount club={club} kind={key as "applications" | "reservations" | "overview" | "members"}/>}
             </Link>))}
         </nav>
-        {tab === "posts" && <Posts club={club} admin={admin}/>}
+        {noticeError && <p role="alert">{noticeError}</p>}
+        {tab === "posts" && <div className="club-post-layout"><section><Posts club={club} admin={admin}/></section><ClubSidebar club={club}/></div>}
         {tab === "facilities" && <Facilities club={club} admin={admin}/>}
         {tab === "reservations" && <Reservations club={club}/>}
         {admin && tab === "plans" && <Plans club={club}/>}
@@ -114,19 +126,14 @@ function Plans({ club }: {
     const base = `/api/clubs/${club}/membership-plans`;
     const state = useData(base, v);
     return (<>
-      <div className="list-heading"><h2>Planes de membresía</h2>
+      <div className="list-heading"><h2>Planes y requisitos documentales</h2>
       <EditorModal title="Crear plan">
         <Form fields={planFields} initial={{ price: 0, durationValue: 1 }} url={base} onDone={() => setV(v + 1)}/>
       </EditorModal></div>
       <Status state={state}>
         <Empty rows={state.data?.plans || []}/>
-        <div className="grid equal-cards plan-cards">
-        {state.data?.plans.map((p: Row) => (<Panel key={p.id} title={p.name}>
-            <p>
-              {money(p.price)} / {p.durationValue} {label(p.durationUnit)} ·{" "}
-              {p.isActive ? "Disponible" : "Desactivado"}
-            </p>
-            <p>{p.description}</p>{Array.isArray(p.benefits) && <ul className="plan-benefits">{p.benefits.map((b: string) => <li key={b}>{b}</li>)}</ul>}
+        <div className="bounded-cards">
+        {state.data?.plans.map((p: Row) => (<PlanCard key={p.id} plan={p}>
             <EditorModal title="Editar plan">
               <Form key={String(p.updatedAt)+String(p.requiresDocumentation)} fields={planFields} initial={p} url={`${base}/${p.id}`} method="PATCH" onDone={() => setV(v + 1)}/>
             </EditorModal>
@@ -134,7 +141,7 @@ function Plans({ club }: {
                 Desactivar
               </Action>)}
 
-          </Panel>))}
+          </PlanCard>))}
         </div>
         <Requirements club={club} plans={state.data?.plans||[]} onChanged={()=>setV(v=>v+1)}/>
       </Status>
@@ -145,7 +152,7 @@ function Members({club}:{club:string}){
  const state=useData(`/api/clubs/${club}/members`,version);
  const members:Row[]=state.data?.members||[];
  const current=(m:Row)=>m.status==="ACTIVE"&&(m.role==="CLUB_ADMIN"||m.plans?.length>0);
- return <><h2>Miembros del club</h2><Status state={state}>{[true,false].map(active=><section className="member-section" key={String(active)}><h3>{active?"Miembros activos":"Historial de miembros"}</h3><div className="grid equal-cards member-cards">{members.filter(m=>Boolean(current(m))===active).map(m=><Panel key={m.membershipId} title={m.user.firstName+" "+m.user.lastName}>
+ return <><h2>Miembros del club</h2><Status state={state}>{[true,false].map(active=><section className="member-section" key={String(active)}><h3>{active?"Miembros activos":"Historial de miembros"}</h3><div className="bounded-cards member-cards">{members.filter(m=>Boolean(current(m))===active).map(m=><Panel key={m.membershipId} title={m.user.firstName+" "+m.user.lastName}>
  <span className="member-avatar">{safeUrl(m.user.avatarUrl)?<img src={safeUrl(m.user.avatarUrl)} alt=""/>:m.user.firstName.slice(0,1)+m.user.lastName.slice(0,1)}</span><p>{m.user.email}</p><p>{label(m.role)} · <Badge value={m.status}/></p>{m.role!=="CLUB_ADMIN"&&<p>{m.plans?.map((p:Row)=>p.plan.name).join(", ")||"Sin plan vigente"}</p>}
  {active&&m.role==="MEMBER"&&<EditorModal title="Retirar del club"><p>Confirma el retiro de {m.user.firstName}.</p><Form fields={[{name:"reason",label:"Motivo",type:"textarea"}]} url={`/api/clubs/${club}/members/${m.user.id}`} method="DELETE" submit="Confirmar retiro" onDone={()=>setVersion(v=>v+1)}/></EditorModal>}
  </Panel>)}</div>{!members.some(m=>Boolean(current(m))===active)&&<p>No hay miembros en esta sección.</p>}</section>)}</Status></>;
@@ -239,7 +246,7 @@ function ClubPayments({ club }: {
             </small>
           </Panel>)}
       </Status>
-      <Status state={activity}><Bars title="Ingresos diarios (USD)" series={["Pagos confirmados"]} rows={Object.entries(activity.data?.series || {}).map(([label, r]) => ({ label, values: [Object.values((r as Row).incomeCents).reduce((sum: number, v) => sum + Number(v), 0) / 100] }))}/></Status>
+      <Status state={activity}><Bars title="Ingresos diarios (USD)" yAxis="Ingresos (USD)" xAxis="Días" calendar="day" series={["Pagos confirmados"]} rows={Object.entries(activity.data?.series || {}).map(([label, r]) => ({ label, values: [Object.values((r as Row).incomeCents).reduce((sum: number, v) => sum + Number(v), 0) / 100] }))}/></Status>
       <Status state={state}>
         <Empty rows={state.data?.payments || []}/>
         <div className="grid">

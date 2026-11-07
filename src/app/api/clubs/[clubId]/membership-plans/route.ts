@@ -214,9 +214,20 @@ export async function GET(
       },
     });
 
+    const now = new Date();
+    const memberships = await prisma.subscription.findMany({
+      where: {
+        plan: { clubId }, clubMembership: { status: "ACTIVE", club: { status: "ACTIVE" } },
+        startedAt: { lte: now },
+        OR: [{ status: "ACTIVE", expiresAt: { gt: now } }, { status: "PENDING_PAYMENT", gracePeriodEndsAt: { gt: now } }],
+      },
+      distinct: ["planId", "clubMembershipId"], select: { planId: true, clubMembershipId: true },
+    });
+    const counts = new Map<string, number>();
+    for (const { planId } of memberships) counts.set(planId, (counts.get(planId) || 0) + 1);
     return NextResponse.json({
       success: true,
-      plans,
+      plans: plans.map(plan => ({...plan, activeMembers: counts.get(plan.id) || 0})),
     });
   } catch (error) {
     console.error("Get membership plans error:", error);

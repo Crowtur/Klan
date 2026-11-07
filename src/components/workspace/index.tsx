@@ -34,7 +34,7 @@ export default function Workspace() {
               .
             </p>) : globalView && !global ? (<p className="error">
               No tienes acceso a la administración global.
-            </p>) : (<div key={view + club + id}>
+            </p>) : (<div className="workspace-view" key={view + club + id}>
               {[
                 "clubs",
                 "memberships",
