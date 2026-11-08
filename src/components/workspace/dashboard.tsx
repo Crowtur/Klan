@@ -177,12 +177,19 @@ function Facts({ value, depth = 0 }: {
     const nested = entries.filter(([, v]) => v !== null && typeof v === "object");
     return <><div className="facts-grid">{simple.map(([k, v]) => <dl className="fact" key={k}><dt>{names[k] || label(k).replace(/([a-z])([A-Z])/g, "$1 $2")}</dt><dd className={typeof v==="number" || typeof v==="string" && monetary.test(k) ? "numeric":undefined}>{k === "status" ? <Badge value={v}/> : scalar(v, k)}</dd></dl>)}</div>{nested.map(([k, v]) => <section className="facts-section" key={k}><h3>{names[k] || label(k)}</h3><Facts value={v} depth={depth + 1}/></section>)}</>;
 }
-export function Dashboard({ club }: {
+type DashboardFilters = {section:string;period:string};
+export function Dashboard({ club, filters, onFilters }: {
+    filters?:DashboardFilters;
+    onFilters?:(filters:DashboardFilters)=>void;
     club?: string;
 }) {
-    const [section, setSection] = useState("overview"), [period, setPeriod] = useState(new Date()
+    const [localSection, setLocalSection] = useState("overview"), [localPeriod, setLocalPeriod] = useState(new Date()
         .toLocaleDateString("en-CA", { timeZone: "America/Guayaquil" })
         .slice(0, 7)), [v, setV] = useState(0);
+    const section = filters?.section ?? localSection;
+    const period = filters?.period ?? localPeriod;
+    const setSection = (value:string) => onFilters ? onFilters({section:value,period}) : setLocalSection(value);
+    const setPeriod = (value:string) => onFilters ? onFilters({section,period:value}) : setLocalPeriod(value);
     const [year, month] = period.split("-");
     const prefix = club ? `/api/clubs/${club}/dashboard` : "/api/admin/dashboard";
     const state = useData(`${prefix}/${section}?year=${year}&month=${Number(month)}`, v);
@@ -251,7 +258,7 @@ export function Dashboard({ club }: {
         <label>
           Período
           <input type="month" min="2000-01" max="2100-12" value={period} onChange={(e) => {
-            if (e.target.value)
+            if (e.target.validity.valid && e.target.value)
                 setPeriod(e.target.value);
         }}/>
         </label>

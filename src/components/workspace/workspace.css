@@ -1094,8 +1094,8 @@
 .workspace .photo-viewer[open]{display:grid;justify-items:end;gap:8px}
 .workspace .photo-viewer img{width:auto;height:auto;max-width:calc(94vw - 24px);max-height:calc(94dvh - 80px);object-fit:contain}
 .public-plan-panel>header{display:flex;gap:8px;align-items:center;justify-content:space-between;margin-bottom:16px}.public-plan-panel h2{margin:0;font-size:1.15rem}.public-plan-panel header button{font-size:.8rem;padding:8px}
-.plan-pair,.club-sidebar-cards{display:grid;gap:16px}.carousel-controls{align-items:center}.all-plan-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,245px),1fr));gap:14px}
-.workspace .all-plans{width:min(880px,94vw)}
+.plan-pair,.club-sidebar-cards{display:grid;gap:16px}.carousel-controls{align-items:center}
+.workspace .all-plans{width:94vw;height:90dvh;max-width:94vw;max-height:90dvh}
 .workspace .editor-modal:has(.icon-picker)>header{margin-bottom:12px}
 .workspace .editor-modal .editor:has(.icon-picker)>fieldset{margin-top:0}
 .workspace .editor-modal .editor fieldset.icon-picker{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px;margin:0}.icon-picker legend{padding:0}
@@ -1118,4 +1118,39 @@
     from { opacity: 0.6; transform: translateX(0.75rem); }
     to { opacity: 1; transform: translateX(0); }
   }
+}
+
+.workspace .history-toggle,
+.reservation-title, .reservation-time {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+}
+.workspace .history-toggle input { width: 18px; height: 18px; margin: 0; flex: none; }
+.workspace .payment-detail-card { width: min(100%, 388px); margin-inline: auto; }
+.workspace .visit-club { display: inline-flex; align-items: center; gap: 6px; }
+.visit-club svg, .reservation-title svg { flex: none; }
+.public-plan-panel > header { flex-wrap: wrap; }
+.public-plan-panel .carousel-controls { margin: 0; }
+.public-plan-panel > button { display: flex; margin: 16px auto 0; }
+.workspace .all-plans > header { position: sticky; top: 0; z-index: 1; background: var(--surface); padding-block: 8px; }
+.workspace .all-plan-grid { margin-inline: auto; }
+
+@media (max-width: 650px) {
+  .workspace-view, .workspace-view section, .workspace-view aside,
+  .workspace-view .panel, .workspace-view label { min-width: 0; }
+  .workspace .dashboard-controls, .workspace .club-filter,
+  .workspace .list-heading, .workspace .page-heading { flex-wrap: wrap; }
+  .workspace .dashboard-controls > label, .workspace .club-filter > label { flex: 1 1 140px; }
+  .workspace .list-heading > .actions { max-width: 100%; margin-block: 4px; }
+  .workspace select, .workspace textarea, .workspace input { max-width: 100%; font-size: 16px; }
+  .workspace .editor-modal { padding: 16px; overscroll-behavior: contain; }
+  .workspace .hero-identity { flex-wrap: wrap; }
+  .workspace .hero-identity > div { min-width: 0; overflow-wrap: anywhere; }
+  .workspace .dashboard-grid, .workspace .facts-grid { grid-template-columns: minmax(0,1fr); }
+  .workspace .feed-sidebar > section:last-child { display: block; }
+  .workspace .table-scroll { max-width: 100%; overflow-x: auto; }
+  .notification-list { position: fixed; inset: 72px 12px auto; width: auto; max-height: calc(100dvh - 90px); }
+  .public-plan-panel .carousel-controls button { min-height: 40px; min-width: 40px; }
 }

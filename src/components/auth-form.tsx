@@ -52,6 +52,7 @@ export default function AuthForm({ mode }: Props) {
                 setRegistered(true);
                 return;
             }
+            try { sessionStorage.removeItem("klubo:admin-filters"); } catch {}
             router.replace("/app");
             router.refresh();
         }

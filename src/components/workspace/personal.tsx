@@ -8,7 +8,7 @@ import { Icon, PageHeading, PLACEHOLDER_IMAGE } from "@/components/ui";
 import { ClubCard } from "./explore";
 import {ClubHero} from "./club-hero";
 import {PostCard} from "./post-card";
-import { useEffect,useRef,useState } from "react";
+import { useEffect,useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { UploadButton, UploadDropzone } from "@/lib/uploadthing";
@@ -71,7 +71,7 @@ export function Personal({ view, q = "" }: {
     }
     return (<>
       <PageHeading eyebrow="Tu espacio personal" title={title} description={{ clubs: "Un espacio para cada una de tus comunidades.", memberships: "Tu participación y tu historia en cada club.", subscriptions: "Tus planes, fechas de vigencia y renovaciones.", payments: "Revisa tus movimientos y el estado de cada pago.", applications: "Sigue tus solicitudes de ingreso y completa tus documentos." }[view] || "Todas tus novedades, en un solo lugar."}/>
-      {view === "subscriptions" && <><div className="metrics-grid">{[["Suscripciones activas", allRows.filter(r => r.status === "ACTIVE" && r.billingMode !== "ONE_TIME").length], ["Pendiente", money(allRows.reduce((sum, r) => sum + (r.obligations || []).reduce((s: number, o: Row) => s + Number(o.amount), 0), 0))], ["Próximo cobro", nextCharge ? money(nextCharge.priceSnapshot ?? nextCharge.plan.price) : "—"]].map(([k, v]) => <dl className="metric-card" key={String(k)}><dt>{k}</dt><dd>{v}{k==="Próximo cobro" && nextCharge && <small>{new Date(nextCharge.nextBillingAt).toLocaleDateString("es-EC",{timeZone:"America/Guayaquil",dateStyle:"long"})}</small>}</dd></dl>)}</div><label><input type="checkbox" checked={history} onChange={e => setHistory(e.target.checked)}/> Mostrar historial de suscripciones y pases</label></>}
+      {view === "subscriptions" && <><div className="metrics-grid">{[["Suscripciones activas", allRows.filter(r => r.status === "ACTIVE" && r.billingMode !== "ONE_TIME").length], ["Pendiente", money(allRows.reduce((sum, r) => sum + (r.obligations || []).reduce((s: number, o: Row) => s + Number(o.amount), 0), 0))], ["Próximo cobro", nextCharge ? money(nextCharge.priceSnapshot ?? nextCharge.plan.price) : "—"]].map(([k, v]) => <dl className="metric-card" key={String(k)}><dt>{k}</dt><dd>{v}{k==="Próximo cobro" && nextCharge && <small>{new Date(nextCharge.nextBillingAt).toLocaleDateString("es-EC",{timeZone:"America/Guayaquil",dateStyle:"long"})}</small>}</dd></dl>)}</div><label className="history-toggle"><input type="checkbox" checked={history} onChange={e => setHistory(e.target.checked)}/> Mostrar historial de suscripciones y pases</label></>}
       {message && <p role="alert">{message}</p>}
       {view === "search" && (<form className="actions" onSubmit={(e) => {
                 e.preventDefault();
@@ -94,7 +94,7 @@ export function Personal({ view, q = "" }: {
             Las publicaciones aparecerán cuando pertenezcas a un club con
             actividad. <Link href={href("search")}>Explora clubes</Link>.
           </p>)}
-        <div className={view === "clubs" ? "club-grid" : view === "memberships" ? "bounded-cards" : "personal-grid"}>
+        <div className={view === "clubs" ? "club-grid" : (view === "memberships" || view === "subscriptions") ? "bounded-cards" : "personal-grid"}>
         {rows.map((r: Row) => view === "memberships" ? <Link key={r.id} className="membership-medal" href={href("club", { club: r.club.id })}>{safeUrl(r.club.logoUrl) ? <AvatarImage src={safeUrl(r.club.logoUrl)} alt=""/> : <span className="medal-placeholder"><Icon name="users" size={48}/></span>}<h2>{r.club.name}</h2><strong>{label(r.role)}</strong><small>Desde {date(r.joinedAt)}</small></Link> : view === "clubs" ? <ClubCard key={r.id} club={{ ...r, planName: myPlans.data?.subscriptions.filter((s: Row) => s.clubMembership.club.id === r.id && s.status === "ACTIVE").map((s: Row) => s.plan.name).join(", ") }} destination={href("club", { club: r.id })}/> : (<Panel key={r.id} title={r.club?.name ||
                 r.clubMembership?.club?.name ||
                 r.name ||
@@ -110,11 +110,10 @@ export function Personal({ view, q = "" }: {
             {view === "subscriptions" && r.plan && <p className="plan-price">{r.plan.type === "FREE" ? "Gratuito" : money(r.plan.price)} <small>/ {r.plan.durationValue} {label(r.plan.durationUnit)}</small></p>}
             {r.status && <p><Badge value={r.status}/></p>}
             {r.role && <p>Rol: {label(r.role)}</p>}
-            {r.createdAt && <p>{date(r.createdAt)}</p>}
+            {view !== "subscriptions" && r.createdAt && <p>{date(r.createdAt)}</p>}
             {r.joinedAt && <p>Ingreso: {date(r.joinedAt)}</p>}
             {r.billingMode === "ONE_TIME" && <p className="notice">Pase de pago único · {r.plan.durationValue} días</p>}
-            {r.nextBillingAt && <p>Próximo cobro{r.nextBillingEstimated ? " estimado" : ""}: {date(r.nextBillingAt)} · {money(r.priceSnapshot ?? r.plan.price)}</p>}
-            {r.expiresAt && <p>Vencimiento: {date(r.expiresAt)}</p>}
+            {view === "subscriptions" && <p>{r.status === "ACTIVE" && r.billingMode === "RECURRING" && r.plan.type === "PAID" && !r.cancelAtPeriodEnd ? "Próximo cobro" : "Vencimiento"}: {r.status === "SUSPENDED" && !r.suspendedAt ? "Sin fecha registrada" : date(r.nextBillingAt || (r.status === "SUSPENDED" ? r.suspendedAt : r.expiresAt))}</p>}
             {r.amount !== undefined && <p>{money(r.amount, r.currency)}</p>}
             <div className="actions">
               {["clubs", "search"].includes(view) && (<Link href={href(view === "clubs" ? "club" : "publicClub", {
@@ -136,7 +135,7 @@ export function Personal({ view, q = "" }: {
                   </button>)}
               {view === "subscriptions" &&
                 r.status === "ACTIVE" &&
-                r.plan.type === "PAID" && r.billingMode !== "ONE_TIME" && (<Action url={`/api/clubs/${r.clubMembership.club.id}/subscriptions/${r.id}/cancel`} confirm="¿Programar la cancelación al finalizar el período actual?" onDone={() => refresh((v) => v + 1)}>
+                r.plan.type === "PAID" && !r.cancelAtPeriodEnd && r.billingMode !== "ONE_TIME" && (<Action url={`/api/clubs/${r.clubMembership.club.id}/subscriptions/${r.id}/cancel`} confirm="¿Programar la cancelación al finalizar el período actual?" onDone={() => refresh((v) => v + 1)}>
                     Cancelar renovación
                   </Action>)}
             </div>
@@ -174,21 +173,20 @@ export function PublicClub({club,target=""}:{club:string;target?:string}){
 export function Payment({ id }: {
     id: string;
 }) {
-    const [version, refresh] = useState(0);
-    const state = useData(id ? `/api/payments/${encodeURIComponent(id)}` : null, version);
+    const state = useData(id ? `/api/payments/${encodeURIComponent(id)}` : null);
     const p = state.data?.payment;
     return (<>
       <PageHeading eyebrow="Mis pagos" title="Detalle de pago" description="Consulta el importe y la confirmación de tu transacción."/>
       <Link href={href("payments")}>Volver a mis pagos</Link>
 
       <Status state={state}>
-        {p && (<Panel title={p.clubName}>
+        {p && (<div className="payment-detail-card"><Panel title={p.clubName}>
             <p>{p.plan.name}</p>
             <p className="plan-price">{money(p.amount, p.currency)}</p>
             <p><Badge value={p.status}/></p>
             <p>Fecha: {date(p.createdAt)}</p>
             <p>Pagado: {date(p.paidAt)}</p>
-          </Panel>)}
+          </Panel></div>)}
       </Status>
     </>);
 }

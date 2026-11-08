@@ -16,7 +16,7 @@ export function ClubSidebar({club,admin}: {club:string;admin:boolean}) {
   const facilities = useData(`/api/clubs/${club}/facilities?summary=popular&limit=2`,version);
   const suggestions:Row[] = [last?.facility,...(facilities.data?.facilities||[])].filter((f,i,rows)=>f && rows.findIndex(item=>item?.id===f.id)===i).slice(0,2);
   return <aside className="club-post-sidebar">
-    <div className="list-heading"><h3>Tu espacio en el club</h3>{admin && <small>Administrador</small>}</div><div className="club-sidebar-cards"><section className="panel"><Icon name="calendar"/><h3>Mi próxima reserva</h3>
+    <div className="list-heading"><h3>Tu espacio en el club</h3>{admin && <small>Administrador</small>}</div><div className="club-sidebar-cards"><section className="panel"><h3 className="reservation-title"><Icon name="calendar"/>Mi próxima reserva</h3>
       <Status state={bookings}>{next ? <><strong>{next.facility.name}</strong><p>{date(next.startAt)}</p>
         <p>{Math.round((Date.parse(next.endAt)-Date.parse(next.startAt))/60000)} minutos · Confirmada</p><Action method="PATCH" url={`/api/clubs/${club}/facilities/${next.facilityId}/reservations/${next.id}`} confirm="¿Cancelar esta reserva?" onDone={()=>refresh(v=>v+1)}>Cancelar reserva</Action></> : <p>No tienes ninguna reserva.</p>}</Status>
     </section>

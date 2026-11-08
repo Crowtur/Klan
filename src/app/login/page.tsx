@@ -1,5 +1,8 @@
 import AuthForm from "../../components/auth-form";
 
-export default function LoginPage() {
+import { redirectAuthenticatedGuest } from "@/lib/auth/guest";
+
+export default async function LoginPage() {
+  await redirectAuthenticatedGuest();
   return <AuthForm mode="login" />;
 }

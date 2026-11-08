@@ -23,7 +23,7 @@ export async function GET(request: Request) {
         id: true,
         status: true,
 
-        cancelAtPeriodEnd:true, billingMode:true, firstActivatedAt:true, finishedAt:true, nextBillingAt:true, priceSnapshot:true, obligations:{where:{status:"OPEN"},select:{amount:true,dueAt:true}},
+        cancelAtPeriodEnd:true, billingMode:true, suspendedAt:true, firstActivatedAt:true, finishedAt:true, nextBillingAt:true, priceSnapshot:true, obligations:{where:{status:"OPEN"},select:{amount:true,dueAt:true}},
         startedAt: true,
         expiresAt: true,
         gracePeriodEndsAt: true,

@@ -12,6 +12,7 @@ const paths: Record<string, ReactNode> = {
     chevron: <path d="m6 9 6 6 6-6"/>,
     check: <path d="m5 12 4 4L19 6"/>,
     document: <><path d="M14 3H5v18h14V8Zm0 0v5h5M8 12h8m-8 4h6"/></>,
+    clock: <><circle cx="12" cy="12" r="9"/><path d="M12 6v6l4 2"/></>,
     logout: <><path d="M9 3H4v18h5m6-14 5 5-5 5M8 12h12"/></>,
     refresh: <><path d="M20 7V3m0 4h-4M4 17v4m0-4h4"/><path d="M20 7a9 9 0 0 0-16 3m0 7a9 9 0 0 0 16-3"/></>,
     grid: <><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></>,

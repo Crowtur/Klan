@@ -368,6 +368,7 @@ model Subscription {
   durationValueSnapshot Int?
   durationUnitSnapshot  DurationUnit?
   // Primera activación real, no fecha del último ciclo.
+  suspendedAt           DateTime?
   firstActivatedAt      DateTime?
   finishedAt            DateTime?
   cancelledAt           DateTime?

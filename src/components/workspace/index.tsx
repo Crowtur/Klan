@@ -10,7 +10,8 @@ import { useData, Status, href, type Row } from "./common";
 import { Personal, PublicClub, Payment } from "./personal";
 import { Club, Posts } from "./club";
 import { Facility } from "./facilities";
-import { Dashboard, GlobalClubs, Settlement } from "./dashboard";
+import {GlobalDashboard} from "./global-dashboard";
+import { GlobalClubs, Settlement } from "./dashboard";
 import "./workspace.css";
 export default function Workspace() {
     const q = useSearchParams(), view = q.get("view") || "feed", club = q.get("club") || "", id = q.get("id") || "", tab = q.get("tab") || "posts";
@@ -48,7 +49,7 @@ export default function Workspace() {
               {view === "club" && <Club club={club} tab={tab} admin={admin}/>}
               {view === "facility" && (<Facility club={club} id={id} admin={admin}/>)}
               {view === "payment" && <Payment id={id}/>}
-              {view === "admin" && <Dashboard />}
+              {view === "admin" && <GlobalDashboard />}
               {view === "globalClubs" && <GlobalClubs />}
               {view === "settlement" && <Settlement id={id}/>}
               {view === "globalPosts" && (<Posts club={club} admin canUpload={admin}/>)}

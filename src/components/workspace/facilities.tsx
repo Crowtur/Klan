@@ -1,5 +1,6 @@
 "use client";
 import {AvatarImage} from "@/components/avatar-image";
+import {Icon} from "@/components/ui";
 import {FacilityIcon} from "./facility-icon";
 import {Location} from "./location";
 import { EditorModal } from "./modal";
@@ -60,11 +61,10 @@ export function Reservations({ club, facility, admin = false, onChanged, }: {
       <h2>{admin ? "Reservas de la instalación" : "Mis reservas"}</h2>
       <Status state={state}>
         <Empty rows={state.data?.reservations || []}/>
-        <div className="grid">
+        <div className="bounded-cards reservation-cards">
         {state.data?.reservations.map((r: Row) => (<Panel key={r.id} title={r.facility?.name || "Reserva"}>
-            <p>
-              {date(r.startAt)} — {date(r.endAt)} (Ecuador)
-            </p>
+            <p>{new Date(r.startAt).toLocaleDateString("es-EC", {dateStyle:"long", timeZone:"America/Guayaquil"})}</p>
+            <p className="reservation-time"><Icon name="clock" size={16}/>{new Date(r.startAt).toLocaleTimeString("es-EC", {hour:"2-digit",minute:"2-digit",hour12:false,timeZone:"America/Guayaquil"})} · {Math.round((Date.parse(r.endAt)-Date.parse(r.startAt))/60000)} min</p>
             <p><Badge value={r.status==="CONFIRMED" && Date.parse(r.endAt)<=Date.now()?"RESERVATION_EXPIRED":r.status}/></p>{r.clubMembership?.user && <p>Reserva de {r.clubMembership.user.firstName} {r.clubMembership.user.lastName}</p>}
             {r.status === "CONFIRMED" && Date.parse(r.endAt)>Date.now() && (<Action method="PATCH" url={`${base}/facilities/${r.facilityId || facility}/reservations/${r.id}`} confirm="¿Cancelar esta reserva?" onDone={() => { setV(v + 1); onChanged?.(); }}>
                 Cancelar reserva

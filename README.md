@@ -1,6 +1,6 @@
-# Klubo Parte 5
+# Klubo Parte 6
 
-## Actualizar desde la Parte 4
+## Actualizar desde la Parte 5
 
 Usa la configuración de PostgreSQL, autenticación, Stripe y UploadThing de tu instalación anterior. Desde la carpeta del proyecto, ejecuta:
 
@@ -12,7 +12,7 @@ npm run build
 npm start
 ```
 
-La Parte 5 usa el esquema de la Parte 4. El cron de Vercel incluido en `vercel.json` llama a `GET /api/cron/read-notifications` a las 05:00 UTC (medianoche en Ecuador continental). Configura `CRON_SECRET` en el despliegue de producción. Si utilizas otro alojamiento, programa la misma petición y hora con la cabecera `Authorization: Bearer <CRON_SECRET>`. La operación borra únicamente registros con `readAt` informado.
+La migración de esta versión añade una fecha opcional de suspensión. Las suspensiones anteriores sin fecha comprobable se muestran como «Sin fecha registrada». Los comprobantes de pagos completados se consultan en Stripe al abrirlos con la clave del entorno que procesó el pago. El cron de Vercel incluido en `vercel.json` llama a `GET /api/cron/read-notifications` a las 05:00 UTC (medianoche en Ecuador continental). Configura `CRON_SECRET` en el despliegue de producción. Si utilizas otro alojamiento, programa la misma petición y hora con la cabecera `Authorization: Bearer <CRON_SECRET>`. La operación borra únicamente registros con `readAt` informado.
 
 La migración previa `20261105000100_queue_document_withdrawals` registra las eliminaciones pendientes de archivos. La retirada se intenta al confirmar la operación y el proceso programado existente `POST /api/cron/expired-plans` reintenta los fallos. Debe ejecutarse periódicamente con la cabecera `Authorization: Bearer <CRON_SECRET>`.
 

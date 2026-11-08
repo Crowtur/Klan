@@ -228,3 +228,11 @@
 }
 
 .photoAction{display:flex;align-items:center;gap:12px;width:100%;padding:12px 16px;border:0;background:transparent;color:light-dark(#334155,#d6dce6);font:inherit;text-align:left;cursor:pointer;border-radius:8px}.photoAction:hover{background:light-dark(#e8f5ed,#1a2920);color:light-dark(#136336,#98ebbd)}
+
+@media (max-width: 650px) {
+  .headerInner { row-gap: 8px; }
+  .headerInner .actions > a:first-child { display: inline-flex; }
+  .actions { max-width: 100%; }
+  .profilePanel { max-height: calc(100dvh - 90px); overflow-y: auto; }
+  .main { padding: 24px 16px; }
+}

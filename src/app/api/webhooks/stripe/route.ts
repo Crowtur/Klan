@@ -966,6 +966,7 @@ export async function POST(request: Request) {
               where: { id: localSubscription.id },
               data: {
                 status: "SUSPENDED",
+                suspendedAt: localSubscription.status === "SUSPENDED" ? localSubscription.suspendedAt : new Date(event.created * 1000),
                 gracePeriodEndsAt: null,
               },
             });

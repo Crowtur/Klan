@@ -164,3 +164,36 @@ test('solo administradores autorizados pueden recuperar los últimos datos banca
   allowed=true;const response=await route.GET(req,ctx);
   assert.equal((await response.json()).details.accountNumber,'00123');assert.match(response.headers.get('Cache-Control'),/no-store/);
 });
+
+const receiptContext = {params:Promise.resolve({paymentId:"p"})};
+function receiptHandler(payment,stripe) {
+  return load('src/app/api/payments/[paymentId]/receipt/route.ts',{
+    '@/lib/auth/auth':{requireAuth:async()=>({id:'buyer'})},
+    '@/lib/prisma':{prisma:{payment:{findFirst:async({where})=>{
+      assert.deepEqual({...where},{id:'p',userId:'buyer',status:'PAID'});
+      return payment;
+    }}}},
+    '@/lib/stripe':{stripe}
+  }).GET;
+}
+test('completed payment opens its hosted invoice without caching the private redirect',async()=>{
+  const stripe={invoices:{retrieve:async id=>{
+    assert.equal(id,'in_1');return {hosted_invoice_url:'https://invoice.stripe.com/i/example'};
+  }}};
+  const res=await receiptHandler({stripeInvoiceId:'in_1'},stripe)({},receiptContext);
+  assert.equal(res.status,303);
+  assert.equal(res.headers.get('location'),'https://invoice.stripe.com/i/example');
+  assert.match(res.headers.get('cache-control'),/no-store/);
+});
+test('legacy checkout-only payment resolves its successful charge receipt',async()=>{
+  const stripe={checkout:{sessions:{retrieve:async()=>({payment_intent:'pi_1'})}},
+    paymentIntents:{retrieve:async id=>{
+      assert.equal(id,'pi_1');return {latest_charge:{receipt_url:'https://pay.stripe.com/receipts/example'}};
+    }}};
+  const res=await receiptHandler({stripeCheckoutSessionId:'cs_1'},stripe)({},receiptContext);
+  assert.equal(res.headers.get('location'),'https://pay.stripe.com/receipts/example');
+});
+test('ineligible payment does not contact Stripe or redirect',async()=>{
+  const res=await receiptHandler(null,{})({},receiptContext);
+  assert.equal(res.status,404);assert.equal(res.headers.get('location'),null);
+});
