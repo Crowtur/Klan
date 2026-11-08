@@ -44,7 +44,7 @@ export default function Workspace() {
               {view === "payments" && <PaymentHistory />}
               {view === "feed" && <Feed user={user.data?.user} memberships={memberships.data?.memberships || []}/>}
               {view === "search" && <BrowseClubs authenticated initialQuery={q.get("q") || ""}/>}
-              {view === "publicClub" && <PublicClub club={club}/>}
+              {view === "publicClub" && <PublicClub key={club+q.get("post")} club={club} target={q.get("post")||""}/>}
               {view === "club" && <Club club={club} tab={tab} admin={admin}/>}
               {view === "facility" && (<Facility club={club} id={id} admin={admin}/>)}
               {view === "payment" && <Payment id={id}/>}

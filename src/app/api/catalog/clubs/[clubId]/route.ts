@@ -14,7 +14,7 @@ export async function GET(
         name: true,
         slug: true,
         description: true,
-        logoUrl: true,address:true,googleMapsUrl:true,coverUrl:true,
+        createdAt:true, _count:{select:{memberships:{where:{status:"ACTIVE"}}}}, logoUrl: true,address:true,googleMapsUrl:true,coverUrl:true,
       },
     });
     if (!club)

@@ -1,5 +1,7 @@
 "use client";
 import { useEffect, useState, useRef, type ReactNode, type FormEvent } from "react";
+import {FacilityIcon} from "./facility-icon";
+import { facilityIcons } from "@/lib/facility-icons";
 import { Icon } from "@/components/ui";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -108,6 +110,7 @@ export function money(v: unknown, _currency?: string) {
     }).format(Number(v || 0));
 }
 export function safeUrl(v: unknown) {
+    if(typeof v === "string" && /^\/api\/avatars\/[a-zA-Z0-9_-]+$/.test(v)) return v;
     try {
         const u = new URL(String(v));
         return ["https:", "http:"].includes(u.protocol) ? u.href : undefined;
@@ -253,7 +256,8 @@ export function Form({ fields, url, method = "POST", initial = {}, onDone, submi
     }
     return (<form className="editor" onSubmit={send}>
       <fieldset disabled={busy}>
-        {fields.filter(f => f.name !== "rejectionReason" || decision === "REJECTED").map((f) => (<label key={f.name}>
+        {fields.filter(f => f.name !== "rejectionReason" || decision === "REJECTED").map((f) => f.name==="icon" ? <fieldset key={f.name} className="icon-picker"><legend>{f.label}</legend>{facilityIcons.map(icon=><label key={icon.value} title={icon.label}>
+          <input type="radio" aria-label={icon.label} name="icon" value={icon.value} defaultChecked={icon.value===(initial.icon||"building")}/><FacilityIcon value={icon.value}/></label>)}</fieldset> : (<label key={f.name}>
             {f.label}
             {f.type === "textarea" ? (<textarea name={f.name} defaultValue={Array.isArray(initial[f.name]) ? initial[f.name].join("\n") : initial[f.name] ?? ""} required={f.required} maxLength={f.max}/>) : f.options ? (<select onChange={e => { if (f.name === "status")
                 setDecision(e.target.value); }} name={f.name} defaultValue={String(initial[f.name] ?? f.options[0]?.value ?? "")} required={f.required}>
@@ -290,6 +294,7 @@ export const clubFields: Field[] = [
     { name: "address", label: "Dirección del club" }, { name: "googleMapsUrl", label: "Enlace de Google Maps", type: "url" },
 ];
 export const facilityFields: Field[] = [
+    {name:"icon",label:"Icono de la instalación",options:facilityIcons},
     { name: "name", label: "Nombre", required: true, max: 50 },
     { name: "description", label: "Descripción", type: "textarea" },
     { name: "location", label: "Ubicación" },

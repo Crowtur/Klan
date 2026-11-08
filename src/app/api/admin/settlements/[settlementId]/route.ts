@@ -29,7 +29,7 @@ export async function GET(
         club: {
           select: {
             id: true,
-            name: true,
+            name: true, bankDetails: true,
           },
         },
       },
@@ -162,6 +162,7 @@ export async function PATCH(
             }
           : {
               notes: notes ?? settlement.notes,
+              ...(typeof paymentReference==="string" && {paymentReference:paymentReference.trim()}),
             }),
       },
     });

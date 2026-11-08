@@ -1,4 +1,6 @@
 "use client";
+import {AvatarImage} from "@/components/avatar-image";
+import {FacilityIcon} from "./facility-icon";
 import {Location} from "./location";
 import { EditorModal } from "./modal";
 import { useState } from "react";
@@ -30,23 +32,16 @@ export function Facilities({ club, admin }: {
     const base = `/api/clubs/${club}/facilities`;
     const state = useData(base, v);
     return (<>
-      <div className="list-heading"><h2>Instalaciones</h2>
+      <div className="list-heading"><div><h2>Instalaciones <small>{state.data?.facilities.length}</small></h2><p>Explora los espacios del club y encuentra el lugar para tu próxima actividad.</p></div>
       {admin && (<EditorModal title="Crear instalación">
           <Form fields={facilityFields} url={base} onDone={() => setV(v + 1)}/>
         </EditorModal>)}</div>
       <Status state={state}>
         <Empty rows={state.data?.facilities || []}/>
         <div className="bounded-cards">
-        {state.data?.facilities.map((f: Row) => (<Panel key={f.id} title={f.name}>
-            <p>{f.description}</p>
-            <p>
-              <Location value={f.location}/></p><p>Capacidad: {f.capacity ?? "—"}</p><p>Estado: {label(f.status)}
-            </p>
-            <Link className="btn btn-outline" href={href("facility", { club, id: f.id })}>
-              Consultar y reservar
-            </Link>
-          </Panel>))}
-        </div>
+        {state.data?.facilities.map((f: Row) => (<article key={f.id} className="panel facility-tile"><header><h3>{f.name}</h3><FacilityIcon value={f.icon}/></header><p>{f.description}</p><Location value={f.location}/><div className="facility-meta"><small>Capacidad: {f.capacity??"—"}</small><Badge value={f.status}/></div>
+    <footer><Link className="btn btn-outline" href={href("facility",{club,id:f.id})}>Consultar y reservar</Link></footer></article>))}
+        </div>{!!state.data?.facilities.length && <div className="facility-meta"><small>Mostrando {state.data.facilities.length} de {state.data.facilities.length} instalaciones</small><small>{state.data.facilities.every((f:Row)=>f.status==="ACTIVE")?"Todas las instalaciones están activas":""}</small></div>}
       </Status>
     </>);
 }
@@ -95,7 +90,7 @@ export function Facility({ club, id, admin, }: {
       <Link className="btn btn-outline back-button" href={href("club", { club, tab: "facilities" })}>
         Volver al club
       </Link>
-      {identity.data?.club&&<div className="club-identity"><span className="avatar">{safeUrl(identity.data.club.logoUrl)&&<img src={safeUrl(identity.data.club.logoUrl)} alt=""/>}</span><div><h2>{identity.data.club.name}</h2><p>{identity.data.club.description}</p></div></div>}
+      {identity.data?.club&&<div className="club-identity"><span className="avatar">{safeUrl(identity.data.club.logoUrl)&&<AvatarImage src={safeUrl(identity.data.club.logoUrl)} alt=""/>}</span><div><h2>{identity.data.club.name}</h2><p>{identity.data.club.description}</p></div></div>}
       <h1>{f?.name || "Instalación"}</h1>
       <Status state={state}>
         {f && (<>

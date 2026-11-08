@@ -173,6 +173,7 @@ model User {
 }
 
 model Club {
+  bankDetails ClubBankDetails?
   id          String     @id @default(uuid())
   name        String
   slug        String     @unique
@@ -472,6 +473,7 @@ model ClubSettlement {
 }
 
 model Facility {
+  icon String @default("building")
   id          String         @id @default(uuid())
   clubId      String
   name        String
@@ -689,4 +691,20 @@ model PendingFileDeletion {
   fileKey String @id
   queuedAt DateTime @default(now())
   @@index([queuedAt])
+}
+
+model ClubBankDetails {
+  clubId String @id
+  beneficiary String
+  identity String
+  bankName String
+  accountType String
+  accountNumber String
+  club Club @relation(fields:[clubId],references:[id],onDelete:Cascade)
+}
+
+model AvatarThumbnail {
+  key String @id
+  small Bytes
+  large Bytes
 }

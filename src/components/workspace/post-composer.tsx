@@ -17,10 +17,11 @@ export function PostComposer({club,post,onDone}:{club:string;post?:Row;onDone:()
  onDone();form.current?.closest("dialog")?.close();if(!post){setTitle("");setContent("")}setFile(null);requestKey.current="";
  }catch(e){setError((e as Error).message)}finally{setBusy(false)}}}>
  <fieldset disabled={busy}>
+ <label>Título<input maxLength={150} value={title} onChange={e=>setTitle(e.target.value)}/></label><label>Contenido<textarea required maxLength={5000} value={content} onChange={e=>setContent(e.target.value)}/></label>
  {(preview||!remove&&safeUrl(post?.imageUrl))&&<img className="composer-preview" src={preview||safeUrl(post?.imageUrl)} alt="Vista previa de la publicación"/>}
  <div className={drag?"file-drop dragging":"file-drop"} onDragOver={e=>{e.preventDefault();setDrag(true)}} onDragLeave={()=>setDrag(false)} onDrop={e=>{e.preventDefault();setDrag(false);choose(e.dataTransfer.files[0])}}><Icon name="camera" size={28}/><strong>{file?.name||"Arrastra una imagen aquí"}</strong><small>Imagen opcional · Máximo 4 MB</small><button type="button" className="secondary" onClick={()=>input.current?.click()}>Elegir imagen</button><input ref={input} type="file" hidden accept="image/*" onChange={e=>{choose(e.target.files?.[0]);e.target.value=""}}/></div>
  {(file||post?.imageUrl&&!remove)&&<button type="button" className="secondary" onClick={()=>{setFile(null);setRemove(true)}}>Quitar imagen</button>}
-<label>Título<input maxLength={150} value={title} onChange={e=>setTitle(e.target.value)}/></label><label>Contenido<textarea required maxLength={5000} value={content} onChange={e=>setContent(e.target.value)}/></label>
+
  </fieldset>{error&&<p className="error" role="alert">{error}</p>}<div className="actions"><button disabled={busy}>{busy?"Guardando publicación…":post?"Guardar cambios":"Publicar"}</button></div>
  </form>
 }

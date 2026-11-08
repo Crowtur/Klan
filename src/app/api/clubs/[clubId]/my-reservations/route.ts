@@ -122,7 +122,7 @@ export async function GET(
           select: {
             id: true,
             name: true,
-            location: true,
+            icon: true, location: true,
             description: true,
             status: true,
           },

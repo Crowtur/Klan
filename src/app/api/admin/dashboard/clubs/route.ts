@@ -104,6 +104,7 @@ export async function GET(request: Request) {
 
     const { searchParams } = new URL(request.url);
 
+    const lifetime = searchParams.get("scope")==="lifetime";
     const yearParam = searchParams.get("year");
     const monthParam = searchParams.get("month");
 
@@ -211,7 +212,7 @@ export async function GET(request: Request) {
       prisma.club.findMany({
         where,
         orderBy: [
-          { createdAt: "desc" },
+          { createdAt: searchParams.get("order")==="oldest"?"asc":"desc" },
           { id: "asc" },
         ],
         skip: (page - 1) * limit,
@@ -219,7 +220,7 @@ export async function GET(request: Request) {
         select: {
           id: true,
           name: true,
-          slug: true,
+          slug: true, logoUrl:true,address:true,
           status: true,
           createdAt: true,
         },
@@ -345,10 +346,7 @@ export async function GET(request: Request) {
           facility: {
             clubId: { in: clubIds },
           },
-          startAt: {
-            gte: periodStart,
-            lt: periodEnd,
-          },
+          ...(lifetime?{}:{startAt:{gte:periodStart,lt:periodEnd}}),
         },
         orderBy: [
           { facilityId: "asc" },
@@ -365,10 +363,7 @@ export async function GET(request: Request) {
           clubId: { in: clubIds },
           status: "PAID",
           currency: CURRENCY,
-          paidAt: {
-            gte: periodStart,
-            lt: periodEnd,
-          },
+          ...(lifetime?{}:{paidAt:{gte:periodStart,lt:periodEnd}}),
         },
         orderBy: { clubId: "asc" },
         _count: {
@@ -382,10 +377,7 @@ export async function GET(request: Request) {
           clubId: { in: clubIds },
           status: "PAID",
           currency: CURRENCY,
-          paidAt: {
-            gte: periodStart,
-            lt: periodEnd,
-          },
+          ...(lifetime?{}:{paidAt:{gte:periodStart,lt:periodEnd}}),
         },
         orderBy: { clubId: "asc" },
         _sum: {
@@ -625,6 +617,7 @@ export async function GET(request: Request) {
     // 15. Resumen agregado
     const totals = clubsStatistics.reduce(
       (acc, club) => ({
+        grossRevenue:acc.grossRevenue.plus(club.grossRevenue),
         members: acc.members + club.totalMembers,
         activeMembers:
           acc.activeMembers + club.activeMembers,
@@ -641,7 +634,7 @@ export async function GET(request: Request) {
           acc.paidPayments + club.paidPayments,
       }),
       {
-        members: 0,
+        grossRevenue:new Prisma.Decimal(0), members: 0,
         activeMembers: 0,
         plans: 0,
         facilities: 0,

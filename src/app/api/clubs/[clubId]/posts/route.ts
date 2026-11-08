@@ -268,7 +268,7 @@ export async function GET(
       );
     }
 
-    const page = Number(pageParam);
+    let page = Number(pageParam);
     const limit = Number(limitParam);
 
     if (limit > 50 || (page - 1) * limit > 100000) {
@@ -286,6 +286,15 @@ export async function GET(
       clubId,
     };
 
+    const anchor = searchParams.get("anchor");
+    let anchorMissing = false;
+    if (anchor) {
+      const target = await prisma.post.findFirst({where:{id:anchor,clubId},select:{id:true,updatedAt:true}});
+      if (target) {
+        const ahead = await prisma.post.count({where:{clubId,OR:[{updatedAt:{gt:target.updatedAt}},{updatedAt:target.updatedAt,id:{gt:target.id}}]}});
+        page = Math.floor(ahead/limit)+1;
+      } else anchorMissing = true;
+    }
     const [posts, total] = await prisma.$transaction([
       prisma.post.findMany({
         where,
@@ -328,7 +337,7 @@ export async function GET(
     // 4. Devolver los resultados paginados.
     return NextResponse.json({
       success: true,
-      posts,
+      posts, anchorMissing,
       pagination: {
         page,
         limit,

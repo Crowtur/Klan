@@ -41,8 +41,8 @@ export function Pie({ title, values }: {
 }) {
     const total = values.reduce((n, v) => n + v.value, 0);
     let offset = 0;
-    const gradient = values.map((v, i) => { const start = offset; offset += total ? v.value / total * 100 : 0; return colors[i % colors.length] + " " + start + "% " + offset + "%"; }).join(",");
-    return <section className="panel chart-panel"><h3>{title}</h3><div className="pie-layout"><div className="pie" style={{ background: total ? "conic-gradient(" + gradient + ")" : "#e2e8f0" }} role="img" aria-label={values.map(v => v.label + " " + v.value).join(",")}><span>{total.toLocaleString("es-EC")}</span></div><ul>{values.map((v, i) => <li key={v.label}><i style={{ background: colors[i % colors.length] }}/>{v.label}<strong>{v.value.toLocaleString("es-EC")}</strong></li>)}</ul></div></section>;
+    const gradient = values.map((v, i) => { const start = offset; offset += total ? v.value / total * 100 : 0; return (values.length<=colors.length?colors[i]:`hsl(${Math.round(i*137.508)%360} 45% 48%)`) + " " + start + "% " + offset + "%"; }).join(",");
+    return <section className="panel chart-panel"><h3>{title}</h3><div className="pie-layout"><div className="pie" style={{ background: total ? "conic-gradient(" + gradient + ")" : "#e2e8f0" }} role="img" aria-label={values.map(v => v.label + " " + v.value).join(",")}><span>{total.toLocaleString("es-EC")}</span></div><ul>{values.map((v, i) => <li key={i}><i style={{ background: values.length<=colors.length?colors[i]:`hsl(${Math.round(i*137.508)%360} 45% 48%)` }}/>{v.label}<strong>{v.value.toLocaleString("es-EC")}</strong></li>)}</ul></div></section>;
 }
 export function Activity({ club }: {
     club: string;

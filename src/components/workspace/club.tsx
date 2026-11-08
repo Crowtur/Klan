@@ -1,4 +1,8 @@
 "use client";
+import {AvatarImage} from "@/components/avatar-image";
+import {ClubBankForm} from "./finance-controls";
+import {ClubHero} from "./club-hero";
+import {PostCard} from "./post-card";
 import { PlanCard } from "./plan-card";
 import { ClubSidebar } from "./club-sidebar";
 import {Requirements} from "./requirements";
@@ -32,7 +36,7 @@ export function Club({ club, tab = "posts", admin, }: {
       } catch { setNoticeError("No se pudieron marcar las novedades como leídas."); }
     }
     return (<>
-      <img className="identity-cover" src={safeUrl(state.data?.club.coverUrl)||PLACEHOLDER_IMAGE} alt="Portada del club"/><div className="club-identity"><span className="avatar">{safeUrl(state.data?.club.logoUrl) ? <img src={safeUrl(state.data?.club.logoUrl)} alt=""/> : <Icon name="users" size={30}/>}</span><div><p className="eyebrow">{admin ? "Administración del club" : "Tu comunidad"}</p><h1>{state.data?.club.name || "Club"}</h1><p>{state.data?.club.description}</p><Location value={state.data?.club.address}/>{safeUrl(state.data?.club.googleMapsUrl) && <a className="text-link" href={safeUrl(state.data?.club.googleMapsUrl)} target="_blank" rel="noreferrer">Ver en Google Maps ↗</a>}</div></div>
+      <ClubHero club={state.data?.club}/>
       <Status state={state}>
         <nav className="tabs" aria-label="Secciones del club">
           {[
@@ -49,12 +53,12 @@ export function Club({ club, tab = "posts", admin, }: {
                     ["settings", "Configuración"],
                 ]
                 : []),
-        ].map(([key, title]) => (<Link key={key} onClick={()=>void readTab(key)} aria-current={tab === key ? "page" : undefined} href={href("club", { club, tab: key })}>
+        ].map(([key, title]) => (<Link scroll={false} key={key} onClick={()=>void readTab(key)} aria-current={tab === key ? "page" : undefined} href={href("club", { club, tab: key })}>
               {title}{(["applications","reservations","overview","members"].includes(key)) && <NoticeCount club={club} kind={key as "applications" | "reservations" | "overview" | "members"}/>}
             </Link>))}
         </nav>
         {noticeError && <p role="alert">{noticeError}</p>}
-        {tab === "posts" && <div className="club-post-layout"><section><Posts club={club} admin={admin}/></section><ClubSidebar club={club}/></div>}
+        {tab === "posts" && <div className="club-post-layout"><section><Posts club={club} admin={admin}/></section><ClubSidebar club={club} admin={admin}/></div>}
         {tab === "facilities" && <Facilities club={club} admin={admin}/>}
         {tab === "reservations" && <Reservations club={club}/>}
         {admin && tab === "plans" && <Plans club={club}/>}
@@ -64,11 +68,11 @@ export function Club({ club, tab = "posts", admin, }: {
         {admin && tab === "overview" && <Activity club={club}/>}
         {admin && tab === "settings" && state.data && (<div className="club-settings"><Panel title="Editar perfil del club">
             <Form fields={clubFields} initial={state.data.club} url={base} onDone={() => setVersion(v => v + 1)} method="PATCH"/>
-            <div className="club-image-settings">{(["logo","cover"] as const).map(kind=><section key={kind}>{safeUrl(state.data?.club[kind+"Url"])&&<img className={kind==="logo"?"settings-logo":"settings-cover"} src={safeUrl(state.data?.club[kind+"Url"])} alt={kind==="logo"?"Logotipo actual":"Portada actual"}/>}<UploadFeedback endpoint={kind==="logo"?"clubLogoUploader":"clubCoverUploader"} input={{clubId:club}} onDone={()=>setVersion(v=>v+1)}/><h3>{kind==="logo"?"Logotipo":"Portada"}</h3>{state.data?.club[kind+"Url"]&&<Action url={base} method="PATCH" body={kind==="logo"?{clearLogo:true}:{clearCover:true}} confirm="¿Quitar esta imagen?" onDone={()=>setVersion(v=>v+1)}>Quitar imagen</Action>}</section>)}</div>
+            <div className="club-image-settings">{(["logo","cover"] as const).map(kind=><section key={kind}>{safeUrl(state.data?.club[kind+"Url"])&&(kind==="logo"?<AvatarImage className="settings-logo" src={safeUrl(state.data?.club.logoUrl)} alt="Logotipo actual"/>:<img className="settings-cover" src={safeUrl(state.data?.club.coverUrl)} alt="Portada actual"/>)}<UploadFeedback endpoint={kind==="logo"?"clubLogoUploader":"clubCoverUploader"} input={{clubId:club}} onDone={()=>setVersion(v=>v+1)}/><h3>{kind==="logo"?"Logotipo":"Portada"}</h3>{state.data?.club[kind+"Url"]&&<Action url={base} method="PATCH" body={kind==="logo"?{clearLogo:true}:{clearCover:true}} confirm="¿Quitar esta imagen?" onDone={()=>setVersion(v=>v+1)}>Quitar imagen</Action>}</section>)}</div>
             <Action url={`${base}/suspend`} confirm="¿Suspender el club y sus membresías? Se intentará cancelar las suscripciones recurrentes. Solo la administración global puede reactivarlo.">
               Suspender club
             </Action>
-          </Panel></div>)}
+          </Panel><ClubBankForm club={club}/></div>)}
       </Status>
     </>);
 }
@@ -101,22 +105,12 @@ export function Posts({ club, admin, canUpload = admin, }: {
     const base = `/api/clubs/${club}/posts`;
     const state = useData(`${base}?page=${page}&limit=10`, v);
     return (<>
-      <div className="list-heading"><h2>Publicaciones</h2>{admin&&<EditorModal title="Crear publicación"><PostComposer club={club} onDone={()=>setV(v=>v+1)}/></EditorModal>}</div>
-      <Status state={state}>
+      <div className="list-heading"><div><h2>Publicaciones</h2><small>Últimas novedades</small></div>{admin&&<EditorModal title="Crear publicación"><PostComposer club={club} onDone={()=>setV(v=>v+1)}/></EditorModal>}</div>
+      <div><Status state={state}>
         <Empty rows={state.data?.posts || []}/>
-        {state.data?.posts.map((p: Row) => (<Panel key={p.id} title={p.title || "Publicación"}>
-            <p style={{ whiteSpace: "pre-wrap" }}>{p.content}</p>
-            {safeUrl(p.imageUrl) && (<img src={safeUrl(p.imageUrl)} alt={p.title || "Publicación"}/>)}
-            <small>{date(p.updatedAt)}</small>
-            {admin && (<EditorModal title="Editar publicación e imagen">
-                <PostComposer club={club} post={p} onDone={()=>setV(v=>v+1)}/>
-                <Action url={`${base}/${p.id}`} method="DELETE" confirm="¿Eliminar esta publicación definitivamente?" onDone={() => setV(v + 1)}>
-                  Eliminar publicación
-                </Action>
-              </EditorModal>)}
-          </Panel>))}
-        <Pager data={state.data} page={page} onPage={setPage}/>
-      </Status>
+        {state.data?.posts.map((p: Row) => (<PostCard key={p.id} post={p} admin={admin} onChanged={()=>setV(v=>v+1)}/>))}
+        <Pager data={state.data} page={page} onPage={setPage}/>{!!state.data?.posts?.length && !state.data.pagination.hasNextPage && <p className="feed-end">✓ Estás al día con las novedades del club</p>}
+      </Status></div>
     </>);
 }
 function Plans({ club }: {
@@ -153,7 +147,7 @@ function Members({club}:{club:string}){
  const members:Row[]=state.data?.members||[];
  const current=(m:Row)=>m.status==="ACTIVE"&&(m.role==="CLUB_ADMIN"||m.plans?.length>0);
  return <><h2>Miembros del club</h2><Status state={state}>{[true,false].map(active=><section className="member-section" key={String(active)}><h3>{active?"Miembros activos":"Historial de miembros"}</h3><div className="bounded-cards member-cards">{members.filter(m=>Boolean(current(m))===active).map(m=><Panel key={m.membershipId} title={m.user.firstName+" "+m.user.lastName}>
- <span className="member-avatar">{safeUrl(m.user.avatarUrl)?<img src={safeUrl(m.user.avatarUrl)} alt=""/>:m.user.firstName.slice(0,1)+m.user.lastName.slice(0,1)}</span><p>{m.user.email}</p><p>{label(m.role)} · <Badge value={m.status}/></p>{m.role!=="CLUB_ADMIN"&&<p>{m.plans?.map((p:Row)=>p.plan.name).join(", ")||"Sin plan vigente"}</p>}
+ <span className="member-avatar">{safeUrl(m.user.avatarUrl)?<AvatarImage src={safeUrl(m.user.avatarUrl)} alt=""/>:m.user.firstName.slice(0,1)+m.user.lastName.slice(0,1)}</span><p>{m.user.email}</p><p>{label(m.role)} · <Badge value={m.status}/></p>{m.role!=="CLUB_ADMIN"&&<p>{m.plans?.map((p:Row)=>p.plan.name).join(", ")||"Sin plan vigente"}</p>}
  {active&&m.role==="MEMBER"&&<EditorModal title="Retirar del club"><p>Confirma el retiro de {m.user.firstName}.</p><Form fields={[{name:"reason",label:"Motivo",type:"textarea"}]} url={`/api/clubs/${club}/members/${m.user.id}`} method="DELETE" submit="Confirmar retiro" onDone={()=>setVersion(v=>v+1)}/></EditorModal>}
  </Panel>)}</div>{!members.some(m=>Boolean(current(m))===active)&&<p>No hay miembros en esta sección.</p>}</section>)}</Status></>;
 }

@@ -1,3 +1,4 @@
+import { validFacilityIcon } from "@/lib/facility-icons";
 import { prisma } from "@/lib/prisma";
 import { requireAuth } from "@/lib/auth/auth";
 import { NextResponse } from "next/server";
@@ -39,6 +40,8 @@ export async function POST(
       location,
       capacity,
     } = body;
+    if (body.icon !== undefined && !validFacilityIcon(body.icon)) return NextResponse.json({message:"Icono de instalación inválido"},{status:400});
+
 
     if (!name || typeof name !== "string") {
       return NextResponse.json(
@@ -66,6 +69,7 @@ export async function POST(
 
     const facility = await prisma.facility.create({
       data: {
+        ...(body.icon !== undefined && {icon:body.icon}),
         clubId,
         name: name.trim(),
         description:
@@ -141,14 +145,18 @@ export async function GET(
 
     // The feed only needs one suggestion when the member has no booking history.
     if (new URL(request.url).searchParams.get("summary") === "popular") {
+      const limit = new URL(request.url).searchParams.get("limit")==="2" ? 2 : 1;
       const ranked = await prisma.reservation.groupBy({
-        by: ["facilityId"], where: {facility:{clubId},status:"CONFIRMED"},
-        _count:{facilityId:true}, orderBy:[{_count:{facilityId:"desc"}},{facilityId:"asc"}], take:1
+        by:["facilityId"],where:{facility:{clubId},status:"CONFIRMED"},
+        _count:{facilityId:true},orderBy:[{_count:{facilityId:"desc"}},{facilityId:"asc"}],take:limit
       });
-      const suggestion = await prisma.facility.findFirst({
-        where:{clubId, ...(ranked.length > 0 && {id:ranked[0].facilityId})}, orderBy:[{createdAt:"asc"},{id:"asc"}]
-      });
-      return NextResponse.json({success:true,facilities:suggestion?[suggestion]:[]});
+      const ids = ranked.map(row=>row.facilityId);
+      const popular = await prisma.facility.findMany({where:{clubId,id:{in:ids}}});
+      popular.sort((a,b)=>ids.indexOf(a.id)-ids.indexOf(b.id));
+      const other = popular.length<limit ? await prisma.facility.findMany({
+        where:{clubId,id:{notIn:ids}},orderBy:[{createdAt:"asc"},{id:"asc"}],take:limit-popular.length
+      }) : [];
+      return NextResponse.json({success:true,facilities:[...popular,...other]});
     }
     const facilities = await prisma.facility.findMany({
       where: {

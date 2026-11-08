@@ -1,11 +1,14 @@
 "use client";
-import {PlanCard} from "./plan-card";
+import {AvatarImage} from "@/components/avatar-image";
+import {PublicPlans} from "./public-plans";
 import { Location } from "./location";
 import { CreateClub } from "./create-club";
 import { EditorModal } from "./modal";
 import { Icon, PageHeading, PLACEHOLDER_IMAGE } from "@/components/ui";
 import { ClubCard } from "./explore";
-import { useState } from "react";
+import {ClubHero} from "./club-hero";
+import {PostCard} from "./post-card";
+import { useEffect,useRef,useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { UploadButton, UploadDropzone } from "@/lib/uploadthing";
@@ -92,7 +95,7 @@ export function Personal({ view, q = "" }: {
             actividad. <Link href={href("search")}>Explora clubes</Link>.
           </p>)}
         <div className={view === "clubs" ? "club-grid" : view === "memberships" ? "bounded-cards" : "personal-grid"}>
-        {rows.map((r: Row) => view === "memberships" ? <Link key={r.id} className="membership-medal" href={href("club", { club: r.club.id })}>{safeUrl(r.club.logoUrl) ? <img src={safeUrl(r.club.logoUrl)} alt=""/> : <span className="medal-placeholder"><Icon name="users" size={48}/></span>}<h2>{r.club.name}</h2><strong>{label(r.role)}</strong><small>Desde {date(r.joinedAt)}</small></Link> : view === "clubs" ? <ClubCard key={r.id} club={{ ...r, planName: myPlans.data?.subscriptions.filter((s: Row) => s.clubMembership.club.id === r.id && s.status === "ACTIVE").map((s: Row) => s.plan.name).join(", ") }} destination={href("club", { club: r.id })}/> : (<Panel key={r.id} title={r.club?.name ||
+        {rows.map((r: Row) => view === "memberships" ? <Link key={r.id} className="membership-medal" href={href("club", { club: r.club.id })}>{safeUrl(r.club.logoUrl) ? <AvatarImage src={safeUrl(r.club.logoUrl)} alt=""/> : <span className="medal-placeholder"><Icon name="users" size={48}/></span>}<h2>{r.club.name}</h2><strong>{label(r.role)}</strong><small>Desde {date(r.joinedAt)}</small></Link> : view === "clubs" ? <ClubCard key={r.id} club={{ ...r, planName: myPlans.data?.subscriptions.filter((s: Row) => s.clubMembership.club.id === r.id && s.status === "ACTIVE").map((s: Row) => s.plan.name).join(", ") }} destination={href("club", { club: r.id })}/> : (<Panel key={r.id} title={r.club?.name ||
                 r.clubMembership?.club?.name ||
                 r.name ||
                 r.plan?.club?.name}>
@@ -151,35 +154,22 @@ export function Personal({ view, q = "" }: {
       </Status>
     </>);
 }
-export function PublicClub({ club }: {
-    club: string;
-}) {
-    const state = useData(`/api/catalog/clubs/${club}`);
-    const [version, refresh] = useState(0);
-    const posts = useData(`/api/clubs/${club}/posts?page=${version + 1}&limit=10`);
-    const router = useRouter();
-    return (<>
-      <div className="public-club"><div className="club-banner"><img src={safeUrl(state.data?.club.coverUrl) || PLACEHOLDER_IMAGE} alt=""/></div><div className="club-identity"><span className="avatar">{safeUrl(state.data?.club.logoUrl) ? <img src={safeUrl(state.data?.club.logoUrl)} alt=""/> : <Icon name="users" size={30}/>}</span><div><p className="eyebrow">Encuentra tu comunidad</p><h1>{state.data?.club.name || "Club"}</h1><p>{state.data?.club.description}</p><Location value={state.data?.club.address}/>{safeUrl(state.data?.club.googleMapsUrl)&&<a href={safeUrl(state.data?.club.googleMapsUrl)} target="_blank" rel="noreferrer">Ver en Google Maps ↗</a>}</div></div></div>
-      <Status state={state}>
-        <h2>Planes disponibles</h2>
-        <Empty rows={state.data?.plans || []}/>
-        <div className="bounded-cards">{state.data?.plans.map((p: Row) => (<PlanCard key={p.id} plan={p} showRequirements>
-            <Action url={`/api/clubs/${club}/membership-applications`} body={{ planId: p.id }} onDone={() => router.push(href("applications"))}>
-              Solicitar ingreso
-            </Action>
-          </PlanCard>))}</div>
-      </Status>
-      <h2 style={{ marginTop: 36 }}>Publicaciones</h2>
-      <Status state={posts}>
-        <Empty rows={posts.data?.posts || []}/>
-        {posts.data?.posts.map((p: Row) => (<Panel key={p.id} title={p.title || "Publicación"}>
-            <p style={{ whiteSpace: "pre-wrap" }}>{p.content}</p>
-            {safeUrl(p.imageUrl) && (<img src={safeUrl(p.imageUrl)} alt={p.title || "Publicación"}/>)}
-            <small>{date(p.createdAt)}</small>
-          </Panel>))}
-        <Pager data={posts.data} page={version + 1} onPage={(p) => refresh(p - 1)}/>
-      </Status>
-    </>);
+export function PublicClub({club,target=""}:{club:string;target?:string}){
+  const state=useData(`/api/catalog/clubs/${club}`);
+  const [page,setPage]=useState<number|null>(null);
+  const query=new URLSearchParams({limit:"10",page:String(page||1)});
+  if(target && page===null)query.set("anchor",target);
+  const posts=useData(`/api/clubs/${club}/posts?${query}`);
+  useEffect(()=>{
+    if(target && page===null && posts.data && state.data)
+      document.getElementById("post-"+target)?.scrollIntoView({block:"start",behavior:"instant"});
+  },[target,page,posts.data,state.data]);
+  const plans:Row[]=state.data?.plans||[];
+  return <><ClubHero club={state.data?.club}/><div className="public-columns"><section><div className="list-heading"><h2>Publicaciones públicas</h2><small>Últimas novedades</small></div>
+    <div><Status state={posts}><Empty rows={posts.data?.posts||[]}/>{posts.data?.posts.map((p:Row)=><PostCard key={p.id} post={p}/>)}
+    {target && page===null && posts.data?.anchorMissing && <p>La publicación compartida ya no está disponible.</p>}
+    <Pager data={posts.data} page={posts.data?.pagination.page||1} onPage={setPage}/>{!!posts.data?.posts.length&&!posts.data.pagination.hasNextPage&&<p className="feed-end">✓ Estás al día con las novedades del club</p>}</Status></div></section>
+    <aside className="public-plans"><small>Tu próximo club empieza aquí</small><div><Status state={state}><PublicPlans club={club} plans={plans}/></Status></div></aside></div></>;
 }
 export function Payment({ id }: {
     id: string;

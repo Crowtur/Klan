@@ -1,3 +1,4 @@
+import { validFacilityIcon } from "@/lib/facility-icons";
 import { prisma } from "@/lib/prisma";
 import { requireAuth } from "@/lib/auth/auth";
 import { NextResponse } from "next/server";
@@ -140,6 +141,8 @@ export async function PATCH(
       capacity,
       status,
     } = body;
+    if (body.icon !== undefined && !validFacilityIcon(body.icon)) return NextResponse.json({message:"Icono de instalación inválido"},{status:400});
+
 
     if (
       name !== undefined &&
@@ -187,6 +190,7 @@ export async function PATCH(
         id: facilityId,
       },
       data: {
+        ...(body.icon !== undefined && {icon:body.icon}),
         ...(name !== undefined && {
           name: name.trim(),
         }),

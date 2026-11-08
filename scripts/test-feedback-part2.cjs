@@ -1,7 +1,7 @@
 // Run from project root: node scripts/test-feedback-part2.cjs
 // Tests exercise handlers with isolated repositories; no external services are contacted.
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm'),ts=require('typescript');
-function load(file,imports={}){const exports={};const js=ts.transpileModule(fs.readFileSync(file,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020}}).outputText;vm.runInNewContext(js,{exports,Date,URL,Response,Request,console,Error,require:n=>{if(n in imports)return imports[n];if(n==='next/server')return {NextResponse:{json:(body,o)=>({body,status:o?.status||200})}};if(n==='@prisma/client')return {ClubRole:{CLUB_ADMIN:'CLUB_ADMIN'}};throw Error('Unexpected import '+n)}});return exports;}
+function load(file,imports={},globals={}){const exports={};const js=ts.transpileModule(fs.readFileSync(file,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020}}).outputText;vm.runInNewContext(js,{...globals,exports,Date,URL,Response,Request,console,Error,require:n=>{if(n in imports)return imports[n];if(n==='next/server')return {NextResponse:{json:(body,o)=>({body,status:o?.status||200})}};if(n==='@prisma/client')return {ClubRole:{CLUB_ADMIN:'CLUB_ADMIN'}};throw Error('Unexpected import '+n)}});return exports;}
 const routing=load('src/lib/notification-routing.ts');
 test('recipient routing distinguishes administrative applications from personal applications',()=>{
  for(const type of ['APPLICATION_SUBMITTED','DOCUMENTS_SUBMITTED']){const r=routing.notificationDestination({type,clubId:'c1'});assert.equal(r.scope,'club');assert.equal(r.tab,'applications');assert.match(r.path,/tab=applications/)}
@@ -106,4 +106,61 @@ test('approving the last pending document after a rejection sends the applicatio
   });
   const result=await route.PATCH({json:async()=>({status:'APPROVED',version:2})},{params:{clubId:'club',applicationId,documentId:'d'}});
   assert.equal(result.status,200);assert.equal(nextStatus,'PENDING');
+});
+
+test('los datos bancarios se escriben únicamente para el club autorizado y no se devuelven al remitente', async()=>{
+  let allowed=false, stored;
+  const bank=load('src/app/api/clubs/[clubId]/bank/route.ts',{
+    zod:require('zod'),'@/lib/prisma':{prisma:{clubBankDetails:{upsert:async q=>{stored=q.create}}}},
+    '@/lib/auth/auth':{requireAuth:async()=>({id:'actor'})},
+    '@/lib/auth/authorization':{requireClubAdmin:async(id,club)=>{assert.equal(id,'actor');assert.equal(club,'club');if(!allowed)throw Error('FORBIDDEN')}}
+  });
+  const data={beneficiary:'Nombre',bankName:'Banco',accountType:'AHORROS',accountNumber:'000234',identity:'1234',clubId:'ajeno'};
+  const request=()=>new Request('https://local.test',{method:'PUT',body:JSON.stringify(data)});
+  const ctx={params:{clubId:'club'}};
+  assert.equal((await bank.PUT(request(),ctx)).status,403);assert.equal(stored,undefined);
+  allowed=true;const result=await bank.PUT(request(),ctx);assert.equal(result.status,200);
+  assert.equal(stored.clubId,'club');assert.equal(stored.accountNumber,'000234');assert.doesNotMatch(await result.text(),/000234/);
+  data.accountType='incorrecto';assert.equal((await bank.PUT(request(),ctx)).status,400);
+});
+
+test('un enlace público a una publicación anterior recupera su página dentro del club',async()=>{
+  let skip;const prisma={club:{findUnique:async()=>({id:'club',status:'ACTIVE'})},post:{
+    findFirst:async({where})=>{assert.equal(where.clubId,'club');assert.equal(where.id,'post');return {id:'post',updatedAt:new Date()}},
+    count:async({where})=>where.OR?21:27,
+    findMany:async q=>{skip=q.skip;return []}
+  },$transaction:promises=>Promise.all(promises)};
+  const route=load('src/app/api/clubs/[clubId]/posts/route.ts',{'@/lib/prisma':{prisma},'@/lib/auth/auth':{}});
+  const result=await route.GET(new Request('https://local.test/?anchor=post&limit=10'),{params:{clubId:'club'}});
+  assert.equal(result.status,200);assert.equal(result.body.pagination.page,3);assert.equal(skip,20);
+});
+
+test('la limpieza diaria requiere el secreto y conserva las notificaciones sin leer', async()=>{
+  let remaining=[{readAt:null},{readAt:new Date()}];
+  const route=load('src/app/api/cron/read-notifications/route.ts',{
+    '@/lib/prisma':{prisma:{notification:{deleteMany:async({where})=>{
+      assert.deepEqual(JSON.parse(JSON.stringify(where)),{readAt:{not:null}});
+      const count=remaining.filter(n=>n.readAt!==null).length;
+      remaining=remaining.filter(n=>n.readAt===null);return {count};
+    }}}}
+  },{process:{env:{CRON_SECRET:'test-key'}}});
+  const request=key=>new Request('https://local.test/api/cron/read-notifications',{headers:{authorization:'Bearer '+key}});
+  assert.equal((await route.GET(request('incorrect'))).status,401);
+  assert.equal(remaining.length,2);
+  assert.equal((await (await route.GET(request('test-key'))).json()).deleted,1);
+  assert.equal(remaining[0].readAt,null);
+  assert.equal((await (await route.GET(request('test-key'))).json()).deleted,0);
+});
+
+test('solo administradores autorizados pueden recuperar los últimos datos bancarios del club',async()=>{
+  let allowed=false,reads=0;
+  const route=load('src/app/api/clubs/[clubId]/bank/route.ts',{
+    zod:require('zod'),'@/lib/auth/auth':{requireAuth:async()=>({id:'a'})},
+    '@/lib/auth/authorization':{requireClubAdmin:async(id,club)=>{assert.equal(club,'own');if(!allowed)throw Error('FORBIDDEN')}},
+    '@/lib/prisma':{prisma:{clubBankDetails:{findUnique:async({where})=>{reads++;assert.equal(where.clubId,'own');return {accountNumber:'00123'}}}}}
+  });
+  const ctx={params:{clubId:'own'}},req=new Request('https://local.test/');
+  assert.equal((await route.GET(req,ctx)).status,403);assert.equal(reads,0);
+  allowed=true;const response=await route.GET(req,ctx);
+  assert.equal((await response.json()).details.accountNumber,'00123');assert.match(response.headers.get('Cache-Control'),/no-store/);
 });

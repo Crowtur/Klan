@@ -20,7 +20,7 @@ export async function GET(
 
     return NextResponse.json({
       success: true,
-      club: membership.club,
+      club: {...membership.club,_count:{memberships:await prisma.clubMembership.count({where:{clubId,status:"ACTIVE"}})}},
       membership: {
         id: membership.id,
         role: membership.role,
@@ -195,13 +195,18 @@ export async function PATCH(
     }
 
     // Actualizar únicamente si el club continúa activo.
-    const updated = await prisma.club.updateMany({
-      where: {
-        id: clubId,
-        status: "ACTIVE",
-      },
-      data: updateData,
-    });
+    const where = {id:clubId,status:"ACTIVE" as const};
+    const updated = data.clearLogo===true ? await prisma.$transaction(async tx=>{
+      const current=await tx.club.findUnique({where:{id:clubId},select:{logoFileKey:true}});
+      if (!current) return {count:0};
+      const result=await tx.club.updateMany({where:{...where,logoFileKey:current.logoFileKey},data:updateData});
+      if (result.count && current.logoFileKey) {
+        const fileKey=current.logoFileKey;
+        await tx.avatarThumbnail.deleteMany({where:{key:fileKey}});
+        await tx.pendingFileDeletion.upsert({where:{fileKey},create:{fileKey},update:{}});
+      }
+      return result;
+    }) : await prisma.club.updateMany({where,data:updateData});
 
     if (updated.count === 0) {
       return NextResponse.json(

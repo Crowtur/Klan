@@ -187,17 +187,21 @@ export const ourFileRouter = {
       }
 
       // Actualizar la fotografía en PostgreSQL.
-      await prisma.user.update({
-        where: {
-          id: metadata.userId,
-          status: "ACTIVE",
-        },
-        data: {
-          avatarUrl: file.ufsUrl,
-          avatarFileKey: file.key,
-        },
-      });
-
+      const imageUrl = "/api/avatars/" + encodeURIComponent(file.key);
+      try {
+        const { downloadAvatars } = await import("@/lib/thumbnails");
+        const sizes = await downloadAvatars(file.ufsUrl);
+        await prisma.$transaction(async tx => {
+          const saved = await tx.user.updateMany({
+            where: {id:metadata.userId,status:"ACTIVE",avatarFileKey:previousUser.avatarFileKey},
+            data: {avatarUrl:imageUrl,avatarFileKey:file.key}
+          });
+          if (!saved.count) throw new UploadThingError("La imagen cambió. Vuelve a intentarlo.");
+          await tx.avatarThumbnail.upsert({where:{key:file.key},create:{key:file.key,...sizes},update:sizes});
+          if (previousUser.avatarFileKey && previousUser.avatarFileKey !== file.key)
+            await tx.avatarThumbnail.deleteMany({where:{key:previousUser.avatarFileKey}});
+        });
+      } catch (error) { await cleanupFailedUpload(file.key); throw error; }
       // Eliminar la fotografía anterior, si corresponde.
       await cleanupOldFile(
         previousUser.avatarFileKey,
@@ -207,7 +211,7 @@ export const ourFileRouter = {
       return {
         uploadedBy: metadata.userId,
         fileKey: file.key,
-        fileUrl: file.ufsUrl,
+        fileUrl: imageUrl,
         persisted: true,
       };
     }),
@@ -255,17 +259,21 @@ export const ourFileRouter = {
       }
 
       // Guardar el nuevo logotipo.
-      await prisma.club.update({
-        where: {
-          id: metadata.clubId,
-          status: "ACTIVE",
-        },
-        data: {
-          logoUrl: file.ufsUrl,
-          logoFileKey: file.key,
-        },
-      });
-
+      const imageUrl = "/api/avatars/" + encodeURIComponent(file.key);
+      try {
+        const { downloadAvatars } = await import("@/lib/thumbnails");
+        const sizes = await downloadAvatars(file.ufsUrl);
+        await prisma.$transaction(async tx => {
+          const saved = await tx.club.updateMany({
+            where: {id:metadata.clubId,status:"ACTIVE",logoFileKey:previousClub.logoFileKey},
+            data: {logoUrl:imageUrl,logoFileKey:file.key}
+          });
+          if (!saved.count) throw new UploadThingError("La imagen cambió. Vuelve a intentarlo.");
+          await tx.avatarThumbnail.upsert({where:{key:file.key},create:{key:file.key,...sizes},update:sizes});
+          if (previousClub.logoFileKey && previousClub.logoFileKey !== file.key)
+            await tx.avatarThumbnail.deleteMany({where:{key:previousClub.logoFileKey}});
+        });
+      } catch (error) { await cleanupFailedUpload(file.key); throw error; }
       // Intentar eliminar el logotipo anterior.
       await cleanupOldFile(
         previousClub.logoFileKey,
@@ -276,7 +284,7 @@ export const ourFileRouter = {
         uploadedBy: metadata.userId,
         clubId: metadata.clubId,
         fileKey: file.key,
-        fileUrl: file.ufsUrl,
+        fileUrl: imageUrl,
         persisted: true,
       };
     }),

@@ -17,6 +17,10 @@ export async function getCurrentUser(request: Request) {
 
   const token = cookies.auth_token;
 
+  return userFromToken(token);
+}
+
+export async function userFromToken(token:string|undefined) {
   if (!token) {
     return null;
   }

@@ -1,25 +1,29 @@
 "use client";
+import {useState} from "react";
+import {FacilityIcon} from "./facility-icon";
 import Link from "next/link";
 import { Icon } from "@/components/ui";
-import { date, href, Status, useData, type Row } from "./common";
+import { Action, date, href, Status, useData, type Row } from "./common";
 
-export function ClubSidebar({club}: {club:string}) {
-  const bookings = useData(`/api/clubs/${club}/my-reservations`);
+export function ClubSidebar({club,admin}: {club:string;admin:boolean}) {
+  const [version,refresh]=useState(0);
+  const bookings = useData(`/api/clubs/${club}/my-reservations`,version);
   
   const confirmed:Row[] = (bookings.data?.reservations || []).filter((r:Row)=>r.status === "CONFIRMED");
   const next = confirmed.filter(r => Date.parse(r.startAt) >= Date.now())
     .sort((a,b)=>Date.parse(a.startAt)-Date.parse(b.startAt))[0];
   const last = [...confirmed].sort((a,b)=>Date.parse(b.createdAt)-Date.parse(a.createdAt))[0];
-  const facilities = useData(!bookings.loading && !last ? `/api/clubs/${club}/facilities?summary=popular` : null);
-  const facility = last?.facility || facilities.data?.facilities?.[0];
+  const facilities = useData(`/api/clubs/${club}/facilities?summary=popular&limit=2`,version);
+  const suggestions:Row[] = [last?.facility,...(facilities.data?.facilities||[])].filter((f,i,rows)=>f && rows.findIndex(item=>item?.id===f.id)===i).slice(0,2);
   return <aside className="club-post-sidebar">
-    <section className="panel"><Icon name="calendar"/><h3>Mi próxima reserva</h3>
+    <div className="list-heading"><h3>Tu espacio en el club</h3>{admin && <small>Administrador</small>}</div><div className="club-sidebar-cards"><section className="panel"><Icon name="calendar"/><h3>Mi próxima reserva</h3>
       <Status state={bookings}>{next ? <><strong>{next.facility.name}</strong><p>{date(next.startAt)}</p>
-        <Link href={href("club",{club,tab:"reservations"})}>Ver mis reservas</Link></> : <p>No tienes ninguna reserva.</p>}</Status>
+        <p>{Math.round((Date.parse(next.endAt)-Date.parse(next.startAt))/60000)} minutos · Confirmada</p><Action method="PATCH" url={`/api/clubs/${club}/facilities/${next.facilityId}/reservations/${next.id}`} confirm="¿Cancelar esta reserva?" onDone={()=>refresh(v=>v+1)}>Cancelar reserva</Action></> : <p>No tienes ninguna reserva.</p>}</Status>
     </section>
-    <section className="panel"><Icon name="home"/><h3>Instalaciones</h3>
-      <Status state={bookings.loading ? bookings : last ? bookings : facilities}>{facility ? <><strong>{facility.name}</strong><p>{facility.description || facility.location}</p>
-        <Link href={href("facility",{club,id:facility.id})}>Consultar instalación</Link></> : <p>El club aún no tiene instalaciones.</p>}</Status>
+    <section className="panel"><div className="list-heading"><h3>Instalaciones</h3><Link href={href("club",{club,tab:"facilities"})}>Ver todas ↗</Link></div>
+      <Status state={facilities}>{suggestions.length ? suggestions.map(facility=><article className="facility-preview" key={facility.id}><div><FacilityIcon value={facility.icon}/><strong>{facility.name}</strong></div>
+        <small>{facility.location}</small><p>{facility.description}</p>
+        <Link className="btn btn-outline" href={href("facility",{club,id:facility.id})}>Consultar instalación</Link></article>) : <p><FacilityIcon/> El club aún no tiene instalaciones.</p>}</Status>
     </section>
-  </aside>;
+  </div></aside>;
 }

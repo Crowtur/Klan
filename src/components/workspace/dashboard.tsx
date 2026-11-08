@@ -1,4 +1,7 @@
 "use client";
+import {AvatarImage} from "@/components/avatar-image";
+import {ActionDropdown} from "./action-dropdown";
+import {BankDetails,FinanceChart,SettlementForm} from "./finance-controls";
 import {Bars,Pie} from "./activity";
 import {UploadDropzone} from "@/lib/uploadthing";
 import { GlobalFinances } from "./global-finances";
@@ -37,6 +40,7 @@ const names: Record<string, string> = {
     planName: "Plan",
     count: "Cantidad",
     totalSubscriptions: "Total de suscripciones",
+    totalPlans:"Planes totales",activePlans:"Planes activos",
     currentlyActive: "Vigentes",
     byStatus: "Por estado",
     expirations: "Vencimientos",
@@ -278,47 +282,35 @@ export function Dashboard({ club }: {
 }
 export function GlobalClubs() {
     const [v, setV] = useState(0), [page, setPage] = useState(1), [search, setSearch] = useState(""), [status, setStatus] = useState("");
+    const [order,setOrder]=useState("oldest");
     const state = useData("/api/admin/dashboard/clubs?" +
         new URLSearchParams({
             page: String(page),
-            limit: "10",
+            limit: "10",order,scope:"lifetime",
             search,
             ...(status ? { status } : {}),
         }), v);
+    const platform=useData(search||status?"/api/admin/dashboard/clubs?scope=lifetime&limit=1":null,v);
+    const summary=(search||status?platform.data:state.data)?.summary;
     return (<>
       <PageHeading eyebrow="Administración global" title="Clubes de la plataforma" description="Supervisa y administra las comunidades de la plataforma."/>
-      <div className="actions">
-        <label>
-          Buscar
-          <input value={search} onChange={(e) => {
-            setSearch(e.target.value);
-            setPage(1);
-        }}/>
-        </label>
-        <label>
-          Estado
-          <select value={status} onChange={(e) => {
-            setStatus(e.target.value);
-            setPage(1);
-        }}>
-            <option value="">Todos</option>
-            {["ACTIVE", "INACTIVE", "SUSPENDED"].map((s) => (<option key={s} value={s}>
-                {label(s)}
-              </option>))}
-          </select>
-        </label>
-      </div>
-      <Status state={state}>
-        {state.data?.clubs.map((c: Row) => (<Panel key={c.id} title={c.name}>
-            <p><Badge value={c.status}/></p>
-            <Facts value={c.statistics}/>
-            <div className="global-club-actions">{c.status === "ACTIVE" ? (<Action url={`/api/clubs/${c.id}/suspend`} confirm={`¿Suspender ${c.name} y sus membresías?`} onDone={() => setV(v + 1)}>
-                Suspender
-              </Action>) : (<Action url={`/api/clubs/${c.id}/reactivate`} confirm={`¿Reactivar ${c.name}? Esto no reactiva automáticamente todas las membresías.`} onDone={() => setV(v + 1)}>
-                Reactivar
-              </Action>)}
-<Link className="btn btn-outline" href={href("club",{club:c.id})}>Visitar Club (Admin)</Link><Link className="btn btn-outline" href={href("publicClub",{club:c.id})}>Visitar Club (Visitante)</Link></div>
-          </Panel>))}
+      <div className="metrics-grid">{[
+        ["Clubes registrados",summary?.totalClubs,summary && summary.byStatus.ACTIVE+" activos · "+summary.byStatus.SUSPENDED+" suspendidos"],
+        ["Miembros totales",summary?.totals.members,summary && summary.totals.activeMembers+" miembros activos"],
+        ["Ingresos brutos",summary && money(summary.totals.grossRevenue),"Acumulado de la plataforma"]
+      ].map(([k,n,detail])=><dl className="metric-card" key={k}><dt>{k}</dt><dd>{n??"—"}</dd><small>{detail}</small></dl>)}</div>
+      <div className="club-filter"><label><Icon name="search"/><input aria-label="Buscar club" placeholder="Buscar club por nombre..." value={search} onChange={e=>{setSearch(e.target.value);setPage(1)}}/></label>
+      <select aria-label="Estado de los clubes" value={status} onChange={e=>{setStatus(e.target.value);setPage(1)}}><option value="">Todos</option><option value="ACTIVE">Activos</option><option value="SUSPENDED">Suspendidos</option><option value="INACTIVE">Inactivos</option></select></div>
+      <div className="list-heading"><small>{state.data?.pagination.totalItems??"—"} clubes</small><label>Ordenar<select value={order} onChange={e=>{setOrder(e.target.value);setPage(1)}}><option value="oldest">Más antiguos primero</option><option value="newest">Más recientes primero</option></select></label></div>
+      <Status state={state}>{state.data?.clubs.length===0&&<p>No se encontraron clubes.</p>}
+      {state.data?.clubs.map((c:Row)=>{const m=c.statistics;return <article className="panel global-club" key={c.id}><header><span className="avatar">{safeUrl(c.logoUrl)?<AvatarImage src={safeUrl(c.logoUrl)} alt=""/>:c.name.slice(0,2).toUpperCase()}</span><div><h2>{c.name}</h2><small>{c.address&&c.address+" · "}Desde {new Date(c.createdAt).toLocaleDateString("es-EC",{month:"short",year:"numeric"})}</small></div><Badge value={c.status}/></header>
+      <div className="club-kpis">{[
+        ["Miembros",m.totalMembers+" totales",m.activeMembers+" activos"],
+        ["Planes y suscripciones",m.activePlans+" planes activos",m.totalPlans+" planes totales · "+m.activeSubscriptions+" suscripciones activas · "+m.totalFacilities+" instalaciones"],
+        ["Reservas y pagos",m.confirmedReservations+" confirmadas",m.cancelledReservations+" canceladas · "+m.paidPayments+" pagos realizados"],
+        ["Finanzas",money(m.grossRevenue),"Ingresos brutos acumulados"]].map(([k,n,v])=><div key={k}><small>{k}</small><strong>{n}</strong><small>{v}</small></div>)}</div>
+      <footer><small>{c.status==="SUSPENDED"?"Acceso al club suspendido":"Los cambios de estado requieren confirmación"}</small><Action url={`/api/clubs/${c.id}/${c.status==="ACTIVE"?"suspend":"reactivate"}`} confirm={c.status==="ACTIVE"?"¿Suspender el club y sus membresías?":"¿Reactivar el club?"} onDone={()=>setV(v=>v+1)}>{c.status==="ACTIVE"?"Suspender":"Reactivar"}</Action>
+      <ActionDropdown label="Visitar club">{close=><><Link onClick={close} href={href("club",{club:c.id})}>Como admin</Link><Link onClick={close} href={href("publicClub",{club:c.id})}>Como visitante</Link></>}</ActionDropdown></footer></article>})}
         <Pager data={state.data} page={page} onPage={setPage}/>
       </Status>
     </>);
@@ -336,21 +328,9 @@ export function Settlement({ id }: {
             <Panel title={state.data.settlement.club?.name}>
               <div className="metrics-grid">{[["Bruto", state.data.settlement.grossAmount], ["Comisiones", state.data.settlement.totalFees], ["Neto a abonar", state.data.settlement.netAmount]].map(([k, v]) => <dl className="metric-card" key={k}><dt>{k}</dt><dd>{money(v)}</dd></dl>)}</div><p><Badge value={state.data.settlement.status}/> · {state.data.settlement.month}/{state.data.settlement.year}</p><p>Referencia: {state.data.settlement.paymentReference || "Pendiente de registrar"}</p><p>{state.data.settlement.notes}</p>
             </Panel>
-            <Panel title="Comprobante de pago">{safeUrl(state.data.settlement.receiptUrl)&&<a className="btn btn-outline" target="_blank" rel="noreferrer" href={safeUrl(state.data.settlement.receiptUrl)}>Ver comprobante: {state.data.settlement.receiptFileName}</a>}<UploadDropzone endpoint="settlementReceiptUploader" input={{settlementId:id}} config={{mode:"auto"}} content={{label:"Arrastra el comprobante o haz clic para elegir",allowedContent:"Un PDF o imagen · Máximo 8 MB",button:"Subir comprobante"}} onClientUploadComplete={()=>setV(v=>v+1)} onUploadError={e=>setUploadError(e.message)}/>{uploadError&&<p role="alert">{uploadError}</p>}</Panel>
+            <BankDetails data={state.data.settlement.club.bankDetails}/><Panel title="Comprobante de pago">{safeUrl(state.data.settlement.receiptUrl)&&<a className="btn btn-outline" target="_blank" rel="noreferrer" href={safeUrl(state.data.settlement.receiptUrl)}>Ver comprobante: {state.data.settlement.receiptFileName}</a>}<UploadDropzone endpoint="settlementReceiptUploader" input={{settlementId:id}} config={{mode:"auto"}} content={{label:"Arrastra el comprobante o haz clic para elegir",allowedContent:"Un PDF o imagen · Máximo 8 MB",button:"Subir comprobante"}} onClientUploadComplete={()=>setV(v=>v+1)} onUploadError={e=>setUploadError(e.message)}/>{uploadError&&<p role="alert">{uploadError}</p>}</Panel>
             <p>Registrar el estado no realiza una transferencia bancaria.</p>
-            <Form url={`/api/admin/settlements/${id}`} method="PATCH" initial={state.data.settlement} fields={[
-                {
-                    name: "status",
-                    label: "Estado",
-                    options: [
-                        { value: "PENDING", label: "Pendiente" },
-                        { value: "PROCESSING", label: "En proceso" },
-                        { value: "PAID", label: "Pagada" },
-                    ],
-                },
-                { name: "paymentReference", label: "Referencia del pago" },
-                { name: "notes", label: "Notas", type: "textarea" },
-            ]} onDone={() => setV(v + 1)}/>
+            <SettlementForm settlement={state.data.settlement} onDone={()=>setV(v=>v+1)}/>
           </>)}
       </Status>
     </>);
@@ -359,5 +339,5 @@ export function Settlement({ id }: {
 function GlobalOverview({data:d,year,month}:{data:Row;year:string;month:string}){
  const finance=useData(`/api/admin/dashboard/finances?year=${year}&month=${Number(month)}`);
  const statusValues=(v:Row)=>Object.entries(v).map(([key,value])=>({label:names[key]||label(key),value:Number(value)}));
- return <><div className="charts-grid"><Pie title="Clubes" values={statusValues({active:d.clubs.active,inactive:d.clubs.inactive,suspended:d.clubs.suspended})}/><Pie title="Usuarios" values={statusValues({active:d.users.active,inactive:d.users.inactive,suspended:d.users.suspended})}/><Pie title="Membresías" values={[{label:"Activas",value:d.memberships.active},{label:"No activas",value:Math.max(0,d.memberships.total-d.memberships.active)}]}/><Pie title="Suscripciones" values={statusValues(d.subscriptions.byStatus)}/><Pie title="Reservas" values={statusValues({confirmed:d.reservations.confirmed,cancelled:d.reservations.cancelled})}/><Status state={finance}><Pie title="Finanzas · ingresos por club (USD)" values={(finance.data?.financesByClub||[]).map((c:Row)=>({label:c.clubName,value:Number(c.grossRevenue)}))}/></Status></div><Bars grouped title="Evolución mensual" yAxis="Altas" xAxis="Meses" calendar="month" series={["Nuevos clubes","Nuevos usuarios"]} rows={d.monthlyGrowth.map((r:Row)=>({label:r.year+"-"+String(r.month).padStart(2,"0"),values:[r.newClubs,r.newUsers]}))}/></>;
+ return <><div className="charts-grid"><Pie title="Clubes" values={statusValues({active:d.clubs.active,inactive:d.clubs.inactive,suspended:d.clubs.suspended})}/><Pie title="Usuarios" values={statusValues({active:d.users.active,inactive:d.users.inactive,suspended:d.users.suspended})}/><Pie title="Membresías" values={[{label:"Activas",value:d.memberships.active},{label:"No activas",value:Math.max(0,d.memberships.total-d.memberships.active)}]}/><Pie title="Suscripciones" values={statusValues(d.subscriptions.byStatus)}/><Pie title="Reservas" values={statusValues({confirmed:d.reservations.confirmed,cancelled:d.reservations.cancelled})}/><Status state={finance}><FinanceChart clubs={finance.data?.financesByClub||[]}/></Status></div><Bars grouped title="Evolución mensual" yAxis="Altas" xAxis="Meses" calendar="month" series={["Nuevos clubes","Nuevos usuarios"]} rows={d.monthlyGrowth.map((r:Row)=>({label:r.year+"-"+String(r.month).padStart(2,"0"),values:[r.newClubs,r.newUsers]}))}/></>;
 }

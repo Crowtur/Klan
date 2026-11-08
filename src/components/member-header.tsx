@@ -1,4 +1,5 @@
 "use client";
+import {AvatarImage} from "@/components/avatar-image";
 import { ThemeToggle } from "./theme-toggle";
 import { AvatarUpload } from "./avatar-upload";
 import { Notifications } from "./workspace/notifications";
@@ -19,7 +20,7 @@ export default function MemberHeader() {
     const box = useRef<HTMLDivElement>(null), button = useRef<HTMLButtonElement>(null);
     const path = usePathname(), router = useRouter();
     async function refresh() {
-        const r = await fetch("/api/auth/me", { cache: "no-store" });
+        const r = await fetch("/api/auth/session", { cache: "no-store" });
         if (r.ok) {
             const d = await r.json();
             setUser(d.user);
@@ -29,7 +30,7 @@ export default function MemberHeader() {
     }
     useEffect(() => {
         let live = true;
-        fetch("/api/auth/me", { cache: "no-store" })
+        fetch("/api/auth/session", { cache: "no-store" })
             .then(async (r) => {
             const d = await r.json();
             if (live)
@@ -86,9 +87,9 @@ export default function MemberHeader() {
       <Brand href={user ? "/app" : "/"}/>
       {user ? (<>
 
-          <ThemeToggle /><Suspense fallback={null}><Notifications /></Suspense><div ref={box} style={{ position: "relative" }}>
+          {path!=="/" && <><ThemeToggle /><Suspense fallback={null}><Notifications /></Suspense></>}<div ref={box} style={{ position: "relative" }}>
             <button ref={button} className={s.avatarButton} aria-label="Abrir perfil" aria-expanded={open} aria-controls="profile-panel" onClick={() => setOpen(!open)}>
-              <span className="avatar">{user.avatarUrl ? (<img src={user.avatarUrl} alt="Tu foto" width={36} height={36} style={{ borderRadius: "50%", objectFit: "cover" }}/>) : (user.firstName.slice(0, 1) + user.lastName.slice(0, 1))}</span><Icon name="chevron" size={16}/>
+              <span className="avatar">{user.avatarUrl ? (<AvatarImage src={user.avatarUrl} alt="Tu foto" width={36} height={36} style={{ borderRadius: "50%", objectFit: "cover" }}/>) : (user.firstName.slice(0, 1) + user.lastName.slice(0, 1))}</span><Icon name="chevron" size={16}/>
             </button>
             {open && (<section id="profile-panel" aria-label="Tu perfil" className={s.profilePanel}>
                 <div className={s.profileInfo}><strong>
