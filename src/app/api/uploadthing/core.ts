@@ -1,3 +1,48 @@
+/**
+ * ==============================================================================
+ * PONTIFICIA UNIVERSIDAD CATÓLICA DEL ECUADOR
+ * Facultad Internacional de Innovación (PUCE - Icam)
+ * ==============================================================================
+ * 
+ * PROYECTO DE TITULACIÓN - INGENIERÍA INTEGRAL
+ * Autor: Diego Alexis Tipán Zambrano
+ * Director del Proyecto: PhD. Rafael Melgarejo
+ * Promoción: Primera Promoción (Año 2026)
+ * 
+ * ------------------------------------------------------------------------------
+ * DECLARACIÓN SOBRE EL USO DE INTELIGENCIA ARTIFICIAL
+ * ------------------------------------------------------------------------------
+ * Se declara formalmente el uso de herramientas de Inteligencia Artificial como
+ * soporte y asistente técnico para el desarrollo de este proyecto, destacando su
+ * aplicación en:
+ * 
+ * - Generación y optimización de bloques de código repetitivos y extensos.
+ * - Desarrollos de endpoints complejos con variabilidad de permisos y roles.
+ * - Integración de nuevas funciones y sugerencias de arquitectura de software.
+ * - Depuración ágil, corrección de errores y optimización de rendimiento.
+ * - Creación, maquetación e integración de diseños UI/UX de formato visual a código.
+ * - Automatización de documentación técnica y estructuración de comentarios.
+ * 
+ * Herramientas de IA utilizadas:
+ * - GPT-5.6 Luna
+ * - GPT-6 Astra
+ * - Gemini 3.6 Flash
+ * - Figma AI (Visual Engine / Make Real)
+ * 
+ * ------------------------------------------------------------------------------
+ * DERECHOS DE AUTOR Y PROPIEDAD INTELECTUAL
+ * ------------------------------------------------------------------------------
+ * Los derechos del presente proyecto corresponden a la Pontificia Universidad
+ * Católica del Ecuador junto al autor y al director del proyecto, en estricto
+ * cumplimiento del reglamento institucional sobre patentes, tesis y titulación.
+ * 
+ * ALCANCE: Dichos derechos aplican exclusivamente al código fuente desarrollado
+ * en este proyecto, excluyendo la idea de negocio global y futuras versiones 
+ * o derivados sustanciales que puedan desarrollarse sobre el sistema.
+ * ==============================================================================
+ */
+
+/* Cada tipo de archivo declara sus límites, el permiso necesario y la operación que vincula el resultado con el registro de Klubo. */
 import { createUploadthing, type FileRouter } from "uploadthing/next";
 import { UploadThingError } from "uploadthing/server";
 import { z } from "zod";
@@ -14,6 +59,7 @@ const clubUploadInput = z.object({
   clubId: z.string().uuid(),
 });
 
+/** Exige una sesión válida para vincular la carga a un usuario. */
 async function getAuthenticatedUser(req: Request) {
   try {
     return await requireAuth(req);
@@ -25,6 +71,7 @@ async function getAuthenticatedUser(req: Request) {
   }
 }
 
+/** Vuelve a comprobar el rol antes de permitir una carga administrativa. */
 async function verifyClubAdmin(userId: string, clubId: string) {
   try {
     await requireClubAdmin(userId, clubId);
@@ -40,6 +87,7 @@ async function verifyClubAdmin(userId: string, clubId: string) {
  * Comprueba si un archivo continúa referenciado
  * en algún registro de la plataforma.
  */
+/** Busca referencias antes de eliminar una clave que podría seguir en uso. */
 async function isFileReferenced(fileKey: string) {
   const [receipts, users, clubs, documents, versions, posts] = await Promise.all([
     prisma.clubSettlement.count({ where: { receiptFileKey: fileKey } }),
@@ -70,6 +118,7 @@ async function isFileReferenced(fileKey: string) {
  * Un fallo de limpieza no debe provocar que
  * la nueva imagen deje de funcionar.
  */
+/** Comprueba si el archivo anterior puede retirarse al reemplazarlo. */
 async function cleanupOldFile(
   oldFileKey: string | null,
   newFileKey: string
@@ -107,6 +156,7 @@ async function cleanupOldFile(
  * Intenta eliminar un archivo recién subido
  * cuando no pudo registrarse en PostgreSQL.
  */
+/** Intenta retirar un archivo cuya vinculación no llegó a completarse. */
 async function cleanupFailedUpload(fileKey: string) {
   try {
     const referenced = await isFileReferenced(fileKey);

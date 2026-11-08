@@ -1,3 +1,47 @@
+/**
+ * ==============================================================================
+ * PONTIFICIA UNIVERSIDAD CATÓLICA DEL ECUADOR
+ * Facultad Internacional de Innovación (PUCE - Icam)
+ * ==============================================================================
+ * 
+ * PROYECTO DE TITULACIÓN - INGENIERÍA INTEGRAL
+ * Autor: Diego Alexis Tipán Zambrano
+ * Director del Proyecto: PhD. Rafael Melgarejo
+ * Promoción: Primera Promoción (Año 2026)
+ * 
+ * ------------------------------------------------------------------------------
+ * DECLARACIÓN SOBRE EL USO DE INTELIGENCIA ARTIFICIAL
+ * ------------------------------------------------------------------------------
+ * Se declara formalmente el uso de herramientas de Inteligencia Artificial como
+ * soporte y asistente técnico para el desarrollo de este proyecto, destacando su
+ * aplicación en:
+ * 
+ * - Generación y optimización de bloques de código repetitivos y extensos.
+ * - Desarrollos de endpoints complejos con variabilidad de permisos y roles.
+ * - Integración de nuevas funciones y sugerencias de arquitectura de software.
+ * - Depuración ágil, corrección de errores y optimización de rendimiento.
+ * - Creación, maquetación e integración de diseños UI/UX de formato visual a código.
+ * - Automatización de documentación técnica y estructuración de comentarios.
+ * 
+ * Herramientas de IA utilizadas:
+ * - GPT-5.6 Luna
+ * - GPT-6 Astra
+ * - Gemini 3.6 Flash
+ * - Figma AI (Visual Engine / Make Real)
+ * 
+ * ------------------------------------------------------------------------------
+ * DERECHOS DE AUTOR Y PROPIEDAD INTELECTUAL
+ * ------------------------------------------------------------------------------
+ * Los derechos del presente proyecto corresponden a la Pontificia Universidad
+ * Católica del Ecuador junto al autor y al director del proyecto, en estricto
+ * cumplimiento del reglamento institucional sobre patentes, tesis y titulación.
+ * 
+ * ALCANCE: Dichos derechos aplican exclusivamente al código fuente desarrollado
+ * en este proyecto, excluyendo la idea de negocio global y futuras versiones 
+ * o derivados sustanciales que puedan desarrollarse sobre el sistema.
+ * ==============================================================================
+ */
+
 "use client";
 import {AvatarImage} from "@/components/avatar-image";
 import {PublicPlans} from "./public-plans";
@@ -13,6 +57,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { UploadButton, UploadDropzone } from "@/lib/uploadthing";
 import { Badge, api, useData, Panel, Status, Empty, Pager, Action, Form, href, label, date, money, safeUrl, clubFields, type Row, } from "./common";
+/** Selecciona los datos del módulo personal y deriva las acciones a partir del estado de cada solicitud o suscripción. */
 export function Personal({ view, q = "" }: {
     view: string;
     q?: string;
@@ -135,14 +180,14 @@ export function Personal({ view, q = "" }: {
                   </button>)}
               {view === "subscriptions" &&
                 r.status === "ACTIVE" &&
-                r.plan.type === "PAID" && !r.cancelAtPeriodEnd && r.billingMode !== "ONE_TIME" && (<Action url={`/api/clubs/${r.clubMembership.club.id}/subscriptions/${r.id}/cancel`} confirm="¿Programar la cancelación al finalizar el período actual?" onDone={() => refresh((v) => v + 1)}>
+                r.plan.type === "PAID" && !r.cancelAtPeriodEnd && r.billingMode !== "ONE_TIME" && (<Action variant="destructive" url={`/api/clubs/${r.clubMembership.club.id}/subscriptions/${r.id}/cancel`} confirm="¿Programar la cancelación al finalizar el período actual?" onDone={() => refresh((v) => v + 1)}>
                     Cancelar renovación
                   </Action>)}
             </div>
             {view === "applications" && (<>
                 <div className="step-progress">{["Documentos", "Revisión", "Ingreso"].map((step, i) => <span className={(r.status === "APPROVED" || i === 0 || i === 1 && r.status === "DOCUMENTATION_REVIEW") ? "done" : ""} key={step}>{i + 1}. {step}</span>)}</div>
                 <p>{r.rejectionReason}</p>
-                {["PENDING", "DOCUMENTATION_REVIEW"].includes(r.status)&&<><ApplicationDocuments application={r} onDone={()=>refresh(v=>v+1)}/><Action url={`/api/clubs/${r.plan.clubId}/membership-applications/${r.id}`} method="PATCH" confirm="¿Cancelar esta solicitud?" onDone={()=>refresh(v=>v+1)}>Cancelar solicitud</Action></>}
+                {["PENDING", "DOCUMENTATION_REVIEW"].includes(r.status)&&<><ApplicationDocuments application={r} onDone={()=>refresh(v=>v+1)}/><Action variant="destructive" url={`/api/clubs/${r.plan.clubId}/membership-applications/${r.id}`} method="PATCH" confirm="¿Cancelar esta solicitud?" onDone={()=>refresh(v=>v+1)}>Cancelar solicitud</Action></>}
                 {r.status === "APPROVED" && (<Link className="btn btn-outline" href={href("subscriptions")}>
                     Consultar suscripción y pago
                   </Link>)}
@@ -153,6 +198,7 @@ export function Personal({ view, q = "" }: {
       </Status>
     </>);
 }
+/** Comparte la ficha pública entre exploración y espacio privado y resuelve publicaciones enlazadas por identificador. */
 export function PublicClub({club,target=""}:{club:string;target?:string}){
   const state=useData(`/api/catalog/clubs/${club}`);
   const [page,setPage]=useState<number|null>(null);
@@ -170,6 +216,7 @@ export function PublicClub({club,target=""}:{club:string;target?:string}){
     <Pager data={posts.data} page={posts.data?.pagination.page||1} onPage={setPage}/>{!!posts.data?.posts.length&&!posts.data.pagination.hasNextPage&&<p className="feed-end">✓ Estás al día con las novedades del club</p>}</Status></div></section>
     <aside className="public-plans"><small>Tu próximo club empieza aquí</small><div><Status state={state}><PublicPlans club={club} plans={plans}/></Status></div></aside></div></>;
 }
+/** Solicita el detalle autorizado y presenta la confirmación y el importe del pago. */
 export function Payment({ id }: {
     id: string;
 }) {
@@ -191,6 +238,7 @@ export function Payment({ id }: {
     </>);
 }
 
+/** Relaciona cada requisito con su archivo vigente y envía la versión al solicitar su retirada. */
 function ApplicationDocuments({application:r,onDone}:{application:Row;onDone:()=>void}){
  const [error,setError]=useState("");
  const base=`/api/clubs/${r.plan.clubId}/membership-applications/${r.id}`;

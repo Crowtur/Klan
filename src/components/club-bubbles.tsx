@@ -1,3 +1,47 @@
+/**
+ * ==============================================================================
+ * PONTIFICIA UNIVERSIDAD CATÓLICA DEL ECUADOR
+ * Facultad Internacional de Innovación (PUCE - Icam)
+ * ==============================================================================
+ * 
+ * PROYECTO DE TITULACIÓN - INGENIERÍA INTEGRAL
+ * Autor: Diego Alexis Tipán Zambrano
+ * Director del Proyecto: PhD. Rafael Melgarejo
+ * Promoción: Primera Promoción (Año 2026)
+ * 
+ * ------------------------------------------------------------------------------
+ * DECLARACIÓN SOBRE EL USO DE INTELIGENCIA ARTIFICIAL
+ * ------------------------------------------------------------------------------
+ * Se declara formalmente el uso de herramientas de Inteligencia Artificial como
+ * soporte y asistente técnico para el desarrollo de este proyecto, destacando su
+ * aplicación en:
+ * 
+ * - Generación y optimización de bloques de código repetitivos y extensos.
+ * - Desarrollos de endpoints complejos con variabilidad de permisos y roles.
+ * - Integración de nuevas funciones y sugerencias de arquitectura de software.
+ * - Depuración ágil, corrección de errores y optimización de rendimiento.
+ * - Creación, maquetación e integración de diseños UI/UX de formato visual a código.
+ * - Automatización de documentación técnica y estructuración de comentarios.
+ * 
+ * Herramientas de IA utilizadas:
+ * - GPT-5.6 Luna
+ * - GPT-6 Astra
+ * - Gemini 3.6 Flash
+ * - Figma AI (Visual Engine / Make Real)
+ * 
+ * ------------------------------------------------------------------------------
+ * DERECHOS DE AUTOR Y PROPIEDAD INTELECTUAL
+ * ------------------------------------------------------------------------------
+ * Los derechos del presente proyecto corresponden a la Pontificia Universidad
+ * Católica del Ecuador junto al autor y al director del proyecto, en estricto
+ * cumplimiento del reglamento institucional sobre patentes, tesis y titulación.
+ * 
+ * ALCANCE: Dichos derechos aplican exclusivamente al código fuente desarrollado
+ * en este proyecto, excluyendo la idea de negocio global y futuras versiones 
+ * o derivados sustanciales que puedan desarrollarse sobre el sistema.
+ * ==============================================================================
+ */
+
 "use client";
 import {AvatarImage} from "@/components/avatar-image";
 import { useEffect,useRef,useState } from "react";
@@ -5,8 +49,10 @@ import Link from "next/link";
 import { Icon } from "./ui";
 type Club={id:string;name:string;logoUrl:string|null};
 type Ball={x:number;y:number;vx:number;vy:number};
+/** Distribuye los clubes de la portada en posiciones animadas y conserva marcadores mientras carga el catálogo. */
 export function ClubBubbles(){
   const [clubs,setClubs]=useState<Club[]>([]);
+  const physics=useRef<Ball[]>([]);
   const canvas=useRef<HTMLDivElement>(null);
   useEffect(()=>{
     const controller=new AbortController();
@@ -17,20 +63,33 @@ export function ClubBubbles(){
     const box=canvas.current!;
     const nodes=Array.from(box.children) as HTMLElement[];
     const motion=matchMedia("(prefers-reduced-motion: reduce)");
-    let frame=0,last=0,diameter=0,width=0,height=0,balls:Ball[]=[];
+    const balls=physics.current;
+    let frame=0,last=0,diameter=0,width=0,height=0;
     function place(){
-      width=box.clientWidth;height=box.clientHeight;
+      const nextWidth=box.clientWidth,nextHeight=box.clientHeight;
+      if (!nextWidth || !nextHeight || (width===nextWidth && height===nextHeight)) return;
+      const previousX=width-diameter,previousY=height-diameter;
+      width=nextWidth;height=nextHeight;
       const columns=width/height>=1.4?4:3;
       const rows=Math.ceil(nodes.length/columns);
       const cellWidth=width/columns,cellHeight=height/rows;
       diameter=Math.min(116,cellWidth*.94,cellHeight*.94);
       box.style.setProperty("--bubble-size",diameter+"px");
+      // Un cambio real de tamaño adapta las posiciones al espacio disponible y conserva las velocidades.
+      if (balls.length) {
+        for (const ball of balls) {
+          if(previousX>0) ball.x*= (width-diameter)/previousX;
+          if(previousY>0) ball.y*= (height-diameter)/previousY;
+        }
+        paint();
+        return;
+      }
       const slots=Array.from({length:columns*rows},(_,index)=>index);
-      balls=nodes.map(()=>{
+      balls.push(...nodes.map(()=>{
         const slot=slots.splice(Math.floor(Math.random()*slots.length),1)[0];
         const angle=Math.random()*2*Math.PI;
         return {x:(slot%columns)*cellWidth+Math.random()*(cellWidth-diameter),y:Math.floor(slot/columns)*cellHeight+Math.random()*(cellHeight-diameter),vx:Math.cos(angle)*36,vy:Math.sin(angle)*36};
-      });
+      }));
       paint();
     }
     function paint(){balls.forEach((b,i)=>nodes[i].style.transform=`translate3d(${b.x}px,${b.y}px,0)`)}
@@ -58,10 +117,20 @@ export function ClubBubbles(){
     const resize=new ResizeObserver(place);resize.observe(box);place();start();
     motion.addEventListener("change",start);document.addEventListener("visibilitychange",start);
     return ()=>{resize.disconnect();cancelAnimationFrame(frame);motion.removeEventListener("change",start);document.removeEventListener("visibilitychange",start)};
-  },[clubs]);
+  },[]);
   return <div ref={canvas} className="club-bubbles" aria-label="Explorar clubes">{Array.from({length:7},(_,i)=>{
     const c=clubs[i],name=c?.name||"Club "+(i+1);
-    const content=<><span className="bubble-photo">{c?.logoUrl?<AvatarImage src={c.logoUrl} alt=""/>:<Icon name="users" size={30}/>}</span><strong>{name}</strong></>;
+    const content=<><BubblePhoto key={c?.logoUrl || "placeholder"} src={c?.logoUrl}/><strong>{name}</strong></>;
     return <div className="bubble-position" key={i}>{c?<Link href={"/explore/"+c.id} title={name}>{content}</Link>:<span>{content}</span>}</div>;
   })}</div>;
+}
+
+/** El logo se descarga bajo el marcador. El navegador elige la miniatura y solo se muestra tras la carga. */
+function BubblePhoto({src}:{src?:string|null}) {
+  const [ready,setReady]=useState(false);
+  return <span className="bubble-photo" data-ready={ready}>
+    <Icon name="users" size={30}/>
+    {src && <AvatarImage src={src} alt="" loading="eager" decoding="async"
+      onLoad={()=>setReady(true)} onError={()=>setReady(false)}/>}
+  </span>;
 }

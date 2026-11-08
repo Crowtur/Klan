@@ -1,3 +1,47 @@
+/**
+ * ==============================================================================
+ * PONTIFICIA UNIVERSIDAD CATÓLICA DEL ECUADOR
+ * Facultad Internacional de Innovación (PUCE - Icam)
+ * ==============================================================================
+ * 
+ * PROYECTO DE TITULACIÓN - INGENIERÍA INTEGRAL
+ * Autor: Diego Alexis Tipán Zambrano
+ * Director del Proyecto: PhD. Rafael Melgarejo
+ * Promoción: Primera Promoción (Año 2026)
+ * 
+ * ------------------------------------------------------------------------------
+ * DECLARACIÓN SOBRE EL USO DE INTELIGENCIA ARTIFICIAL
+ * ------------------------------------------------------------------------------
+ * Se declara formalmente el uso de herramientas de Inteligencia Artificial como
+ * soporte y asistente técnico para el desarrollo de este proyecto, destacando su
+ * aplicación en:
+ * 
+ * - Generación y optimización de bloques de código repetitivos y extensos.
+ * - Desarrollos de endpoints complejos con variabilidad de permisos y roles.
+ * - Integración de nuevas funciones y sugerencias de arquitectura de software.
+ * - Depuración ágil, corrección de errores y optimización de rendimiento.
+ * - Creación, maquetación e integración de diseños UI/UX de formato visual a código.
+ * - Automatización de documentación técnica y estructuración de comentarios.
+ * 
+ * Herramientas de IA utilizadas:
+ * - GPT-5.6 Luna
+ * - GPT-6 Astra
+ * - Gemini 3.6 Flash
+ * - Figma AI (Visual Engine / Make Real)
+ * 
+ * ------------------------------------------------------------------------------
+ * DERECHOS DE AUTOR Y PROPIEDAD INTELECTUAL
+ * ------------------------------------------------------------------------------
+ * Los derechos del presente proyecto corresponden a la Pontificia Universidad
+ * Católica del Ecuador junto al autor y al director del proyecto, en estricto
+ * cumplimiento del reglamento institucional sobre patentes, tesis y titulación.
+ * 
+ * ALCANCE: Dichos derechos aplican exclusivamente al código fuente desarrollado
+ * en este proyecto, excluyendo la idea de negocio global y futuras versiones 
+ * o derivados sustanciales que puedan desarrollarse sobre el sistema.
+ * ==============================================================================
+ */
+
 "use client";
 import {AvatarImage} from "@/components/avatar-image";
 import { Location } from "./location";
@@ -7,12 +51,14 @@ import Link from "next/link";
 import { Icon, PageHeading, PLACEHOLDER_IMAGE } from "@/components/ui";
 import { useData, Status, Pager, safeUrl, href, type Row } from "./common";
 import "./workspace.css";
+/** Presenta el club y dirige a la vista pública o privada que determine el contexto. */
 export function ClubCard({ club, destination }: {
     club: Row;
     destination: string;
 }) {
     return <article className={club.role ? "club-card joined-club" : "club-card"}><img className="club-cover" src={safeUrl(club.coverUrl) || PLACEHOLDER_IMAGE} alt="" loading="lazy"/><div className="club-card-body"><div className="row"><span className="avatar">{safeUrl(club.logoUrl) ? <AvatarImage src={safeUrl(club.logoUrl)} alt=""/> : <Icon name="users" size={25}/>}</span><h2>{club.name}</h2>{club.role && <NoticeCount club={club.id}/>}</div><p>{club.description || "Conoce este club y encuentra tu próxima comunidad."}</p><p className="club-meta"><Location value={club.address}/><span>{club.memberCount ?? club._count?.memberships ?? "—"} {(club.memberCount ?? club._count?.memberships) === 1 ? "miembro" : "miembros"}</span></p>{club.role === "CLUB_ADMIN" ? <small>Administrador</small> : club.planName && <small>{club.planName}</small>}<Link className="btn btn-outline" href={destination}>Ver club <Icon name="arrow" size={17}/></Link></div></article>;
 }
+/** Gestiona la búsqueda y la paginación del catálogo a partir de los filtros elegidos. */
 export function BrowseClubs({ authenticated = false, initialQuery = "" }: {
     authenticated?: boolean;
     initialQuery?: string;

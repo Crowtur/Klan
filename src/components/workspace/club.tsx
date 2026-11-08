@@ -1,3 +1,47 @@
+/**
+ * ==============================================================================
+ * PONTIFICIA UNIVERSIDAD CATÓLICA DEL ECUADOR
+ * Facultad Internacional de Innovación (PUCE - Icam)
+ * ==============================================================================
+ * 
+ * PROYECTO DE TITULACIÓN - INGENIERÍA INTEGRAL
+ * Autor: Diego Alexis Tipán Zambrano
+ * Director del Proyecto: PhD. Rafael Melgarejo
+ * Promoción: Primera Promoción (Año 2026)
+ * 
+ * ------------------------------------------------------------------------------
+ * DECLARACIÓN SOBRE EL USO DE INTELIGENCIA ARTIFICIAL
+ * ------------------------------------------------------------------------------
+ * Se declara formalmente el uso de herramientas de Inteligencia Artificial como
+ * soporte y asistente técnico para el desarrollo de este proyecto, destacando su
+ * aplicación en:
+ * 
+ * - Generación y optimización de bloques de código repetitivos y extensos.
+ * - Desarrollos de endpoints complejos con variabilidad de permisos y roles.
+ * - Integración de nuevas funciones y sugerencias de arquitectura de software.
+ * - Depuración ágil, corrección de errores y optimización de rendimiento.
+ * - Creación, maquetación e integración de diseños UI/UX de formato visual a código.
+ * - Automatización de documentación técnica y estructuración de comentarios.
+ * 
+ * Herramientas de IA utilizadas:
+ * - GPT-5.6 Luna
+ * - GPT-6 Astra
+ * - Gemini 3.6 Flash
+ * - Figma AI (Visual Engine / Make Real)
+ * 
+ * ------------------------------------------------------------------------------
+ * DERECHOS DE AUTOR Y PROPIEDAD INTELECTUAL
+ * ------------------------------------------------------------------------------
+ * Los derechos del presente proyecto corresponden a la Pontificia Universidad
+ * Católica del Ecuador junto al autor y al director del proyecto, en estricto
+ * cumplimiento del reglamento institucional sobre patentes, tesis y titulación.
+ * 
+ * ALCANCE: Dichos derechos aplican exclusivamente al código fuente desarrollado
+ * en este proyecto, excluyendo la idea de negocio global y futuras versiones 
+ * o derivados sustanciales que puedan desarrollarse sobre el sistema.
+ * ==============================================================================
+ */
+
 "use client";
 import {AvatarImage} from "@/components/avatar-image";
 import {ClubBankForm} from "./finance-controls";
@@ -18,6 +62,7 @@ import { UploadDropzone } from "@/lib/uploadthing";
 import { api, Badge, useData, Panel, Status, Form, Action, Empty, Pager, href, label, date, money, safeUrl, clubFields, planFields, requirementFields, postFields, type Row, } from "./common";
 import { Facilities, Reservations } from "./facilities";
 import { Dashboard } from "./dashboard";
+/** Selecciona los módulos de la pestaña activa y habilita la administración según el rol en este club. */
 export function Club({ club, tab = "posts", admin, }: {
     club: string;
     tab?: string;
@@ -68,14 +113,15 @@ export function Club({ club, tab = "posts", admin, }: {
         {admin && tab === "overview" && <Activity club={club}/>}
         {admin && tab === "settings" && state.data && (<div className="club-settings"><Panel title="Editar perfil del club">
             <Form fields={clubFields} initial={state.data.club} url={base} onDone={() => setVersion(v => v + 1)} method="PATCH"/>
-            <div className="club-image-settings">{(["logo","cover"] as const).map(kind=><section key={kind}>{safeUrl(state.data?.club[kind+"Url"])&&(kind==="logo"?<AvatarImage className="settings-logo" src={safeUrl(state.data?.club.logoUrl)} alt="Logotipo actual"/>:<img className="settings-cover" src={safeUrl(state.data?.club.coverUrl)} alt="Portada actual"/>)}<UploadFeedback endpoint={kind==="logo"?"clubLogoUploader":"clubCoverUploader"} input={{clubId:club}} onDone={()=>setVersion(v=>v+1)}/><h3>{kind==="logo"?"Logotipo":"Portada"}</h3>{state.data?.club[kind+"Url"]&&<Action url={base} method="PATCH" body={kind==="logo"?{clearLogo:true}:{clearCover:true}} confirm="¿Quitar esta imagen?" onDone={()=>setVersion(v=>v+1)}>Quitar imagen</Action>}</section>)}</div>
-            <Action url={`${base}/suspend`} confirm="¿Suspender el club y sus membresías? Se intentará cancelar las suscripciones recurrentes. Solo la administración global puede reactivarlo.">
+            <div className="club-image-settings">{(["logo","cover"] as const).map(kind=><section key={kind}>{safeUrl(state.data?.club[kind+"Url"])&&(kind==="logo"?<AvatarImage className="settings-logo" src={safeUrl(state.data?.club.logoUrl)} alt="Logotipo actual"/>:<img className="settings-cover" src={safeUrl(state.data?.club.coverUrl)} alt="Portada actual"/>)}<UploadFeedback endpoint={kind==="logo"?"clubLogoUploader":"clubCoverUploader"} input={{clubId:club}} onDone={()=>setVersion(v=>v+1)}/><h3>{kind==="logo"?"Logotipo":"Portada"}</h3>{state.data?.club[kind+"Url"]&&<Action variant="destructive" url={base} method="PATCH" body={kind==="logo"?{clearLogo:true}:{clearCover:true}} confirm="¿Quitar esta imagen?" onDone={()=>setVersion(v=>v+1)}>Quitar imagen</Action>}</section>)}</div>
+            <Action variant="destructive" url={`${base}/suspend`} confirm="¿Suspender el club y sus membresías? Se intentará cancelar las suscripciones recurrentes. Solo la administración global puede reactivarlo.">
               Suspender club
             </Action>
           </Panel><ClubBankForm club={club}/></div>)}
       </Status>
     </>);
 }
+/** Muestra la confirmación o el error de la carga e informa a la vista cuando debe refrescarse. */
 export function UploadFeedback({ endpoint, input, onDone, }: {
     endpoint: "clubCoverUploader" | "clubLogoUploader" | "postImageUploader";
     input: {
@@ -96,6 +142,7 @@ export function UploadFeedback({ endpoint, input, onDone, }: {
       <p role="status">{msg}</p>
     </>);
 }
+/** Pagina publicaciones del club y refresca la lista cuando cambia una publicación. */
 export function Posts({ club, admin, canUpload = admin, }: {
     club: string;
     admin: boolean;
@@ -113,6 +160,7 @@ export function Posts({ club, admin, canUpload = admin, }: {
       </Status></div>
     </>);
 }
+/** Comparte la tarjeta del catálogo con el editor del club y coordina planes y requisitos. */
 function Plans({ club }: {
     club: string;
 }) {
@@ -141,6 +189,7 @@ function Plans({ club }: {
       </Status>
     </>);
 }
+/** Presenta las membresías por estado y permite documentar el motivo de la retirada. */
 function Members({club}:{club:string}){
  const [version,setVersion]=useState(0);
  const state=useData(`/api/clubs/${club}/members`,version);
@@ -148,9 +197,10 @@ function Members({club}:{club:string}){
  const current=(m:Row)=>m.status==="ACTIVE"&&(m.role==="CLUB_ADMIN"||m.plans?.length>0);
  return <><h2>Miembros del club</h2><Status state={state}>{[true,false].map(active=><section className="member-section" key={String(active)}><h3>{active?"Miembros activos":"Historial de miembros"}</h3><div className="bounded-cards member-cards">{members.filter(m=>Boolean(current(m))===active).map(m=><Panel key={m.membershipId} title={m.user.firstName+" "+m.user.lastName}>
  <span className="member-avatar">{safeUrl(m.user.avatarUrl)?<AvatarImage src={safeUrl(m.user.avatarUrl)} alt=""/>:m.user.firstName.slice(0,1)+m.user.lastName.slice(0,1)}</span><p>{m.user.email}</p><p>{label(m.role)} · <Badge value={m.status}/></p>{m.role!=="CLUB_ADMIN"&&<p>{m.plans?.map((p:Row)=>p.plan.name).join(", ")||"Sin plan vigente"}</p>}
- {active&&m.role==="MEMBER"&&<EditorModal title="Retirar del club"><p>Confirma el retiro de {m.user.firstName}.</p><Form fields={[{name:"reason",label:"Motivo",type:"textarea"}]} url={`/api/clubs/${club}/members/${m.user.id}`} method="DELETE" submit="Confirmar retiro" onDone={()=>setVersion(v=>v+1)}/></EditorModal>}
+ {active&&m.role==="MEMBER"&&<EditorModal destructive title="Retirar del club"><p>Confirma el retiro de {m.user.firstName}.</p><Form fields={[{name:"reason",label:"Motivo",type:"textarea"}]} url={`/api/clubs/${club}/members/${m.user.id}`} method="DELETE" submit="Confirmar retiro" onDone={()=>setVersion(v=>v+1)}/></EditorModal>}
  </Panel>)}</div>{!members.some(m=>Boolean(current(m))===active)&&<p>No hay miembros en esta sección.</p>}</section>)}</Status></>;
 }
+/** Lista las solicitudes del club y abre el expediente seleccionado para revisión. */
 function Applications({ club }: {
     club: string;
 }) {
@@ -172,6 +222,7 @@ function Applications({ club }: {
       </Status>
     </>);
 }
+/** Reúne los documentos del expediente. Cada revisión de archivo incluye su versión para detectar ediciones simultáneas. */
 function ApplicationReview({ club, application, onDone, }: {
     club: string;
     application: Row;
@@ -207,6 +258,7 @@ function ApplicationReview({ club, application, onDone, }: {
       {["PENDING", "DOCUMENTATION_REVIEW"].includes(application.status) && (<Form fields={fields} url={`${base}/review`} method="PATCH" submit="Guardar decisión de solicitud" onDone={onDone}/>)}
     </EditorModal>);
 }
+/** Aplica el período y la paginación al historial financiero del club. */
 function ClubPayments({ club }: {
     club: string;
 }) {

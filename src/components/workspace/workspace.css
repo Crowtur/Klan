@@ -1,3 +1,48 @@
+/**
+ * ==============================================================================
+ * PONTIFICIA UNIVERSIDAD CATÓLICA DEL ECUADOR
+ * Facultad Internacional de Innovación (PUCE - Icam)
+ * ==============================================================================
+ * 
+ * PROYECTO DE TITULACIÓN - INGENIERÍA INTEGRAL
+ * Autor: Diego Alexis Tipán Zambrano
+ * Director del Proyecto: PhD. Rafael Melgarejo
+ * Promoción: Primera Promoción (Año 2026)
+ * 
+ * ------------------------------------------------------------------------------
+ * DECLARACIÓN SOBRE EL USO DE INTELIGENCIA ARTIFICIAL
+ * ------------------------------------------------------------------------------
+ * Se declara formalmente el uso de herramientas de Inteligencia Artificial como
+ * soporte y asistente técnico para el desarrollo de este proyecto, destacando su
+ * aplicación en:
+ * 
+ * - Generación y optimización de bloques de código repetitivos y extensos.
+ * - Desarrollos de endpoints complejos con variabilidad de permisos y roles.
+ * - Integración de nuevas funciones y sugerencias de arquitectura de software.
+ * - Depuración ágil, corrección de errores y optimización de rendimiento.
+ * - Creación, maquetación e integración de diseños UI/UX de formato visual a código.
+ * - Automatización de documentación técnica y estructuración de comentarios.
+ * 
+ * Herramientas de IA utilizadas:
+ * - GPT-5.6 Luna
+ * - GPT-6 Astra
+ * - Gemini 3.6 Flash
+ * - Figma AI (Visual Engine / Make Real)
+ * 
+ * ------------------------------------------------------------------------------
+ * DERECHOS DE AUTOR Y PROPIEDAD INTELECTUAL
+ * ------------------------------------------------------------------------------
+ * Los derechos del presente proyecto corresponden a la Pontificia Universidad
+ * Católica del Ecuador junto al autor y al director del proyecto, en estricto
+ * cumplimiento del reglamento institucional sobre patentes, tesis y titulación.
+ * 
+ * ALCANCE: Dichos derechos aplican exclusivamente al código fuente desarrollado
+ * en este proyecto, excluyendo la idea de negocio global y futuras versiones 
+ * o derivados sustanciales que puedan desarrollarse sobre el sistema.
+ * ==============================================================================
+ */
+
+/* Estilos compartidos del espacio de trabajo. Las variantes de acción cubren también los botones dentro de diálogos y menús. */
 .workspace {
   max-width: 1280px;
   margin: auto;
@@ -1054,7 +1099,7 @@
 .workspace .fact .numeric{text-align:right;font-variant-numeric:tabular-nums}
 .bounded-cards>.panel>button.secondary:last-of-type{margin-top:auto}
 .plan-actions>.secondary,.plan-actions>.action>button{min-height:38px;padding:6px 12px}
-.plan-actions>.action>button.danger{color:var(--danger);background:var(--surface);border:1px solid currentColor}
+
 .plan-pill.paid{color:#073a25}
 @media(prefers-reduced-motion:no-preference){
 .workspace .bounded-cards>*,.workspace button,.workspace .btn{transition:background-color .3s ease,color .3s ease,border-color .3s ease,box-shadow .2s ease,transform .2s ease}
@@ -1086,7 +1131,7 @@
 .workspace .action-dropdown>button.visit-club:hover{background:#0e502b}
 .workspace .dropdown-options{position:absolute;z-index:12;right:0;top:calc(100% + 4px);min-width:145px;display:grid;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:5px;box-shadow:0 8px 24px #122c2524}
 .workspace .dropdown-options>:is(button,a){background:transparent;color:var(--foreground);justify-content:start;text-align:left;border:0;border-radius:6px;padding:8px 12px;font-size:.9rem;text-decoration:none;line-height:1.35}
-.workspace .dropdown-options>:is(button,a):hover{background:var(--soft)}.workspace .dropdown-options>button.remove-option{color:var(--danger)}
+.workspace .dropdown-options>:is(button,a):hover{background:var(--soft)}
 .workspace .global-club .action>button.danger:hover,.workspace .global-club .action>button.danger:focus-visible{background:#a8261b;color:white}
 .workspace .global-club:has(.dropdown-options),.workspace .club-post:has(.dropdown-options){position:relative;z-index:4;overflow:visible}
 .workspace .photo-opener{display:block;width:100%;padding:0;border:0;background:transparent;border-radius:0;cursor:zoom-in;overflow:hidden}
@@ -1134,7 +1179,23 @@
 .public-plan-panel > header { flex-wrap: wrap; }
 .public-plan-panel .carousel-controls { margin: 0; }
 .public-plan-panel > button { display: flex; margin: 16px auto 0; }
-.workspace .all-plans > header { position: sticky; top: 0; z-index: 1; background: var(--surface); padding-block: 8px; }
+/* El diálogo es el área de desplazamiento. El margen de las tarjetas queda bajo una cabecera opaca de borde a borde. */
+.workspace dialog.editor-modal.all-plans { padding:0; isolation:isolate; }
+.workspace .all-plans > header {
+  position:sticky;
+  top:0;
+  z-index:20;
+  margin:0;
+  padding:14px clamp(16px,3vw,28px);
+  background-color:#FFFFFF;
+  backdrop-filter:blur(8px);
+  border-bottom:1px solid #E5E7EB;
+}
+:root[data-theme="dark"] .workspace .all-plans > header {
+  background-color:#19251f;
+  border-color:#35463e;
+}
+.workspace .all-plans > .all-plan-grid { padding-inline:clamp(12px,2vw,24px); }
 .workspace .all-plan-grid { margin-inline: auto; }
 
 @media (max-width: 650px) {
@@ -1153,4 +1214,22 @@
   .workspace .table-scroll { max-width: 100%; overflow-x: auto; }
   .notification-list { position: fixed; inset: 72px 12px auto; width: auto; max-height: calc(100dvh - 90px); }
   .public-plan-panel .carousel-controls button { min-height: 40px; min-width: 40px; }
+}
+
+/* La misma variante se utiliza en tarjetas, menús y diálogos de confirmación. */
+.workspace button.outline-destructive,
+.workspace .dropdown-options > button.outline-destructive {
+  background-color: #FFFFFF;
+  border: 1px solid #B91C1C;
+  color: #B91C1C;
+  font-weight: 600;
+  transition: background-color 180ms ease, border-color 180ms ease;
+}
+.workspace button.outline-destructive:is(:hover, :focus-visible),
+.workspace .dropdown-options > button.outline-destructive:is(:hover, :focus-visible) {
+  background-color: #FEF2F2;
+  color: #B91C1C;
+}
+@media (prefers-reduced-motion: reduce) {
+  .workspace button.outline-destructive { transition: none; }
 }

@@ -1,3 +1,47 @@
+/**
+ * ==============================================================================
+ * PONTIFICIA UNIVERSIDAD CATÓLICA DEL ECUADOR
+ * Facultad Internacional de Innovación (PUCE - Icam)
+ * ==============================================================================
+ * 
+ * PROYECTO DE TITULACIÓN - INGENIERÍA INTEGRAL
+ * Autor: Diego Alexis Tipán Zambrano
+ * Director del Proyecto: PhD. Rafael Melgarejo
+ * Promoción: Primera Promoción (Año 2026)
+ * 
+ * ------------------------------------------------------------------------------
+ * DECLARACIÓN SOBRE EL USO DE INTELIGENCIA ARTIFICIAL
+ * ------------------------------------------------------------------------------
+ * Se declara formalmente el uso de herramientas de Inteligencia Artificial como
+ * soporte y asistente técnico para el desarrollo de este proyecto, destacando su
+ * aplicación en:
+ * 
+ * - Generación y optimización de bloques de código repetitivos y extensos.
+ * - Desarrollos de endpoints complejos con variabilidad de permisos y roles.
+ * - Integración de nuevas funciones y sugerencias de arquitectura de software.
+ * - Depuración ágil, corrección de errores y optimización de rendimiento.
+ * - Creación, maquetación e integración de diseños UI/UX de formato visual a código.
+ * - Automatización de documentación técnica y estructuración de comentarios.
+ * 
+ * Herramientas de IA utilizadas:
+ * - GPT-5.6 Luna
+ * - GPT-6 Astra
+ * - Gemini 3.6 Flash
+ * - Figma AI (Visual Engine / Make Real)
+ * 
+ * ------------------------------------------------------------------------------
+ * DERECHOS DE AUTOR Y PROPIEDAD INTELECTUAL
+ * ------------------------------------------------------------------------------
+ * Los derechos del presente proyecto corresponden a la Pontificia Universidad
+ * Católica del Ecuador junto al autor y al director del proyecto, en estricto
+ * cumplimiento del reglamento institucional sobre patentes, tesis y titulación.
+ * 
+ * ALCANCE: Dichos derechos aplican exclusivamente al código fuente desarrollado
+ * en este proyecto, excluyendo la idea de negocio global y futuras versiones 
+ * o derivados sustanciales que puedan desarrollarse sobre el sistema.
+ * ==============================================================================
+ */
+
 "use client";
 import { useEffect, useState, useRef, type ReactNode, type FormEvent } from "react";
 import {FacilityIcon} from "./facility-icon";
@@ -7,6 +51,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 // API records vary by module; only explicitly selected fields are shown in views.
 export type Row = Record<string, any>;
+/** Centraliza las peticiones JSON y conserva el estado HTTP en los errores para que la vista pueda tratar la sesión caducada. */
 export async function api(url: string, method = "GET", body?: unknown): Promise<Row> {
     const r = await fetch(url, {
         method,
@@ -25,6 +70,7 @@ export async function api(url: string, method = "GET", body?: unknown): Promise<
     }
     return d;
 }
+/** Descarta respuestas tardías de una consulta anterior y permite refrescar la misma URL al cambiar la versión. */
 export function useData(url: string | null, version = 0) {
     const [state, set] = useState<{
         data: Row | null;
@@ -34,6 +80,7 @@ export function useData(url: string | null, version = 0) {
     const router = useRouter();
     const previousUrl=useRef<string|null>(null);
     useEffect(() => {
+        // Cambiar de club o filtro invalida la respuesta anterior, aunque esa petición termine después de la nueva.
         let live = true;
         const sameUrl=previousUrl.current===url;
         previousUrl.current=url;
@@ -60,6 +107,7 @@ export function useData(url: string | null, version = 0) {
     }, [url, version, router]);
     return state;
 }
+/** Construye enlaces del espacio privado codificando cada parámetro con URLSearchParams. */
 export function href(view: string, params: Record<string, string | number> = {}) {
     return ("/app?" +
         new URLSearchParams({
@@ -91,9 +139,11 @@ export const labels: Record<string, string> = {
     CLUB_ADMIN: "Administrador",
     MEMBER: "Miembro",
 };
+/** Traduce los estados conocidos y conserva como alternativa el valor enviado por el servidor. */
 export function label(v: unknown) {
     return labels[String(v)] || String(v ?? "—");
 }
+/** Presenta fechas válidas en la zona horaria de Ecuador continental y sustituye los valores ausentes por un guion. */
 export function date(v: unknown) {
     if (!v)
         return "—";
@@ -102,6 +152,7 @@ export function date(v: unknown) {
         ? "—"
         : d.toLocaleString("es-EC", { timeZone: "America/Guayaquil" });
 }
+/** Formatea los importes del sistema en dólares estadounidenses con las convenciones de Ecuador. */
 export function money(v: unknown, _currency?: string) {
     return new Intl.NumberFormat("es-EC", {
         style: "currency",
@@ -109,6 +160,7 @@ export function money(v: unknown, _currency?: string) {
         currencyDisplay: "code",
     }).format(Number(v || 0));
 }
+/** Admite enlaces HTTP o HTTPS y la ruta interna de miniaturas antes de asignarlos a una imagen o enlace. */
 export function safeUrl(v: unknown) {
     if(typeof v === "string" && /^\/api\/avatars\/[a-zA-Z0-9_-]+$/.test(v)) return v;
     try {
@@ -119,6 +171,7 @@ export function safeUrl(v: unknown) {
         return undefined;
     }
 }
+/** Agrupa contenido relacionado en una sección con título opcional. */
 export function Panel({ title, children, }: {
     title?: string;
     children: ReactNode;
@@ -128,6 +181,7 @@ export function Panel({ title, children, }: {
       {children}
     </section>);
 }
+/** Muestra carga o error antes de renderizar el contenido que depende de una consulta. */
 export function Status({ state, children, }: {
     state: ReturnType<typeof useData>;
     children: ReactNode;
@@ -140,11 +194,13 @@ export function Status({ state, children, }: {
       </p>);
     return <>{children}</>;
 }
+/** Presenta el estado vacío únicamente cuando la consulta devuelve una colección sin elementos. */
 export function Empty({ rows }: {
     rows: unknown[];
 }) {
     return rows.length ? null : <div className="empty-state"><span className="icon-tile"><Icon name="document" size={28}/></span><h3>Todavía no hay registros</h3><p>Cuando haya información disponible, la encontrarás aquí.</p></div>;
 }
+/** Conserva la primera y última página junto con las vecinas de la página actual. */
 export function Pager({ data, page, onPage, }: {
     data: Row | null;
     page: number;
@@ -157,18 +213,23 @@ export function Pager({ data, page, onPage, }: {
     const pages = Array.from(new Set([1, ...Array.from({ length: 3 }, (_, i) => page - 1 + i), totalPages])).filter(n => n >= 1 && n <= totalPages).sort((a, b) => a - b);
     return <nav className="pager" aria-label="Paginación"><span className="pager-summary">{p.total !== undefined ? `${p.total} registros · ` : ""}Página {page} de {totalPages}</span><button disabled={page <= 1} onClick={() => onPage(page - 1)} aria-label="Página anterior">‹</button>{pages.map((n, i) => <span key={n}>{i > 0 && n - pages[i - 1] > 1 && <span aria-hidden="true"> … </span>}<button aria-label={`Página ${n}`} aria-current={n === page ? "page" : undefined} onClick={() => onPage(n)}>{n}</button></span>)}<button disabled={page >= totalPages} onClick={() => onPage(page + 1)} aria-label="Página siguiente">›</button></nav>;
 }
-export function Action({ children, url, method = "POST", body, confirm, onDone, }: {
+/** Coordina la confirmación, la petición y la actualización del listado. El mismo criterio visual identifica el disparador y su confirmación. */
+export function Action({ children, url, method = "POST", body, confirm, variant, onDone, }: {
     children: ReactNode;
     url: string;
     method?: string;
     body?: unknown;
     confirm?: string;
+    variant?: "destructive" | "club-suspension";
     onDone?: (d: Row) => void;
 }) {
     const [busy, setBusy] = useState(false), [message, setMessage] = useState(""), [confirming, setConfirming] = useState(false);
     const dialog = useRef<HTMLDialogElement>(null);
     const trigger = useRef<HTMLButtonElement>(null);
-    const destructive = /DELETE/.test(method) || /cancel|suspend|retir/i.test(url) || (typeof children === "string" && /cancel|suspend|elimin|desactiv/i.test(children));
+    // DELETE es destructivo por contrato. Los cambios de estado mediante PATCH o POST
+    // declaran su intención en la vista, incluso si su etiqueta cambia de idioma.
+    const destructive = variant !== undefined || method === "DELETE";
+    const buttonClass = variant === "club-suspension" ? "danger" : destructive ? "outline-destructive" : undefined;
     useEffect(() => {
         if (confirming)
             dialog.current?.showModal();
@@ -194,7 +255,7 @@ export function Action({ children, url, method = "POST", body, confirm, onDone, 
             setBusy(false);
         }
     }
-    return <span className="action"><button ref={trigger} className={destructive ? "danger" : undefined} disabled={busy} onClick={() => confirm ? setConfirming(true) : void run()}>{busy ? "Procesando…" : children}</button>{message && <span role="status">{message}</span>}{confirm && <dialog ref={dialog} className="confirm-dialog" aria-label="Confirmar operación" onCancel={close} onClose={() => setConfirming(false)}><h2>Confirma tu decisión</h2><p>{confirm}</p><div className="actions"><button className="secondary" onClick={close} autoFocus>Volver</button><button className={destructive ? "danger" : undefined} onClick={() => void run()}>Confirmar</button></div></dialog>}</span>;
+    return <span className="action"><button ref={trigger} className={buttonClass} disabled={busy} onClick={() => confirm ? setConfirming(true) : void run()}>{busy ? "Procesando…" : children}</button>{message && <span role="status">{message}</span>}{confirm && <dialog ref={dialog} className="confirm-dialog" aria-label="Confirmar operación" onCancel={close} onClose={() => setConfirming(false)}><h2>Confirma tu decisión</h2><p>{confirm}</p><div className="actions"><button className="secondary" onClick={close} autoFocus>Volver</button><button className={destructive ? "outline-destructive" : undefined} onClick={() => void run()}>Confirmar</button></div></dialog>}</span>;
 }
 export type Field = {
     name: string;
@@ -209,6 +270,7 @@ export type Field = {
     max?: number;
     step?: string;
 };
+/** Construye el cuerpo a partir de los campos configurados y convierte números, casillas y listas antes del envío. */
 export function Form({ fields, url, method = "POST", initial = {}, onDone, submit = "Guardar", transform, }: {
     fields: Field[];
     url: string;
@@ -228,6 +290,7 @@ export function Form({ fields, url, method = "POST", initial = {}, onDone, submi
         const form = e.currentTarget;
         const fd = new FormData(form);
         const body: Row = {};
+        // FormData omite casillas desmarcadas y devuelve texto para números. La API espera booleanos y números reales.
         for (const f of fields) {
             const v = fd.get(f.name);
             body[f.name] =
@@ -272,10 +335,11 @@ export function Form({ fields, url, method = "POST", initial = {}, onDone, submi
             {f.name === "slug" && <small>Slug · {slug || "tu-club"}</small>}
           </label>))}
       </fieldset>
-      <button disabled={busy}>{busy ? "Guardando…" : submit}</button>
+      <button className={method === "DELETE" || decision === "REJECTED" ? "outline-destructive" : undefined} disabled={busy}>{busy ? "Guardando…" : submit}</button>
       {error && <p role="status">{error}</p>}
     </form>);
 }
+/** Expone la selección actual en la navegación usando el destino recibido. */
 export function NavLink({ view, params, children, }: {
     view: string;
     params?: Record<string, string | number>;
@@ -357,6 +421,7 @@ export const postFields: Field[] = [
         max: 5000,
     },
 ];
+/** Traduce el estado visible y conserva su valor original como atributo para aplicar los estilos. */
 export function Badge({ value }: {
     value: unknown;
 }) { return <span className="badge" data-status={String(value)}>{label(value)}</span>; }

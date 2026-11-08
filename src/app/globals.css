@@ -1,3 +1,48 @@
+/**
+ * ==============================================================================
+ * PONTIFICIA UNIVERSIDAD CATÓLICA DEL ECUADOR
+ * Facultad Internacional de Innovación (PUCE - Icam)
+ * ==============================================================================
+ * 
+ * PROYECTO DE TITULACIÓN - INGENIERÍA INTEGRAL
+ * Autor: Diego Alexis Tipán Zambrano
+ * Director del Proyecto: PhD. Rafael Melgarejo
+ * Promoción: Primera Promoción (Año 2026)
+ * 
+ * ------------------------------------------------------------------------------
+ * DECLARACIÓN SOBRE EL USO DE INTELIGENCIA ARTIFICIAL
+ * ------------------------------------------------------------------------------
+ * Se declara formalmente el uso de herramientas de Inteligencia Artificial como
+ * soporte y asistente técnico para el desarrollo de este proyecto, destacando su
+ * aplicación en:
+ * 
+ * - Generación y optimización de bloques de código repetitivos y extensos.
+ * - Desarrollos de endpoints complejos con variabilidad de permisos y roles.
+ * - Integración de nuevas funciones y sugerencias de arquitectura de software.
+ * - Depuración ágil, corrección de errores y optimización de rendimiento.
+ * - Creación, maquetación e integración de diseños UI/UX de formato visual a código.
+ * - Automatización de documentación técnica y estructuración de comentarios.
+ * 
+ * Herramientas de IA utilizadas:
+ * - GPT-5.6 Luna
+ * - GPT-6 Astra
+ * - Gemini 3.6 Flash
+ * - Figma AI (Visual Engine / Make Real)
+ * 
+ * ------------------------------------------------------------------------------
+ * DERECHOS DE AUTOR Y PROPIEDAD INTELECTUAL
+ * ------------------------------------------------------------------------------
+ * Los derechos del presente proyecto corresponden a la Pontificia Universidad
+ * Católica del Ecuador junto al autor y al director del proyecto, en estricto
+ * cumplimiento del reglamento institucional sobre patentes, tesis y titulación.
+ * 
+ * ALCANCE: Dichos derechos aplican exclusivamente al código fuente desarrollado
+ * en este proyecto, excluyendo la idea de negocio global y futuras versiones 
+ * o derivados sustanciales que puedan desarrollarse sobre el sistema.
+ * ==============================================================================
+ */
+
+/* Variables de tema, tipografía y distribución base de la portada. Los ajustes por ancho de pantalla se aplican después de los estilos de escritorio. */
 @import "tailwindcss" ;
 :root {
   --primary: #136336;
@@ -634,3 +679,13 @@ button:enabled:active,.btn:active{transform:translateY(1px)}
 .bubble-photo img{width:100%;height:100%;object-fit:cover}.bubble-position strong{max-width:94%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;position:relative;margin-top:-9px;border-radius:12px;background:white;padding:1px 8px;font-size:12px;color:#18482c;box-shadow:0 2px 6px #1238201c}
 .bubble-photo{width:81%}
 @media(max-width:620px){.club-bubbles{height:clamp(270px,88vw,375px)}}
+
+/* Ambas capas ocupan la misma superficie mientras el navegador carga la miniatura. */
+.bubble-photo { position:relative; }
+.bubble-photo img { position:absolute; inset:0; opacity:0; }
+.bubble-photo img, .bubble-photo svg { transition:opacity 320ms ease; }
+.bubble-photo[data-ready="true"] img { opacity:1; }
+.bubble-photo[data-ready="true"] svg { opacity:0; }
+@media (prefers-reduced-motion:reduce) {
+  .bubble-photo img, .bubble-photo svg { transition:none; }
+}

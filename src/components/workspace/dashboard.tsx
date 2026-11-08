@@ -1,3 +1,47 @@
+/**
+ * ==============================================================================
+ * PONTIFICIA UNIVERSIDAD CATÓLICA DEL ECUADOR
+ * Facultad Internacional de Innovación (PUCE - Icam)
+ * ==============================================================================
+ * 
+ * PROYECTO DE TITULACIÓN - INGENIERÍA INTEGRAL
+ * Autor: Diego Alexis Tipán Zambrano
+ * Director del Proyecto: PhD. Rafael Melgarejo
+ * Promoción: Primera Promoción (Año 2026)
+ * 
+ * ------------------------------------------------------------------------------
+ * DECLARACIÓN SOBRE EL USO DE INTELIGENCIA ARTIFICIAL
+ * ------------------------------------------------------------------------------
+ * Se declara formalmente el uso de herramientas de Inteligencia Artificial como
+ * soporte y asistente técnico para el desarrollo de este proyecto, destacando su
+ * aplicación en:
+ * 
+ * - Generación y optimización de bloques de código repetitivos y extensos.
+ * - Desarrollos de endpoints complejos con variabilidad de permisos y roles.
+ * - Integración de nuevas funciones y sugerencias de arquitectura de software.
+ * - Depuración ágil, corrección de errores y optimización de rendimiento.
+ * - Creación, maquetación e integración de diseños UI/UX de formato visual a código.
+ * - Automatización de documentación técnica y estructuración de comentarios.
+ * 
+ * Herramientas de IA utilizadas:
+ * - GPT-5.6 Luna
+ * - GPT-6 Astra
+ * - Gemini 3.6 Flash
+ * - Figma AI (Visual Engine / Make Real)
+ * 
+ * ------------------------------------------------------------------------------
+ * DERECHOS DE AUTOR Y PROPIEDAD INTELECTUAL
+ * ------------------------------------------------------------------------------
+ * Los derechos del presente proyecto corresponden a la Pontificia Universidad
+ * Católica del Ecuador junto al autor y al director del proyecto, en estricto
+ * cumplimiento del reglamento institucional sobre patentes, tesis y titulación.
+ * 
+ * ALCANCE: Dichos derechos aplican exclusivamente al código fuente desarrollado
+ * en este proyecto, excluyendo la idea de negocio global y futuras versiones 
+ * o derivados sustanciales que puedan desarrollarse sobre el sistema.
+ * ==============================================================================
+ */
+
 "use client";
 import {AvatarImage} from "@/components/avatar-image";
 import {ActionDropdown} from "./action-dropdown";
@@ -149,6 +193,7 @@ const names: Record<string, string> = {
 };
 const hidden = /^(id|.*Id|success|period|referencePeriod|generatedAt|timeZone|feeModel|basis|pagination|filters|logoUrl|avatarUrl)$/;
 const monetary = /amount|revenue|net|fee|gross|transferred|transfernet|difference|^(stripe|transfer|platform)$/i;
+/** Aplica formato de fecha, importe, estado o texto según la clave y el valor recibido. */
 function scalar(value: unknown, key: string) {
     if (value === null || value === undefined)
         return "—";
@@ -162,6 +207,7 @@ function scalar(value: unknown, key: string) {
         return value ? "Sí" : "No";
     return label(value);
 }
+/** Separa los valores simples de las estructuras anidadas para presentar métricas y desgloses. */
 function Facts({ value, depth = 0 }: {
     value: unknown;
     depth?: number;
@@ -178,6 +224,7 @@ function Facts({ value, depth = 0 }: {
     return <><div className="facts-grid">{simple.map(([k, v]) => <dl className="fact" key={k}><dt>{names[k] || label(k).replace(/([a-z])([A-Z])/g, "$1 $2")}</dt><dd className={typeof v==="number" || typeof v==="string" && monetary.test(k) ? "numeric":undefined}>{k === "status" ? <Badge value={v}/> : scalar(v, k)}</dd></dl>)}</div>{nested.map(([k, v]) => <section className="facts-section" key={k}><h3>{names[k] || label(k)}</h3><Facts value={v} depth={depth + 1}/></section>)}</>;
 }
 type DashboardFilters = {section:string;period:string};
+/** Usa el club para seleccionar la API y las secciones disponibles. El tablero global recibe sus filtros desde la URL. */
 export function Dashboard({ club, filters, onFilters }: {
     filters?:DashboardFilters;
     onFilters?:(filters:DashboardFilters)=>void;
@@ -287,6 +334,7 @@ export function Dashboard({ club, filters, onFilters }: {
       </Status>}
     </>);
 }
+/** Filtra y pagina clubes. La visita como administrador y como visitante lleva a vistas con permisos distintos. */
 export function GlobalClubs() {
     const [v, setV] = useState(0), [page, setPage] = useState(1), [search, setSearch] = useState(""), [status, setStatus] = useState("");
     const [order,setOrder]=useState("oldest");
@@ -316,12 +364,13 @@ export function GlobalClubs() {
         ["Planes y suscripciones",m.activePlans+" planes activos",m.totalPlans+" planes totales · "+m.activeSubscriptions+" suscripciones activas · "+m.totalFacilities+" instalaciones"],
         ["Reservas y pagos",m.confirmedReservations+" confirmadas",m.cancelledReservations+" canceladas · "+m.paidPayments+" pagos realizados"],
         ["Finanzas",money(m.grossRevenue),"Ingresos brutos acumulados"]].map(([k,n,v])=><div key={k}><small>{k}</small><strong>{n}</strong><small>{v}</small></div>)}</div>
-      <footer><small>{c.status==="SUSPENDED"?"Acceso al club suspendido":"Los cambios de estado requieren confirmación"}</small><Action url={`/api/clubs/${c.id}/${c.status==="ACTIVE"?"suspend":"reactivate"}`} confirm={c.status==="ACTIVE"?"¿Suspender el club y sus membresías?":"¿Reactivar el club?"} onDone={()=>setV(v=>v+1)}>{c.status==="ACTIVE"?"Suspender":"Reactivar"}</Action>
+      <footer><small>{c.status==="SUSPENDED"?"Acceso al club suspendido":"Los cambios de estado requieren confirmación"}</small><Action variant={c.status==="ACTIVE" ? "club-suspension" : undefined} url={`/api/clubs/${c.id}/${c.status==="ACTIVE"?"suspend":"reactivate"}`} confirm={c.status==="ACTIVE"?"¿Suspender el club y sus membresías?":"¿Reactivar el club?"} onDone={()=>setV(v=>v+1)}>{c.status==="ACTIVE"?"Suspender":"Reactivar"}</Action>
       <ActionDropdown label="Visitar club">{close=><><Link onClick={close} href={href("club",{club:c.id})}>Como admin</Link><Link onClick={close} href={href("publicClub",{club:c.id})}>Como visitante</Link></>}</ActionDropdown></footer></article>})}
         <Pager data={state.data} page={page} onPage={setPage}/>
       </Status>
     </>);
 }
+/** Consulta una liquidación y vuelve a cargarla tras guardar una transición o un comprobante. */
 export function Settlement({ id }: {
     id: string;
 }) {
@@ -343,6 +392,7 @@ export function Settlement({ id }: {
     </>);
 }
 
+/** Convierte los agregados globales en indicadores y series para el período elegido. */
 function GlobalOverview({data:d,year,month}:{data:Row;year:string;month:string}){
  const finance=useData(`/api/admin/dashboard/finances?year=${year}&month=${Number(month)}`);
  const statusValues=(v:Row)=>Object.entries(v).map(([key,value])=>({label:names[key]||label(key),value:Number(value)}));

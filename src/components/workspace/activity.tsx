@@ -1,11 +1,57 @@
+/**
+ * ==============================================================================
+ * PONTIFICIA UNIVERSIDAD CATÓLICA DEL ECUADOR
+ * Facultad Internacional de Innovación (PUCE - Icam)
+ * ==============================================================================
+ * 
+ * PROYECTO DE TITULACIÓN - INGENIERÍA INTEGRAL
+ * Autor: Diego Alexis Tipán Zambrano
+ * Director del Proyecto: PhD. Rafael Melgarejo
+ * Promoción: Primera Promoción (Año 2026)
+ * 
+ * ------------------------------------------------------------------------------
+ * DECLARACIÓN SOBRE EL USO DE INTELIGENCIA ARTIFICIAL
+ * ------------------------------------------------------------------------------
+ * Se declara formalmente el uso de herramientas de Inteligencia Artificial como
+ * soporte y asistente técnico para el desarrollo de este proyecto, destacando su
+ * aplicación en:
+ * 
+ * - Generación y optimización de bloques de código repetitivos y extensos.
+ * - Desarrollos de endpoints complejos con variabilidad de permisos y roles.
+ * - Integración de nuevas funciones y sugerencias de arquitectura de software.
+ * - Depuración ágil, corrección de errores y optimización de rendimiento.
+ * - Creación, maquetación e integración de diseños UI/UX de formato visual a código.
+ * - Automatización de documentación técnica y estructuración de comentarios.
+ * 
+ * Herramientas de IA utilizadas:
+ * - GPT-5.6 Luna
+ * - GPT-6 Astra
+ * - Gemini 3.6 Flash
+ * - Figma AI (Visual Engine / Make Real)
+ * 
+ * ------------------------------------------------------------------------------
+ * DERECHOS DE AUTOR Y PROPIEDAD INTELECTUAL
+ * ------------------------------------------------------------------------------
+ * Los derechos del presente proyecto corresponden a la Pontificia Universidad
+ * Católica del Ecuador junto al autor y al director del proyecto, en estricto
+ * cumplimiento del reglamento institucional sobre patentes, tesis y titulación.
+ * 
+ * ALCANCE: Dichos derechos aplican exclusivamente al código fuente desarrollado
+ * en este proyecto, excluyendo la idea de negocio global y futuras versiones 
+ * o derivados sustanciales que puedan desarrollarse sobre el sistema.
+ * ==============================================================================
+ */
+
 "use client";
 import { useState } from "react";
 import { useData, Status, money, type Row } from "./common";
 const colors = ["#136336", "#34d399", "#66a182", "#ddb66a", "#8b7ab8", "#3c8eaf"];
 const monthFormat = new Intl.DateTimeFormat("es-EC", {month:"long",year:"numeric",timeZone:"UTC"});
+/** Convierte el mes de la serie al texto que se muestra en el eje temporal. */
 function monthLabel(key:string) {
     return /^\d{4}-\d{2}$/.test(key) ? monthFormat.format(new Date(key + "-01T12:00:00Z")) : key;
 }
+/** Representa los valores de una serie mediante barras con una escala común. */
 export function Bars({title, rows, series, grouped=false, xAxis, yAxis, calendar}: {
     title:string; rows:{label:string;values:number[]}[]; series:string[]; grouped?:boolean;
     xAxis:string; yAxis:string; calendar?:string;
@@ -32,6 +78,7 @@ export function Bars({title, rows, series, grouped=false, xAxis, yAxis, calendar
       <details><summary>Ver valores</summary><div className="table-scroll"><table><thead><tr><th>{xAxis}</th>{series.map(s=><th className="numeric" key={s}>{s}</th>)}</tr></thead>
         <tbody>{rows.map(r=><tr key={r.label}><td>{r.label}</td>{r.values.map((v,i)=><td className="numeric" key={i}>{v.toLocaleString("es-EC")}</td>)}</tr>)}</tbody></table></div></details></section>;
 }
+/** Distribuye las porciones según su participación en el total y conserva las etiquetas en la leyenda. */
 export function Pie({ title, values }: {
     title: string;
     values: {
@@ -44,6 +91,7 @@ export function Pie({ title, values }: {
     const gradient = values.map((v, i) => { const start = offset; offset += total ? v.value / total * 100 : 0; return (values.length<=colors.length?colors[i]:`hsl(${Math.round(i*137.508)%360} 45% 48%)`) + " " + start + "% " + offset + "%"; }).join(",");
     return <section className="panel chart-panel"><h3>{title}</h3><div className="pie-layout"><div className="pie" style={{ background: total ? "conic-gradient(" + gradient + ")" : "#e2e8f0" }} role="img" aria-label={values.map(v => v.label + " " + v.value).join(",")}><span>{total.toLocaleString("es-EC")}</span></div><ul>{values.map((v, i) => <li key={i}><i style={{ background: values.length<=colors.length?colors[i]:`hsl(${Math.round(i*137.508)%360} 45% 48%)` }}/>{v.label}<strong>{v.value.toLocaleString("es-EC")}</strong></li>)}</ul></div></section>;
 }
+/** Solicita la actividad para el intervalo elegido y adapta las series a los gráficos. */
 export function Activity({ club }: {
     club: string;
 }) {

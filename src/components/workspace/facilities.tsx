@@ -1,3 +1,47 @@
+/**
+ * ==============================================================================
+ * PONTIFICIA UNIVERSIDAD CATÓLICA DEL ECUADOR
+ * Facultad Internacional de Innovación (PUCE - Icam)
+ * ==============================================================================
+ * 
+ * PROYECTO DE TITULACIÓN - INGENIERÍA INTEGRAL
+ * Autor: Diego Alexis Tipán Zambrano
+ * Director del Proyecto: PhD. Rafael Melgarejo
+ * Promoción: Primera Promoción (Año 2026)
+ * 
+ * ------------------------------------------------------------------------------
+ * DECLARACIÓN SOBRE EL USO DE INTELIGENCIA ARTIFICIAL
+ * ------------------------------------------------------------------------------
+ * Se declara formalmente el uso de herramientas de Inteligencia Artificial como
+ * soporte y asistente técnico para el desarrollo de este proyecto, destacando su
+ * aplicación en:
+ * 
+ * - Generación y optimización de bloques de código repetitivos y extensos.
+ * - Desarrollos de endpoints complejos con variabilidad de permisos y roles.
+ * - Integración de nuevas funciones y sugerencias de arquitectura de software.
+ * - Depuración ágil, corrección de errores y optimización de rendimiento.
+ * - Creación, maquetación e integración de diseños UI/UX de formato visual a código.
+ * - Automatización de documentación técnica y estructuración de comentarios.
+ * 
+ * Herramientas de IA utilizadas:
+ * - GPT-5.6 Luna
+ * - GPT-6 Astra
+ * - Gemini 3.6 Flash
+ * - Figma AI (Visual Engine / Make Real)
+ * 
+ * ------------------------------------------------------------------------------
+ * DERECHOS DE AUTOR Y PROPIEDAD INTELECTUAL
+ * ------------------------------------------------------------------------------
+ * Los derechos del presente proyecto corresponden a la Pontificia Universidad
+ * Católica del Ecuador junto al autor y al director del proyecto, en estricto
+ * cumplimiento del reglamento institucional sobre patentes, tesis y titulación.
+ * 
+ * ALCANCE: Dichos derechos aplican exclusivamente al código fuente desarrollado
+ * en este proyecto, excluyendo la idea de negocio global y futuras versiones 
+ * o derivados sustanciales que puedan desarrollarse sobre el sistema.
+ * ==============================================================================
+ */
+
 "use client";
 import {AvatarImage} from "@/components/avatar-image";
 import {Icon} from "@/components/ui";
@@ -25,6 +69,7 @@ const dayNames = [
     "Sábado",
     "Domingo",
 ];
+/** Lista las instalaciones y habilita su creación para el administrador del club. */
 export function Facilities({ club, admin }: {
     club: string;
     admin: boolean;
@@ -46,6 +91,7 @@ export function Facilities({ club, admin }: {
       </Status>
     </>);
 }
+/** Comparte el listado entre el club y la instalación. El estado y el final del intervalo determinan si se puede cancelar. */
 export function Reservations({ club, facility, admin = false, onChanged, }: {
     club: string;
     facility?: string;
@@ -66,7 +112,7 @@ export function Reservations({ club, facility, admin = false, onChanged, }: {
             <p>{new Date(r.startAt).toLocaleDateString("es-EC", {dateStyle:"long", timeZone:"America/Guayaquil"})}</p>
             <p className="reservation-time"><Icon name="clock" size={16}/>{new Date(r.startAt).toLocaleTimeString("es-EC", {hour:"2-digit",minute:"2-digit",hour12:false,timeZone:"America/Guayaquil"})} · {Math.round((Date.parse(r.endAt)-Date.parse(r.startAt))/60000)} min</p>
             <p><Badge value={r.status==="CONFIRMED" && Date.parse(r.endAt)<=Date.now()?"RESERVATION_EXPIRED":r.status}/></p>{r.clubMembership?.user && <p>Reserva de {r.clubMembership.user.firstName} {r.clubMembership.user.lastName}</p>}
-            {r.status === "CONFIRMED" && Date.parse(r.endAt)>Date.now() && (<Action method="PATCH" url={`${base}/facilities/${r.facilityId || facility}/reservations/${r.id}`} confirm="¿Cancelar esta reserva?" onDone={() => { setV(v + 1); onChanged?.(); }}>
+            {r.status === "CONFIRMED" && Date.parse(r.endAt)>Date.now() && (<Action variant="destructive" method="PATCH" url={`${base}/facilities/${r.facilityId || facility}/reservations/${r.id}`} confirm="¿Cancelar esta reserva?" onDone={() => { setV(v + 1); onChanged?.(); }}>
                 Cancelar reserva
               </Action>)}
           </Panel>))}
@@ -74,6 +120,7 @@ export function Reservations({ club, facility, admin = false, onChanged, }: {
       </Status>
     </>);
 }
+/** Combina la ficha con disponibilidad por día y duración. Actualiza horarios y reservas después de cada operación. */
 export function Facility({ club, id, admin, }: {
     club: string;
     id: string;
@@ -163,6 +210,7 @@ export function Facility({ club, id, admin, }: {
       {!admin && <Reservations key={v} club={club} onChanged={() => setV(v + 1)}/>}
     </>);
 }
+/** Abre el editor con los intervalos semanales vigentes de la instalación. */
 function ScheduleEditor({ base, onDone, }: {
     base: string;
     onDone: () => void;
@@ -174,6 +222,7 @@ function ScheduleEditor({ base, onDone, }: {
       </Status>
     </EditorModal>);
 }
+/** Mantiene intervalos editables por día y envía el conjunto de horarios al guardar. */
 function ScheduleForm({ base, initial, onDone, }: {
     base: string;
     initial: Row[];
@@ -219,7 +268,7 @@ function ScheduleForm({ base, initial, onDone, }: {
                 {key === "openingTime" ? "Apertura" : "Cierre"}
                 <input type="time" required value={r[key as keyof typeof r]} onChange={(e) => setRows(rows.map((x, j) => j === i ? { ...x, [key]: e.target.value } : x))}/>
               </label>))}
-            <button type="button" onClick={() => setRows(rows.filter((_, j) => j !== i))}>
+            <button type="button" className="outline-destructive" onClick={() => setRows(rows.filter((_, j) => j !== i))}>
               Quitar
             </button>
           </div>))}
@@ -240,6 +289,7 @@ function ScheduleForm({ base, initial, onDone, }: {
       <p role="status">{error}</p>
     </form>);
 }
+/** Consulta los permisos de acceso para los planes de la instalación. */
 function AccessEditor({ club, base, onDone, }: {
     club: string;
     base: string;
@@ -254,6 +304,7 @@ function AccessEditor({ club, base, onDone, }: {
       </Status>
     </EditorModal>);
 }
+/** Convierte la selección de planes y sus límites diarios en los permisos que recibe el servidor. */
 function AccessForm({ plans, initial, base, onDone, }: {
     plans: Row[];
     initial: Row[];
