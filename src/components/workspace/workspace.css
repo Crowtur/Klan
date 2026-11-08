@@ -1233,3 +1233,49 @@
 @media (prefers-reduced-motion: reduce) {
   .workspace button.outline-destructive { transition: none; }
 }
+
+/* Las capas comparten el mismo marco desde el primer render. Solo cambia su opacidad. */
+.club-hero .hero-final, .club-hero .hero-placeholder {
+  transition: opacity 360ms ease-in-out;
+}
+.club-hero .hero-final, .club-hero[data-ready="true"] .hero-placeholder { opacity:0; }
+.club-hero[data-ready="true"] .hero-final { opacity:1; }
+.hero-placeholder { pointer-events:none; }
+.hero-media-slot, .hero-copy-slot, .hero-count-slot { position:relative; min-width:0; }
+.hero-media-slot { overflow:hidden; }
+.hero-media-slot > span, .hero-copy-slot > div, .hero-count-slot > div {
+  position:absolute; inset:0;
+}
+.workspace .hero-image-host > img { display:block; width:100%; height:100%; max-height:none; border-radius:0; object-fit:cover; }
+.club-hero .hero-cover, .hero-banner-skeleton { background:linear-gradient(115deg,var(--soft),var(--line),var(--soft)); }
+.hero-logo-skeleton { background:var(--soft); }
+.workspace .club-hero .hero-identity {
+  display:grid; grid-template-columns:auto minmax(0,1fr) 6.25rem;
+}
+.hero-copy-slot { height:7.5rem; }
+.hero-copy, .hero-lines, .hero-count-slot > div {
+  display:flex; flex-direction:column; justify-content:safe center; align-items:flex-start;
+}
+.hero-copy { overflow:auto; overflow-wrap:anywhere; }
+.club-hero .hero-count-slot { align-self:stretch; margin:0; }
+.hero-count-slot > div { align-items:center; text-align:center; }
+.hero-lines { gap:9px; }
+.hero-lines i {
+  display:block; width:min(64%,24rem); height:.7rem; border-radius:6px; background:var(--line);
+}
+.hero-lines i:first-child { width:min(76%,18rem); height:1.5rem; }
+.hero-lines i:last-child { width:min(48%,12rem); }
+@media (max-width:760px) {
+  .workspace .club-hero .hero-identity { grid-template-columns:auto minmax(0,1fr) 4.5rem; }
+  .hero-copy-slot { height:8.5rem; }
+}
+@media (prefers-reduced-motion:no-preference) {
+  .club-hero[data-ready="false"] .hero-lines i { animation:club-loading-pulse 1.55s ease-in-out infinite alternate; }
+  @keyframes club-loading-pulse { from {opacity:.48} to {opacity:.95} }
+}
+@media (prefers-reduced-motion:reduce) {
+  .club-hero .hero-final, .club-hero .hero-placeholder { transition:none; }
+}
+
+.workspace-view:has(> .club-hero) { animation:none; }
+.hero-logo:has(.hero-image-host img) > svg { visibility:hidden; }

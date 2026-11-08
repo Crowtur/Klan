@@ -266,3 +266,44 @@ test('enlaces de club, rutas globales y administradores respetan el destino de e
   assert.equal(await workspaceRedirect(query,member),null);
   assert.equal(reads,2);
 });
+
+test('notification badges only read unread groups for the signed-in recipient', async () => {
+  const groups = [{clubId:'c1', type:'RESERVATION_CREATED', _count:3}];
+  const prisma = {notification:{groupBy:async query => {
+    assert.equal(query.where.recipientId, 'u1');
+    assert.equal(query.where.readAt, null);
+    return groups;
+  }}};
+  const response = await notificationRoute(prisma).GET(new Request('https://local/api/me/notifications?summary=1&recipientId=u2'));
+  assert.deepEqual(await response.json(), {success:true, byClub:groups});
+});
+
+test('availability counts only the member’s own minutes while blocking every confirmed reservation', async () => {
+  let reservationReads = 0;
+  const bookings = ['member', 'other'].map((clubMembershipId, index) => ({
+    clubMembershipId,
+    startAt:new Date(Date.UTC(2035, 0, 1, 15 + index)),
+    endAt:new Date(Date.UTC(2035, 0, 1, 16 + index))
+  }));
+  const prisma = {
+    facility:{findFirst:async () => ({id:'f',status:'ACTIVE'})},
+    facilitySchedule:{findMany:async () => [{openingTime:'09:00',closingTime:'17:00'}]},
+    reservation:{findMany:async query => {
+      reservationReads++;
+      assert.equal(query.where.facilityId, 'f');
+      assert.equal(query.where.status, 'CONFIRMED');
+      return bookings;
+    }},
+    subscription:{findMany:async () => []}
+  };
+  const route = load('src/app/api/clubs/[clubId]/facilities/[facilityId]/availability/route.ts',{
+    '@/lib/prisma':{prisma}, '@/lib/auth/auth':{requireAuth:async () => ({id:'user'})},
+    '@/lib/auth/authorization':{requireClubMembership:async () => ({id:'member', role:'CLUB_ADMIN',club:{timeZone:'America/Guayaquil'}})}
+  });
+  const result = await route.GET(new Request('https://local/?date=2035-01-01'), {params:{clubId:'club',facilityId:'f'}});
+  assert.equal(result.status, 200);
+  assert.equal(reservationReads, 1);
+  assert.equal(result.body.membershipLimits.usedMinutes, 60);
+  assert.equal(result.body.availability.occupiedIntervals.length, 2);
+  assert.deepEqual(result.body.bookingOptions.slots.filter(slot => slot.start >= '10:00' && slot.start < '12:00').length, 0);
+});

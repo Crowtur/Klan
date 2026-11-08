@@ -43,6 +43,7 @@
  */
 
 "use client";
+import { ClubHero } from "./club-hero";
 import { NoticeCount } from "./notice-count";
 import { PaymentHistory } from "./payment-history";
 import { Icon } from "@/components/ui";
@@ -58,20 +59,19 @@ import {GlobalDashboard} from "./global-dashboard";
 import { GlobalClubs, Settlement } from "./dashboard";
 import "./workspace.css";
 /** Lee la vista, el club y la pestaña desde la URL. Resuelve la sesión y la membresía antes de montar las herramientas del rol. */
-export default function Workspace() {
+export default function Workspace({user}: {user: {id: string; firstName: string; globalRole: string}}) {
     const q = useSearchParams(), view = q.get("view") || "feed", club = q.get("club") || "", id = q.get("id") || "", tab = q.get("tab") || "posts";
-    const user = useData("/api/auth/me"), memberships = useData(`/api/me/memberships?context=${encodeURIComponent(club)}`);
+    const memberships = useData(`/api/me/memberships?context=${encodeURIComponent(club)}`);
     const member = memberships.data?.memberships.find((m: Row) => m.club.id === club && m.status === "ACTIVE" && m.club.status === "ACTIVE");
-    const admin = member?.role === "CLUB_ADMIN" || user.data?.user.globalRole === "SUPER_ADMIN";
-    const global = user.data?.user.globalRole === "SUPER_ADMIN";
+    const admin = member?.role === "CLUB_ADMIN" || user.globalRole === "SUPER_ADMIN";
+    const global = user.globalRole === "SUPER_ADMIN";
     const context = ["club", "facility"].includes(view), globalView = ["admin", "globalClubs", "settlement", "globalPosts"].includes(view);
     return (<div className="workspace-shell">
       <nav className="workspace-nav" aria-label="Secciones"><div>
         {[["feed", "Inicio", "home"], ["search", "Explorar clubes", "compass"], ["clubs", "Mis clubes", "users"], ["applications", "Mis solicitudes", "document"], ...(global ? [["admin", "Administración global", "grid"], ["globalClubs", "Gestionar clubes", "settings"]] : [])].map(([v, t, i]) => <Link key={v} href={href(v)} aria-current={view === v ? "page" : undefined}><Icon name={i} size={18}/>{t}{(v === "clubs" || v === "applications") && <NoticeCount kind={v}/>}</Link>)}
       </div></nav>
       <main id="main-content" className="workspace">
-      <Status state={user}>
-        <Status state={memberships}>
+        {memberships.loading && (view==="club" || view==="publicClub") ? <ClubHero/> : <Status state={memberships}>
           {context && !member && !global ? (<p className="notice">
               No tienes una membresía habilitada en este club.{" "}
               <Link href={href("publicClub", { club })}>
@@ -88,7 +88,7 @@ export default function Workspace() {
                 "applications",
             ].includes(view) && <Personal view={view} q={q.get("q") || ""}/>}
               {view === "payments" && <PaymentHistory />}
-              {view === "feed" && <Feed user={user.data?.user} memberships={memberships.data?.memberships || []}/>}
+              {view === "feed" && <Feed user={user} memberships={memberships.data?.memberships || []}/>}
               {view === "search" && <BrowseClubs authenticated initialQuery={q.get("q") || ""}/>}
               {view === "publicClub" && <PublicClub key={club+q.get("post")} club={club} target={q.get("post")||""}/>}
               {view === "club" && <Club club={club} tab={tab} admin={admin}/>}
@@ -119,8 +119,7 @@ export default function Workspace() {
                   <Link href="/app">Volver al inicio</Link>
                 </p>)}
             </div>)}
-        </Status>
-      </Status>
+        </Status>}
       </main>
     </div>);
 }

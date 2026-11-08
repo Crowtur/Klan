@@ -1,4 +1,4 @@
-# Klubo Parte 6.2
+# Klubo Parte 7
 
 ## Instalación y actualización
 

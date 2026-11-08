@@ -210,7 +210,7 @@ export function PublicClub({club,target=""}:{club:string;target?:string}){
       document.getElementById("post-"+target)?.scrollIntoView({block:"start",behavior:"instant"});
   },[target,page,posts.data,state.data]);
   const plans:Row[]=state.data?.plans||[];
-  return <><ClubHero club={state.data?.club}/><div className="public-columns"><section><div className="list-heading"><h2>Publicaciones públicas</h2><small>Últimas novedades</small></div>
+  return <>{!state.error && <ClubHero club={state.data?.club?.id===club ? state.data.club : undefined}/>}<div className="public-columns"><section><div className="list-heading"><h2>Publicaciones públicas</h2><small>Últimas novedades</small></div>
     <div><Status state={posts}><Empty rows={posts.data?.posts||[]}/>{posts.data?.posts.map((p:Row)=><PostCard key={p.id} post={p}/>)}
     {target && page===null && posts.data?.anchorMissing && <p>La publicación compartida ya no está disponible.</p>}
     <Pager data={posts.data} page={posts.data?.pagination.page||1} onPage={setPage}/>{!!posts.data?.posts.length&&!posts.data.pagination.hasNextPage&&<p className="feed-end">✓ Estás al día con las novedades del club</p>}</Status></div></section>

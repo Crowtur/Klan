@@ -238,16 +238,11 @@ export async function GET(request: Request) {
 
     // 5. Consultas principales
     const [
-      totalMatchingClubs,
       statusGroups,
       clubsPage,
       allMatchingClubIds,
       historicalClubs,
     ] = await prisma.$transaction([
-      prisma.club.count({
-        where,
-      }),
-
       prisma.club.groupBy({
         by: ["status"],
         where,
@@ -295,6 +290,7 @@ export async function GET(request: Request) {
       }),
     ]);
 
+    const totalMatchingClubs = allMatchingClubIds.length;
     const clubIds = allMatchingClubIds.map(
       (club) => club.id
     );
@@ -309,7 +305,6 @@ export async function GET(request: Request) {
       planGroups,
       reservationGroups,
       paymentGroups,
-      paymentAmounts,
     ] = await prisma.$transaction([
       prisma.clubMembership.groupBy({
         by: ["clubId"],
@@ -414,20 +409,7 @@ export async function GET(request: Request) {
           ...(lifetime?{}:{paidAt:{gte:periodStart,lt:periodEnd}}),
         },
         orderBy: { clubId: "asc" },
-        _count: {
-          _all: true,
-        },
-      }),
-
-      prisma.payment.groupBy({
-        by: ["clubId"],
-        where: {
-          clubId: { in: clubIds },
-          status: "PAID",
-          currency: CURRENCY,
-          ...(lifetime?{}:{paidAt:{gte:periodStart,lt:periodEnd}}),
-        },
-        orderBy: { clubId: "asc" },
+        _count: { _all: true },
         _sum: {
           amount: true,
         },
@@ -542,7 +524,7 @@ export async function GET(request: Request) {
         );
 
         const grossRevenue = getGroupAmount(
-          paymentAmounts.find(
+          paymentGroups.find(
             (group) => group.clubId === clubId
           )
         );

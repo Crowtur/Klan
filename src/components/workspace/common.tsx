@@ -48,7 +48,7 @@ import {FacilityIcon} from "./facility-icon";
 import { facilityIcons } from "@/lib/facility-icons";
 import { Icon } from "@/components/ui";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+
 // API records vary by module; only explicitly selected fields are shown in views.
 export type Row = Record<string, any>;
 /** Centraliza las peticiones JSON y conserva el estado HTTP en los errores para que la vista pueda tratar la sesión caducada. */
@@ -77,7 +77,7 @@ export function useData(url: string | null, version = 0) {
         error: string;
         loading: boolean;
     }>({ data: null, error: "", loading: true });
-    const router = useRouter();
+
     const previousUrl=useRef<string|null>(null);
     useEffect(() => {
         // Cambiar de club o filtro invalida la respuesta anterior, aunque esa petición termine después de la nueva.
@@ -97,14 +97,13 @@ export function useData(url: string | null, version = 0) {
             .catch((e) => {
             if (!live)
                 return;
-            if (e.status === 401)
-                router.replace("/login");
+
             set({ data: null, error: e.message, loading: false });
         });
         return () => {
             live = false;
         };
-    }, [url, version, router]);
+    }, [url, version]);
     return state;
 }
 /** Construye enlaces del espacio privado codificando cada parámetro con URLSearchParams. */

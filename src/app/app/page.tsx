@@ -52,11 +52,13 @@ import Workspace from "@/components/workspace";
 export default async function Page({searchParams}:{searchParams:Promise<Record<string,string|string[]|undefined>>}) {
   /** Revalida la identidad desde la cookie antes de entregar las páginas privadas. */
   const token=(await cookies()).get("auth_token")?.value;
-  const destination=await workspaceRedirect(await searchParams,await userFromToken(token));
+  const user = await userFromToken(token);
+  const destination = await workspaceRedirect(await searchParams, user);
   if (destination) redirect(destination);
+  if (!user) redirect("/login");
   return (
     <Suspense fallback={<p>Cargando…</p>}>
-      <Workspace />
+      <Workspace key={user.id} user={{firstName: user.firstName, globalRole: user.globalRole, id: user.id}} />
     </Suspense>
   );
 }

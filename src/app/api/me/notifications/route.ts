@@ -53,11 +53,18 @@ export async function GET(req:Request) {
     const page=Number(q.get("page")??1);
     if(!Number.isSafeInteger(page)||page<1||page>10000)return Response.json({success:false},{status:400});
     const where={recipientId:user.id,...(q.get("clubId")&&{clubId:q.get("clubId")!})};
-    const [notifications,total,unread,byClub]=await prisma.$transaction([
+    const groups = prisma.notification.groupBy({
+      by: ["clubId", "type"], orderBy: {clubId: "asc"},
+      where: {...where, readAt: null}, _count: true
+    });
+    if (q.get("summary") === "1") {
+      return Response.json({success: true, byClub: await groups});
+    }
+    const [notifications,total,byClub]=await prisma.$transaction([
       prisma.notification.findMany({where,orderBy:[{createdAt:"desc"},{id:"desc"}],skip:(page-1)*25,take:25}),
-      prisma.notification.count({where}),prisma.notification.count({where:{...where,readAt:null}}),
-      prisma.notification.groupBy({by:["clubId","type"],orderBy:{clubId:"asc"},where:{...where,readAt:null},_count:true})
+      prisma.notification.count({where}), groups
     ]);
+    const unread = byClub.reduce((sum, group) => sum + group._count, 0);
     return Response.json({success:true,notifications,total,page,unread,byClub});
   }catch(e){return fail(e);}
 }

@@ -42,14 +42,104 @@
  * ==============================================================================
  */
 
-import {AvatarImage} from "@/components/avatar-image";
+"use client";
+import {useEffect,useRef,useState} from "react";
+import {avatarSources} from "@/components/avatar-image";
 import {Icon,PLACEHOLDER_IMAGE} from "@/components/ui";
 import {safeUrl,type Row} from "./common";
 import {Location} from "./location";
+
+/** La imagen decodificada es el mismo nodo que se coloca en la cabecera. */
+function preload(source:ReturnType<typeof avatarSources>,signal:AbortSignal) {
+  return new Promise<HTMLImageElement|null>(resolve=>{
+    if(signal.aborted) { resolve(null); return; }
+    const image=new Image();
+    function finish(result:HTMLImageElement|null) {
+      clearTimeout(timer);
+      signal.removeEventListener("abort",cancel);
+      image.onload=null;
+      image.onerror=null;
+      resolve(result);
+    }
+    function cancel() { finish(null); }
+    const timer=window.setTimeout(cancel,6000);
+    signal.addEventListener("abort",cancel,{once:true});
+    image.alt="";
+    image.decoding="async";
+    image.onerror=cancel;
+    image.onload=async()=>{
+      try {
+        if(image.decode) await image.decode();
+        finish(signal.aborted ? null : image);
+      } catch { cancel(); }
+    };
+    if(source.sizes) image.sizes=source.sizes;
+    if(source.srcSet) image.srcset=source.srcSet;
+    image.src=source.src;
+  });
+}
+
 /** Combina portada, logotipo e indicadores en la misma cabecera para la ficha interna y la pública. */
 export function ClubHero({club}:{club?:Row}){
-  return <header className="club-hero"><img className="hero-cover" src={safeUrl(club?.coverUrl)||PLACEHOLDER_IMAGE} alt="Portada del club"/>
-    <div className="hero-identity"><span className="hero-logo">{safeUrl(club?.logoUrl)?<AvatarImage src={safeUrl(club?.logoUrl)} alt=""/>:<Icon name="users" size={38}/>}</span>
-    <div><h1>{club?.name||"Club"}</h1><p>{club?.description}</p><Location value={club?.address}/>{safeUrl(club?.googleMapsUrl)&&<a href={safeUrl(club?.googleMapsUrl)} target="_blank" rel="noreferrer">Ver en Google Maps ↗</a>}</div>
-    <aside>{club?.createdAt&&<small>DESDE {new Date(club.createdAt).getFullYear()}</small>}<strong>{club?._count?.memberships??"—"}</strong><span>Miembros</span></aside></div></header>
+  const coverHost=useRef<HTMLSpanElement>(null);
+  const logoHost=useRef<HTMLSpanElement>(null);
+  const id=club?.id;
+  const cover=safeUrl(club?.coverUrl)||PLACEHOLDER_IMAGE;
+  const logo=safeUrl(club?.logoUrl);
+  const [shown,setShown]=useState<{id:string;cover:string;logo?:string}|null>(null);
+  const ready=!!id && !!shown && shown.id===id && shown.cover===cover && shown.logo===logo;
+
+  useEffect(()=>{
+    if(!id) return;
+    const controller=new AbortController();
+    const {signal}=controller;
+    async function prepare(){
+      const coverTask=preload({src:cover},signal).then(image=>{
+        if(image || cover===PLACEHOLDER_IMAGE || signal.aborted) return image;
+        return preload({src:PLACEHOLDER_IMAGE},signal);
+      });
+      const [banner,avatar]=await Promise.all([
+        coverTask,logo ? preload(avatarSources(logo),signal) : null
+      ]);
+      if(signal.aborted) return;
+      if(banner) coverHost.current?.replaceChildren(banner);
+      else coverHost.current?.replaceChildren();
+      if(avatar) logoHost.current?.replaceChildren(avatar);
+      else logoHost.current?.replaceChildren();
+      setShown({id,cover,logo});
+    }
+    void prepare();
+    return ()=>controller.abort();
+  },[id,cover,logo]);
+
+  const maps=safeUrl(club?.googleMapsUrl);
+  return <header className="club-hero" data-ready={ready} aria-busy={!ready} aria-label={ready ? club?.name : "Cargando club"}>
+    <div className="hero-cover hero-media-slot" aria-hidden="true">
+      <span className="hero-final hero-image-host" ref={coverHost}/>
+      <span className="hero-placeholder hero-banner-skeleton"/>
+    </div>
+    <div className="hero-identity">
+      <span className="hero-logo hero-media-slot" aria-hidden="true">
+        <Icon name="users" size={38}/>
+        <span className="hero-final hero-image-host" ref={logoHost}/>
+        <span className="hero-placeholder hero-logo-skeleton"/>
+      </span>
+      <div className="hero-copy-slot">
+        <div className="hero-final hero-copy" inert={!ready}>
+          <h1>{club?.name}</h1>
+          {club?.description && <p>{club.description}</p>}
+          <Location value={club?.address}/>
+          {maps && <a href={maps} target="_blank" rel="noreferrer">Ver en Google Maps ↗</a>}
+        </div>
+        <div className="hero-placeholder hero-lines" aria-hidden="true"><i/><i/><i/></div>
+      </div>
+      <aside className="hero-count-slot">
+        <div className="hero-final" inert={!ready}>
+          {club?.createdAt && <small>DESDE {new Date(club.createdAt).getFullYear()}</small>}
+          <strong>{club?._count?.memberships??"—"}</strong><span>Miembros</span>
+        </div>
+        <div className="hero-placeholder hero-lines" aria-hidden="true"><i/><i/></div>
+      </aside>
+    </div>
+  </header>;
 }

@@ -43,17 +43,19 @@
  */
 
 "use client";
-import { useRef, type ReactNode } from "react";
+import { useRef, useState, type ReactNode } from "react";
 /** Usa el diálogo nativo para mantener el foco dentro del editor y admite un disparador de retirada. */
-export function EditorModal({ title, children, destructive = false }: {
+export function EditorModal({ title, children, destructive = false, lazy = false }: {
     title: string;
     destructive?: boolean;
+    lazy?: boolean;
     children: ReactNode;
 }) {
+    const [open, setOpen] = useState(false);
     const dialog = useRef<HTMLDialogElement>(null);
-    return <><button className={destructive ? "outline-destructive" : "secondary"} onClick={() => dialog.current?.showModal()}>{title}</button><dialog className="editor-modal" ref={dialog} aria-label={title} onClick={e => { if (e.target === dialog.current)
+    return <><button className={destructive ? "outline-destructive" : "secondary"} onClick={() => { if (lazy) setOpen(true); dialog.current?.showModal(); }}>{title}</button><dialog className="editor-modal" ref={dialog} onClose={() => { if (lazy) setOpen(false); }} aria-label={title} onClick={e => { if (e.target === dialog.current)
         dialog.current.close(); }}>
  <header><h2>{title}</h2><button className="secondary" onClick={() => dialog.current?.close()} aria-label="Cerrar">×</button></header>
- {children}<button className="outline-destructive" onClick={() => dialog.current?.close()}>Cancelar</button>
+ {(!lazy || open) && children}<button className="outline-destructive" onClick={() => dialog.current?.close()}>Cancelar</button>
  </dialog></>;
 }

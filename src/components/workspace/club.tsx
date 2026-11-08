@@ -81,7 +81,7 @@ export function Club({ club, tab = "posts", admin, }: {
       } catch { setNoticeError("No se pudieron marcar las novedades como leídas."); }
     }
     return (<>
-      <ClubHero club={state.data?.club}/>
+      {!state.error && <ClubHero club={state.data?.club?.id===club ? state.data.club : undefined}/>}
       <Status state={state}>
         <nav className="tabs" aria-label="Secciones del club">
           {[
@@ -216,7 +216,9 @@ function Applications({ club }: {
             <p>
               {a.user.email} · {a.plan.name} · <Badge value={a.status}/>
             </p>
-            <ApplicationReview club={club} application={a} onDone={() => setV(v + 1)}/>
+            <EditorModal title="Revisar documentos y solicitud" lazy>
+              <ApplicationReview club={club} application={a} onDone={() => setV(v + 1)}/>
+            </EditorModal>
           </Panel>))}
         </div>
       </Status>
@@ -242,7 +244,7 @@ function ApplicationReview({ club, application, onDone, }: {
         },
         { name: "rejectionReason", label: "Motivo de rechazo", type: "textarea" },
     ];
-    return (<EditorModal title="Revisar documentos y solicitud">
+    return (<>
       <Status state={state}>
         <Empty rows={state.data?.documents || []}/>
         {state.data?.documents.map((d: Row) => (<Panel key={d.id} title={d.requirement?.name || d.fileName || "Documento"}>
@@ -256,7 +258,7 @@ function ApplicationReview({ club, application, onDone, }: {
           </Panel>))}
       </Status>
       {["PENDING", "DOCUMENTATION_REVIEW"].includes(application.status) && (<Form fields={fields} url={`${base}/review`} method="PATCH" submit="Guardar decisión de solicitud" onDone={onDone}/>)}
-    </EditorModal>);
+    </>);
 }
 /** Aplica el período y la paginación al historial financiero del club. */
 function ClubPayments({ club }: {

@@ -54,7 +54,7 @@ export function Requirements({club,plans,onChanged}:{club:string;plans:Row[];onC
 }
 /** Agrupa los requisitos de un plan y permite elegir uno para su edición. */
 function RequirementGroup({plan,base,open,version,onToggle,onEdit}:{plan:Row;base:string;open:boolean;version:number;onToggle:()=>void;onEdit:(r:Row)=>void}){
- const state=useData(base,version),rows:Row[]=state.data?.requirements||[];
+ const state=useData(open ? base : null,version),rows:Row[]=(open && state.data?.requirements) || plan.documentRequirements || [];
  return <section className={open?"requirement-group expanded":"requirement-group"}><button className="requirement-toggle" aria-expanded={open} aria-controls={"requirements-"+plan.id} onClick={onToggle}><span><Icon name="chevron" size={17}/>{plan.name}</span><small>{rows.filter(r=>r.isActive!==false).length} requisitos · {rows.filter(r=>r.isActive!==false&&r.isRequired).length} obligatorios</small></button>{open&&<div id={"requirements-"+plan.id}><Status state={state}>{!rows.length&&<p className="requirement-empty">Este plan todavía no tiene requisitos.</p>}{rows.map(r=><div className="requirement-row" key={r.id}><Icon name="document"/><div><strong>{r.name}</strong><p>{r.description||"Sin instrucciones adicionales."}</p><small>{r.isActive===false?"Desactivado":r.isRequired?"✓ Obligatorio":"Opcional"}</small></div><button className="secondary" onClick={()=>onEdit(r)}>Editar</button></div>)}<button className="requirement-create" onClick={()=>onEdit({isRequired:true})}>+ Crear requisito para {plan.name}</button></Status></div>}</section>
 }
 

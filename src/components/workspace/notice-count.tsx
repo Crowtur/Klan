@@ -43,12 +43,69 @@
  */
 
 "use client";
-import {useEffect,useState} from "react";
-import {api,type Row} from "./common";
+import {useSyncExternalStore} from "react";
+import {api} from "./common";
 import {notificationDestination} from "@/lib/notification-routing";
-/** Obtiene el recuento de avisos correspondiente al destino de navegación. */
+
+type Group = {clubId: string | null; type: string; _count: number};
+const empty: Group[] = [];
+let groups = empty;
+const listeners = new Set<() => void>();
+let timer: ReturnType<typeof setInterval>;
+let generation = 0;
+let pending = false;
+
+function refresh() {
+  if (pending) return;
+  pending = true;
+  const current = ++generation;
+  void api("/api/me/notifications?summary=1").then(data => {
+    if (current !== generation) return;
+    groups = data.byClub;
+    listeners.forEach(listener => listener());
+  }).catch(() => {}).finally(() => {
+    if (current === generation) pending = false;
+  });
+}
+
+function afterRead() {
+  pending = false;
+  refresh();
+}
+
+function subscribe(listener: () => void) {
+  listeners.add(listener);
+  if (listeners.size === 1) {
+    refresh();
+    timer = setInterval(refresh, 30000);
+    window.addEventListener("klubo-notifications", afterRead);
+  }
+  return () => {
+    listeners.delete(listener);
+    if (listeners.size === 0) {
+      clearInterval(timer);
+      window.removeEventListener("klubo-notifications", afterRead);
+      generation++;
+      pending = false;
+      groups = empty;
+    }
+  };
+}
+
+export function useNoticeGroups() {
+  return useSyncExternalStore(subscribe, () => groups, () => empty);
+}
+
 export function NoticeCount({club,kind}:{club?:string;kind?:"applications"|"clubs"|"reservations"|"overview"|"members"}){
- const [count,setCount]=useState(0);
- useEffect(()=>{let live=true;const refresh=()=>api("/api/me/notifications"+(club?"?clubId="+encodeURIComponent(club):"")).then(d=>{if(live)setCount((d.byClub||[]).filter((r:Row)=>{const route=notificationDestination(r as any);if(club)return route.scope==="club"&&(!kind||route.tab===kind);if(kind==="applications")return route.scope==="personal"&&route.tab==="applications";return route.scope==="club"}).reduce((n:number,r:Row)=>n+Number(r._count),0))}).catch(()=>{});void refresh();const timer=setInterval(refresh,30000);window.addEventListener("klubo-notifications",refresh);return()=>{live=false;clearInterval(timer);window.removeEventListener("klubo-notifications",refresh)}},[club,kind]);
- return count?<span className="notification-count" aria-label={count+" novedades"}>{count}</span>:null;
+  const count = useNoticeGroups().reduce((sum, group) => {
+    if (club && group.clubId !== club) return sum;
+    const route = notificationDestination(group);
+    const matches = club
+      ? route.scope === "club" && (!kind || route.tab === kind)
+      : kind === "applications"
+        ? route.scope === "personal" && route.tab === "applications"
+        : route.scope === "club";
+    return matches ? sum + group._count : sum;
+  }, 0);
+  return count ? <span className="notification-count" aria-label={count+" novedades"}>{count}</span> : null;
 }

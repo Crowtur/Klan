@@ -364,48 +364,69 @@ export async function GET(
       );
     }
 
-    // 7. Obtener horarios de apertura
-    const schedules = await prisma.facilitySchedule.findMany({
-      where: {
-        facilityId,
-        dayOfWeek,
-        isClosed: false,
-      },
-      select: {
-        openingTime: true,
-        closingTime: true,
-      },
-      orderBy: {
-        openingTime: "asc",
-      },
-    });
+    const now = new Date();
+    const [schedules, reservations, activeSubscriptions] = await Promise.all([
+      prisma.facilitySchedule.findMany({
+        where: {
+          facilityId,
+          dayOfWeek,
+          isClosed: false,
+        },
+        select: {
+          openingTime: true,
+          closingTime: true,
+        },
+        orderBy: {
+          openingTime: "asc",
+        },
+      }),
+      prisma.reservation.findMany({
+        where: {
+          facilityId,
+          status: "CONFIRMED",
+          startAt: {
+            lt: nextDayStart,
+          },
+          endAt: {
+            gt: dayStart,
+          },
+        },
+        select: {
+          clubMembershipId: true,
+          startAt: true,
+          endAt: true,
+        },
+        orderBy: {
+          startAt: "asc",
+        },
+      }),
+      prisma.subscription.findMany({
+        where: {
+          clubMembershipId: membership.id,
+          status: "ACTIVE",
+          startedAt: {
+            lte: now,
+          },
+          expiresAt: {
+            gt: now,
+          },
+          plan: {
+            clubId,
+            isActive: true,
+          },
+        },
+        select: {
+          id: true,
+          planId: true, expiresAt:true,
+        },
+      })
+    ]);
 
     const openingIntervals: TimeInterval[] =
       schedules.map((schedule) => ({
         start: schedule.openingTime,
         end: schedule.closingTime,
       }));
-
-    // 8. Obtener reservas confirmadas del día
-    const reservations = await prisma.reservation.findMany({
-      where: {
-        facilityId,
-        status: "CONFIRMED",
-        startAt: {
-          lt: nextDayStart,
-        },
-        endAt: {
-          gt: dayStart,
-        },
-      },
-      select: {
-        startAt: true,
-        endAt: true,
-      },
-      orderBy: {
-        startAt: "asc",
-      },
-    });
 
     // 9. Convertir reservas a intervalos locales recortados al día
     const occupiedIntervals: TimeInterval[] =
@@ -438,31 +459,6 @@ export async function GET(
       openingIntervals,
       occupiedIntervals
     );
-
-    // 11. Consultar suscripciones vigentes del socio
-    const now = new Date();
-
-    const activeSubscriptions =
-      await prisma.subscription.findMany({
-        where: {
-          clubMembershipId: membership.id,
-          status: "ACTIVE",
-          startedAt: {
-            lte: now,
-          },
-          expiresAt: {
-            gt: now,
-          },
-          plan: {
-            clubId,
-            isActive: true,
-          },
-        },
-        select: {
-          id: true,
-          planId: true, expiresAt:true,
-        },
-      });
 
     const activePlanIds = activeSubscriptions.map(
       (subscription) => subscription.planId
@@ -499,24 +495,9 @@ export async function GET(
     const hasFacilityAccess = membership.role === "CLUB_ADMIN" || planAccesses.length > 0;
 
     // 13. Calcular minutos confirmados del socio para esta instalación y fecha
-    const memberReservations =
-      await prisma.reservation.findMany({
-        where: {
-          facilityId,
-          clubMembershipId: membership.id,
-          status: "CONFIRMED",
-          startAt: {
-            lt: nextDayStart,
-          },
-          endAt: {
-            gt: dayStart,
-          },
-        },
-        select: {
-          startAt: true,
-          endAt: true,
-        },
-      });
+    const memberReservations = reservations.filter(
+      reservation => reservation.clubMembershipId === membership.id
+    );
 
     const usedMinutes = memberReservations.reduce(
       (total, reservation) => {

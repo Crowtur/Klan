@@ -203,24 +203,18 @@ export function Facility({ club, id, admin, }: {
         </Status>
       </Panel>
       </div>{admin && (<>
-          <div className="facility-tools"><ScheduleEditor key={`s${v}`} base={base} onDone={() => setV(v + 1)}/>
-          <AccessEditor key={`a${v}`} club={club} base={base} onDone={() => setV(v + 1)}/>
+          <div className="facility-tools"><EditorModal key={`s${v}`} title="Configurar horarios" lazy>
+            <Status state={schedule}>
+              {schedule.data && <ScheduleForm base={base} initial={schedule.data.schedules} onDone={() => setV(v + 1)}/>}
+            </Status>
+          </EditorModal>
+          <EditorModal key={`a${v}`} title="Planes con acceso a esta instalación" lazy>
+            <AccessEditor club={club} base={base} onDone={() => setV(v + 1)}/>
+          </EditorModal>
           </div><Reservations key={v} club={club} facility={id} admin onChanged={() => setV(v + 1)}/>
         </>)}
       {!admin && <Reservations key={v} club={club} onChanged={() => setV(v + 1)}/>}
     </>);
-}
-/** Abre el editor con los intervalos semanales vigentes de la instalación. */
-function ScheduleEditor({ base, onDone, }: {
-    base: string;
-    onDone: () => void;
-}) {
-    const state = useData(`${base}/schedule`);
-    return (<EditorModal title="Configurar horarios">
-      <Status state={state}>
-        {state.data && (<ScheduleForm base={base} initial={state.data.schedules} onDone={onDone}/>)}
-      </Status>
-    </EditorModal>);
 }
 /** Mantiene intervalos editables por día y envía el conjunto de horarios al guardar. */
 function ScheduleForm({ base, initial, onDone, }: {
@@ -296,13 +290,13 @@ function AccessEditor({ club, base, onDone, }: {
     onDone: () => void;
 }) {
     const plans = useData(`/api/clubs/${club}/membership-plans`), access = useData(`${base}/plan-access`);
-    return (<EditorModal title="Planes con acceso a esta instalación">
+    return (
       <Status state={plans}>
         <Status state={access}>
           {plans.data && access.data && (<AccessForm plans={plans.data.plans} initial={access.data.planAccesses} base={base} onDone={onDone}/>)}
         </Status>
       </Status>
-    </EditorModal>);
+    );
 }
 /** Convierte la selección de planes y sus límites diarios en los permisos que recibe el servidor. */
 function AccessForm({ plans, initial, base, onDone, }: {

@@ -45,14 +45,41 @@
 "use client";
 import {useEffect,useRef,useState} from "react";
 import {useRouter,usePathname,useSearchParams} from "next/navigation";
+import {useNoticeGroups} from "./notice-count";
 import {api,type Row} from "./common";
 import {notificationDestination,notificationTitle,relativeTime} from "@/lib/notification-routing";
 /** Actualiza los avisos al cambiar de página, periódicamente o tras una lectura, y abre el destino del aviso seleccionado. */
 export function Notifications(){
- const [data,setData]=useState<Row>({notifications:[]}),[open,setOpen]=useState(false),[error,setError]=useState(""),[page,setPage]=useState(1),[,tick]=useState(0);
+ const [data,setData]=useState<Row>({notifications:[]}),[open,setOpen]=useState(false),[error,setError]=useState(""),[page,setPage]=useState(1);
+ const unread = useNoticeGroups().reduce((sum, group) => sum + group._count, 0);
+ const [loadedPage, setLoadedPage] = useState<number | null>(null);
  const box=useRef<HTMLDivElement>(null),trigger=useRef<HTMLButtonElement>(null),router=useRouter(),path=usePathname(),query=useSearchParams().toString();
  useEffect(()=>{setOpen(false)},[path,query]);
  useEffect(()=>{const outside=(e:PointerEvent)=>{if(!box.current?.contains(e.target as Node))setOpen(false)};const key=(e:KeyboardEvent)=>{if(e.key==="Escape"){setOpen(false);trigger.current?.focus()}};document.addEventListener("pointerdown",outside);document.addEventListener("keydown",key);return()=>{document.removeEventListener("pointerdown",outside);document.removeEventListener("keydown",key)}},[]);
- useEffect(()=>{let live=true;const refresh=()=>api(`/api/me/notifications?page=${page}`).then(d=>{if(live){setData(d);tick(n=>n+1)}}).catch(()=>{});void refresh();const timer=setInterval(refresh,30000);window.addEventListener("klubo-notifications",refresh);return()=>{live=false;clearInterval(timer);window.removeEventListener("klubo-notifications",refresh)}},[page]);
- return <div className="notification-box" ref={box}><button className="notification-trigger" ref={trigger} aria-label="Notificaciones" aria-expanded={open} onClick={()=>setOpen(!open)}><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9ZM10 20a2 2 0 0 0 4 0"/></svg>{data.unread>0&&<b className="notification-count">{data.unread}</b>}</button>{open&&<section className="notification-list" aria-label="Notificaciones"><h3>Tus novedades</h3>{error&&<p role="alert">{error}</p>}{!data.notifications.length&&<p>Estás al día.</p>}{data.notifications.map((n:Row)=><button key={n.id} className={n.readAt?"notification-item":"notification-item unread"} onClick={async()=>{try{await api("/api/me/notifications","PATCH",{id:n.id});window.dispatchEvent(new Event("klubo-notifications"));setOpen(false);router.push(notificationDestination(n as any).path)}catch(e){setError((e as Error).message)}}}><strong>{notificationTitle(n as any)}</strong>{n.message&&<span>{n.message}</span>}<small>{relativeTime(n.createdAt)}</small></button>)}<div className="notification-pages"><button disabled={page===1} onClick={()=>setPage(p=>p-1)}>Anterior</button><span>{page}</span><button disabled={page*25>=data.total} onClick={()=>setPage(p=>p+1)}>Siguiente</button></div></section>}</div>
+ useEffect(() => {
+   setLoadedPage(null);
+   if (!open) return;
+   let sequence = 0;
+   async function refresh() {
+     const current = ++sequence;
+     try {
+       const result = await api(`/api/me/notifications?page=${page}`);
+       if (current !== sequence) return;
+       setData(result);
+       setError("");
+       setLoadedPage(page);
+     } catch (e) {
+       if (current === sequence) setError((e as Error).message);
+     }
+   }
+   void refresh();
+   const timer = setInterval(refresh, 30000);
+   window.addEventListener("klubo-notifications",refresh);
+   return () => {
+     sequence++;
+     clearInterval(timer);
+     window.removeEventListener("klubo-notifications",refresh);
+   };
+ }, [open,page]);
+ return <div className="notification-box" ref={box}><button className="notification-trigger" ref={trigger} aria-label="Notificaciones" aria-expanded={open} onClick={()=>setOpen(!open)}><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9ZM10 20a2 2 0 0 0 4 0"/></svg>{unread>0&&<b className="notification-count">{unread}</b>}</button>{open&&<section className="notification-list" aria-label="Notificaciones"><h3>Tus novedades</h3>{error&&<p role="alert">{error}</p>}{loadedPage !== page && !error && <p>Cargando novedades…</p>}{loadedPage === page && !data.notifications.length&&<p>Estás al día.</p>}{loadedPage === page && data.notifications.map((n:Row)=><button key={n.id} className={n.readAt?"notification-item":"notification-item unread"} onClick={async()=>{try{await api("/api/me/notifications","PATCH",{id:n.id});window.dispatchEvent(new Event("klubo-notifications"));setOpen(false);router.push(notificationDestination(n as any).path)}catch(e){setError((e as Error).message)}}}><strong>{notificationTitle(n as any)}</strong>{n.message&&<span>{n.message}</span>}<small>{relativeTime(n.createdAt)}</small></button>)}<div className="notification-pages"><button disabled={page===1} onClick={()=>setPage(p=>p-1)}>Anterior</button><span>{page}</span><button disabled={loadedPage !== page || page*25>=data.total} onClick={()=>setPage(p=>p+1)}>Siguiente</button></div></section>}</div>
 }
