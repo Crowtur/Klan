@@ -170,9 +170,6 @@ C:\PROJECTS\CLUB-SAAS\SRC\APP\API
 |   \---clubs
 |           route.ts
 |           
-+---test-db
-|       route.ts
-|       
 +---uploadthing
 |       core.ts
 |       route.ts

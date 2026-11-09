@@ -177,9 +177,6 @@ L5: export async function GET(
 ===== search\clubs\route.ts =====
 L5: export async function GET(request: Request) {
 
-===== test-db\route.ts =====
-L4: export async function GET() {
-
 ===== uploadthing\route.ts =====
 L6: export const runtime = "nodejs";
 L8: export const { GET, POST } = createRouteHandler({

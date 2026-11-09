@@ -46,7 +46,7 @@
 // Run from project root: node scripts/test-feedback-part2.cjs
 // Tests exercise handlers with isolated repositories; no external services are contacted.
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm'),ts=require('typescript');
-function load(file,imports={},globals={}){const exports={};const js=ts.transpileModule(fs.readFileSync(file,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020}}).outputText;vm.runInNewContext(js,{...globals,exports,Date,URL,Response,Request,console,Error,require:n=>{if(n in imports)return imports[n];if(n==='next/server')return {NextResponse:{json:(body,o)=>({body,status:o?.status||200})}};if(n==='@prisma/client')return {ClubRole:{CLUB_ADMIN:'CLUB_ADMIN'}};throw Error('Unexpected import '+n)}});return exports;}
+function load(file,imports={},globals={}){const exports={};const js=ts.transpileModule(fs.readFileSync(file,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020}}).outputText;vm.runInNewContext(js,{...globals,exports,Date,URL,Response,Request,console,Error,SyntaxError,require:n=>{if(n in imports)return imports[n];if(n==='next/server')return {NextResponse:{json:(body,o)=>({body,status:o?.status||200})}};if(n==='@prisma/client')return {ClubRole:{CLUB_ADMIN:'CLUB_ADMIN'}};throw Error('Unexpected import '+n)}});return exports;}
 const routing=load('src/lib/notification-routing.ts');
 test('recipient routing distinguishes administrative applications from personal applications',()=>{
  for(const type of ['APPLICATION_SUBMITTED','DOCUMENTS_SUBMITTED']){const r=routing.notificationDestination({type,clubId:'c1'});assert.equal(r.scope,'club');assert.equal(r.tab,'applications');assert.match(r.path,/tab=applications/)}
@@ -306,4 +306,54 @@ test('availability counts only the member’s own minutes while blocking every c
   assert.equal(result.body.membershipLimits.usedMinutes, 60);
   assert.equal(result.body.availability.occupiedIntervals.length, 2);
   assert.deepEqual(result.body.bookingOptions.slots.filter(slot => slot.start >= '10:00' && slot.start < '12:00').length, 0);
+});
+
+// Estos casos invocan el controlador real con una petición HTTP y sustituyen sólo sus dependencias externas.
+test('la ruta de diagnóstico que enumeraba usuarios queda fuera de la aplicación', () => {
+  assert.equal(fs.existsSync('src/app/api/test-db/route.ts'), false);
+});
+
+test('expulsión distingue sesión ausente y permisos insuficientes en el club solicitado', async () => {
+  const context = { params: Promise.resolve({ clubId: 'club-b', memberId: 'otro' }) };
+  for (const expected of [401, 403]) {
+    const route = load('src/app/api/clubs/[clubId]/members/[memberId]/route.ts', {
+      '@/lib/prisma': { prisma: {} }, '@/lib/stripe': { stripe: {} },
+      '@/lib/auth/auth': { requireAuth: async () => {
+        if (expected === 401) throw new Error('UNAUTHORIZED');
+        return { id: 'socio' };
+      } },
+      '@/lib/auth/authorization': { requireClubAdmin: async (actor, club) => {
+        assert.equal(actor, 'socio');
+        assert.equal(club, 'club-b');
+        throw new Error('FORBIDDEN');
+      } },
+    });
+    const result = await route.DELETE(new Request('http://localhost/', { method: 'DELETE' }), context);
+    assert.equal(result.status, expected);
+    assert.ok(result.body.error);
+  }
+});
+
+test('crear planes rechaza JSON inválido o incompleto antes de escribir y admite un plan válido', async () => {
+  const writes = [];
+  const route = load('src/app/api/clubs/[clubId]/membership-plans/route.ts', {
+    '@/lib/auth/auth': { requireAuth: async () => ({ id: 'admin' }) },
+    '@/lib/auth/authorization': { requireClubAdmin: async () => {} },
+    '@/lib/prisma': { prisma: { membershipPlan: { create: async ({ data }) => {
+      writes.push(data);
+      return data;
+    } } } },
+  });
+  const context = { params: Promise.resolve({ clubId: 'club-a' }) };
+  const post = body => route.POST(new Request('http://localhost/', { method: 'POST', body }), context);
+  for (const body of ['{', '', 'null', '[]', 'false', '{}', '{"name":"Mensual"}']) {
+    const result = await post(body);
+    assert.equal(result.status, 400);
+    assert.ok(result.body.message);
+    if (body === '{}') assert.match(result.body.message, /price/);
+  }
+  assert.equal(writes.length, 0);
+  const valid = { name: 'Mensual', price: 5, type: 'PAID', durationValue: 1, durationUnit: 'MONTH' };
+  assert.equal((await post(JSON.stringify(valid))).status, 201);
+  assert.equal(writes.length, 1);
 });

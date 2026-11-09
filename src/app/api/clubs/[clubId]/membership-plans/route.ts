@@ -59,7 +59,37 @@ export async function POST(
 
     await requireClubAdmin(user.id, clubId);
 
-    const body = await request.json();
+    // Validar después del control de acceso conserva el 401/403 incluso con un cuerpo
+    // defectuoso. Se distingue un error de sintaxis de un fallo inesperado del servidor.
+    let body;
+    try {
+      body = await request.json();
+    } catch (error) {
+      if (!(error instanceof SyntaxError)) throw error;
+      return NextResponse.json(
+        { success: false, message: "El cuerpo debe contener JSON válido" },
+        { status: 400 }
+      );
+    }
+
+    // JSON admite valores escalares, arreglos y null; este contrato exige un objeto.
+    if (body === null || typeof body !== "object" || Array.isArray(body)) {
+      return NextResponse.json(
+        { success: false, message: "Se esperaba un objeto JSON para el plan" },
+        { status: 400 }
+      );
+    }
+
+    // Informar todos los campos ausentes de una vez. El precio cero sigue siendo válido
+    // para planes gratuitos y las reglas de negocio se aplican antes de la escritura.
+    const missing = ["name", "type", "price", "durationValue", "durationUnit"]
+      .filter(field => body[field] == null);
+    if (missing.length) {
+      return NextResponse.json(
+        { success: false, message: `Campos requeridos faltantes: ${missing.join(", ")}`, fields: missing },
+        { status: 400 }
+      );
+    }
 
     const {
       name,
@@ -94,17 +124,18 @@ export async function POST(
       );
     }
 
-    // Validación del precio
+    // Rechazar importes fuera de Decimal(10,2) antes de enviar el precio a PostgreSQL.
     if (
       price === undefined ||
       price === null ||
-      typeof price !== "number" ||
+      !Number.isFinite(price) ||
+      price > 99_999_999.99 ||
       price < 0
     ) {
       return NextResponse.json(
         {
           success: false,
-          message: "El precio debe ser un número mayor o igual a 0",
+          message: "El precio debe estar entre 0 y 99 999 999,99",
         },
         { status: 400 }
       );
@@ -132,10 +163,11 @@ export async function POST(
       );
     }
 
-    // Validación de duración
+    // Prisma Int utiliza 32 bits con signo para guardar la duración.
     if (
       durationValue === undefined ||
       !Number.isInteger(durationValue) ||
+      durationValue > 2_147_483_647 ||
       durationValue <= 0
     ) {
       return NextResponse.json(

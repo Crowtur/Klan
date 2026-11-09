@@ -75,9 +75,12 @@ export async function DELETE(
       );
     }
 
-    // 2. Autorización contextual
-    const leaving=user.id===memberId;
-    if(!leaving)await requireClubAdmin(user.id,clubId);
+    // La salida voluntaria conserva su flujo. Para expulsar a otra persona se verifica el
+    // rol en este club antes de buscar la membresía objetivo o modificar sus suscripciones.
+    const leaving = user.id === memberId;
+    if (!leaving) {
+      await requireClubAdmin(user.id, clubId);
+    }
     // 3. Buscar la membresía objetivo
     const membership = await prisma.clubMembership.findFirst({
       where: {
@@ -250,6 +253,18 @@ export async function DELETE(
       pendingSubscriptionIds: stripeErrors,
     });
   } catch (error) {
+    // Los guardas de acceso comunican la causa mediante estos códigos internos. Convertirlos
+    // aquí en respuestas HTTP evita revelar si el usuario objetivo pertenece al club.
+    if (error instanceof Error && error.message === "UNAUTHORIZED") {
+      return NextResponse.json({ error: "No autenticado" }, { status: 401 });
+    }
+    if (error instanceof Error && error.message === "FORBIDDEN") {
+      return NextResponse.json(
+        { error: "No tienes permisos para expulsar miembros de este club" },
+        { status: 403 }
+      );
+    }
+
     console.error("Error expulsando miembro:", error);
 
     return NextResponse.json(
