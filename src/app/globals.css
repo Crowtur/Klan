@@ -689,3 +689,78 @@ button:enabled:active,.btn:active{transform:translateY(1px)}
 @media (prefers-reduced-motion:reduce) {
   .bubble-photo img, .bubble-photo svg { transition:none; }
 }
+
+/* Parte 8: compactar la portada y los formularios exclusivamente por debajo de 768 px. */
+@media (width < 768px) {
+  /* La presentación y las burbujas ocupan filas separadas; se conserva el motor de animación. */
+  .landing-inner, .auth-layout { grid-template-columns:minmax(0,1fr); gap:16px; }
+  .landing-hero, .landing-section { padding:24px 16px; }
+  /* Un ritmo de 12–16 px agrupa cada función con su explicación y permite partir títulos largos. */
+  .feature-grid, .steps-grid { gap:12px; }
+  .feature-card, .step { padding:16px; min-width:0; }
+  .landing-copy h1, .section-intro h2, .page-heading h1 { overflow-wrap:anywhere; }
+  /* Los controles de entrada y registro se distribuyen en líneas al aumentar el tamaño del texto. */
+  .landing-actions, .trust-row { flex-wrap:wrap; gap:12px; }
+  .landing-actions a { min-height:44px; display:inline-flex; align-items:center; }
+  /* El pie recupera el ancho de lectura de la portada y deja espacio para enlaces de varias líneas. */
+  .site-footer { padding:20px 16px; gap:16px; flex-wrap:wrap; }
+}
+
+/* Portada móvil: reducir la escala editorial preservando las proporciones aprobadas en escritorio. */
+@media (width < 768px) {
+  /* El titular conserva dos líneas al ancho normal sin dominar la primera pantalla. */
+  .landing-hero .landing-copy h1 { font-size:clamp(1.5rem,6.5vw,1.875rem); line-height:1.13; letter-spacing:-.035em; }
+  /* Kicker pequeño y espaciado, diferenciable del párrafo de introducción. */
+  .landing-copy .eyebrow { font-size:.75rem; font-weight:600; letter-spacing:.065em; }
+  /* Cuerpo con interlineado suficiente para leer en columna estrecha. */
+  .landing-hero .landing-copy > p:not(.eyebrow) { font-size:.9375rem; line-height:1.5; }
+  /* Las acciones pueden envolver en lugar de estirar el CTA de borde a borde. */
+  .landing-copy .landing-actions { align-items:flex-start; gap:6px; }
+  /* Altura táctil de 44 px incluso cuando el texto visual es pequeño. */
+  .landing-copy .landing-actions .btn { width:fit-content; min-height:44px; padding:9px 18px; font-size:.875rem; border-radius:10px; }
+  /* Enlace complementario y notas subordinados visualmente al CTA. */
+  .landing-actions a:not(.btn), .landing-copy .trust-row { font-size:.75rem; }
+  /* Espacio reducido para las dos viñetas cuando se parten en dos líneas. */
+  .landing-copy .trust-row { gap:6px 12px; margin-block:10px; }
+}
+
+/* Móvil: las cinco plazas ocupan dos esquinas superiores, el centro y dos esquinas inferiores.
+   La medida relativa al contenedor reserva espacio para los nombres, incluso en orientación horizontal. */
+@media (width < 768px) {
+  /* El lienzo ya tiene ancho y altura propios: se pueden medir ambos ejes con cqw y cqh. */
+  .club-bubbles { container-type:size; }
+  /* Ocultar las dos plazas adicionales del HTML de escritorio hasta que React hidrate el recorte a cinco. */
+  .club-bubbles > .bubble-position:nth-child(n+6) { display:none; }
+  /* El diámetro cabe en cada zona con margen para la oscilación y el foco. Ignorar posiciones inline
+     del motor de escritorio durante la rotación; sus coordenadas se recalculan al volver al escritorio. */
+  .club-bubbles > .bubble-position {
+    width:min(116px,32cqw,27cqh); height:min(116px,32cqw,27cqh);
+    left:var(--center-x); top:var(--center-y); transform:none !important; translate:-50% -50%;
+  }
+  /* Las coordenadas se refieren al centro de cada burbuja, no al borde de su fotografía. */
+  .club-bubbles > :nth-child(1) { --center-x:25%; --center-y:18%; }
+  /* Separar ambos extremos de la fila superior deja aire entre las etiquetas. */
+  .club-bubbles > :nth-child(2) { --center-x:75%; --center-y:18%; }
+  /* La plaza central equilibra las dos diagonales. */
+  .club-bubbles > :nth-child(3) { --center-x:50%; --center-y:50%; }
+  /* La fila inferior refleja a la superior para conservar la separación al rotar. */
+  .club-bubbles > :nth-child(4) { --center-x:25%; --center-y:82%; }
+  /* El quinto enlace ocupa la última esquina incluso cuando aún muestra un marcador. */
+  .club-bubbles > :nth-child(5) { --center-x:75%; --center-y:82%; }
+}
+/* Animar solo en móvil y cuando el usuario permite movimiento. La amplitud cabe dentro de cada zona. */
+@media (width < 768px) and (prefers-reduced-motion:no-preference) {
+  /* Alternar suavemente sin volver a arrancar al actualizar el nombre o el logo. */
+  .club-bubbles > .bubble-position { animation:club-float-mobile 3s ease-in-out infinite alternate; }
+  /* Desfasar las trayectorias evita que todas las burbujas parezcan una sola fila en movimiento. */
+  .club-bubbles > .bubble-position:nth-child(even) { animation-delay:-3s; }
+  /* La plaza central sigue su propio ritmo. */
+  .club-bubbles > .bubble-position:nth-child(3) { animation-delay:-1.5s; }
+  /* Un objetivo enfocado o bajo el puntero permanece quieto para facilitar la selección. */
+  .club-bubbles > .bubble-position:is(:hover,:focus-within) { animation-play-state:paused; }
+  /* Tres píxeles a cada lado del centro mantienen las etiquetas dentro del lienzo. */
+  @keyframes club-float-mobile {
+    from { translate:-50% calc(-50% - 3px); }
+    to { translate:-50% calc(-50% + 3px); }
+  }
+}

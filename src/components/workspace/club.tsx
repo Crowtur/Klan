@@ -43,6 +43,7 @@
  */
 
 "use client";
+import {useMobile} from "../use-mobile";
 import {AvatarImage} from "@/components/avatar-image";
 import {ClubBankForm} from "./finance-controls";
 import {ClubHero} from "./club-hero";
@@ -56,12 +57,85 @@ import { NoticeCount } from "./notice-count";
 import { Activity, Bars } from "./activity";
 import { EditorModal } from "./modal";
 import { Icon, PLACEHOLDER_IMAGE } from "@/components/ui";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { UploadDropzone } from "@/lib/uploadthing";
 import { api, Badge, useData, Panel, Status, Form, Action, Empty, Pager, href, label, date, money, safeUrl, clubFields, planFields, requirementFields, postFields, type Row, } from "./common";
 import { Facilities, Reservations } from "./facilities";
 import { Dashboard } from "./dashboard";
+/** En pantallas estrechas los mismos enlaces forman una lista vertical. Compartirlos evita duplicar
+ * los contadores de avisos y conserva la navegación de Next y el marcado de lectura en ambos tamaños.
+ */
+function ClubSections({club,tab,admin,readTab}:{
+  club:string; tab:string; admin:boolean; readTab:(key:string)=>Promise<void>;
+}) {
+  // Móvil: la lista parte cerrada. El foco vuelve al selector al elegir una sección o pulsar Escape.
+  const [open,setOpen]=useState(false);
+  const nav=useRef<HTMLElement>(null);
+  const trigger=useRef<HTMLButtonElement>(null);
+  // Móvil: al abandonar el club, recorrer el historial o redimensionar a escritorio, descartar la apertura previa.
+  useEffect(()=>{
+    if(!open) return;
+    const mobile=window.matchMedia("(width < 768px)");
+    // Un toque fuera también debe cerrar en navegadores que no enfocan el elemento pulsado.
+    function outside(event:PointerEvent) {
+      if(event.target instanceof Node && !nav.current?.contains(event.target)) setOpen(false);
+    }
+    // Al recuperar el ancho de escritorio, dejar la lista preparada para el siguiente acceso móvil.
+    function resized() { if(!mobile.matches) setOpen(false); }
+    // El historial puede cambiar la pestaña sin que se active uno de nuestros enlaces.
+    function historyChanged() { setOpen(false); }
+    document.addEventListener("pointerdown",outside);
+    mobile.addEventListener("change",resized);
+    window.addEventListener("popstate",historyChanged);
+    return ()=>{
+      document.removeEventListener("pointerdown",outside);
+      mobile.removeEventListener("change",resized);
+      window.removeEventListener("popstate",historyChanged);
+    };
+  },[open]);
+  // Ambos diseños derivan del mismo conjunto de secciones permitidas para este rol.
+  const sections=[
+            ["posts", "Publicaciones"],
+            ["facilities", "Instalaciones"],
+            ["reservations", "Mis reservas"],
+            ...(admin
+                ? [
+                    ["overview", "Resumen"],
+                    ["members", "Miembros"],
+                    ["plans", "Planes"],
+                    ["applications", "Solicitudes"],
+                    ["payments", "Pagos"],
+                    ["settings", "Configuración"],
+                ]
+                : []),
+        ];
+  const current=sections.find(([key])=>key===tab)?.[1] ?? "Secciones del club";
+  // La ruta y el efecto de lectura son los originales. Solo un selector abierto requiere restaurar el foco.
+  function select(key:string) {
+    if(open) { setOpen(false); trigger.current?.focus(); }
+    void readTab(key);
+  }
+  return <nav ref={nav} className="tabs club-sections" aria-label="Secciones del club" data-open={open}
+    onKeyDown={event=>{
+      // Escape cierra la lista sin navegar ni modificar los avisos.
+      if(open && event.key==="Escape") { event.preventDefault(); setOpen(false); trigger.current?.focus(); }
+    }} onBlur={event=>{
+      // Al tabular fuera de la navegación, retirar la lista del orden de lectura.
+      if(open && !event.currentTarget.contains(event.relatedTarget)) setOpen(false);
+    }}>
+    {/* Oculto de origen: únicamente la regla móvil puede hacerlo visible y enfocable. */}
+    <button ref={trigger} type="button" style={{display:"none"}} className="club-section-trigger"
+      aria-expanded={open} aria-label={`Sección del club: ${current}`} onClick={()=>setOpen(value=>!value)}>
+      {current}<span aria-hidden="true">▾</span>
+    </button>
+    {sections.map(([key,title])=><Link scroll={false} key={key} onClick={()=>select(key)}
+      aria-current={tab===key?"page":undefined} href={href("club",{club,tab:key})}>
+      {title}{(["applications","reservations","overview","members"].includes(key)) && <NoticeCount club={club} kind={key as "applications" | "reservations" | "overview" | "members"}/>}
+    </Link>)}
+  </nav>;
+}
+
 /** Selecciona los módulos de la pestaña activa y habilita la administración según el rol en este club. */
 export function Club({ club, tab = "posts", admin, }: {
     club: string;
@@ -83,25 +157,8 @@ export function Club({ club, tab = "posts", admin, }: {
     return (<>
       {!state.error && <ClubHero club={state.data?.club?.id===club ? state.data.club : undefined}/>}
       <Status state={state}>
-        <nav className="tabs" aria-label="Secciones del club">
-          {[
-            ["posts", "Publicaciones"],
-            ["facilities", "Instalaciones"],
-            ["reservations", "Mis reservas"],
-            ...(admin
-                ? [
-                    ["overview", "Resumen"],
-                    ["members", "Miembros"],
-                    ["plans", "Planes"],
-                    ["applications", "Solicitudes"],
-                    ["payments", "Pagos"],
-                    ["settings", "Configuración"],
-                ]
-                : []),
-        ].map(([key, title]) => (<Link scroll={false} key={key} onClick={()=>void readTab(key)} aria-current={tab === key ? "page" : undefined} href={href("club", { club, tab: key })}>
-              {title}{(["applications","reservations","overview","members"].includes(key)) && <NoticeCount club={club} kind={key as "applications" | "reservations" | "overview" | "members"}/>}
-            </Link>))}
-        </nav>
+        {/* Móvil: el selector reutiliza los enlaces, permisos y avisos de las pestañas originales. */}
+        <ClubSections club={club} tab={tab} admin={admin} readTab={readTab}/>
         {noticeError && <p role="alert">{noticeError}</p>}
         {tab === "posts" && <div className="club-post-layout"><section><Posts club={club} admin={admin}/></section><ClubSidebar club={club} admin={admin}/></div>}
         {tab === "facilities" && <Facilities club={club} admin={admin}/>}
@@ -189,37 +246,67 @@ function Plans({ club }: {
       </Status>
     </>);
 }
+/** Fila móvil compartida por miembros actuales, históricos y solicitantes.
+ * El menú de gestión permanece en su componente original para respetar permisos y confirmaciones. */
+function PersonRow({user, role, plans, status, children}: {
+    user:Row; role:string; plans:string; status:string; children:React.ReactNode;
+}) {
+    const name = [user.firstName,user.lastName].filter(Boolean).join(" ");
+    return <article className="person-row">
+        <span className="member-avatar">{safeUrl(user.avatarUrl)
+            ? <AvatarImage src={safeUrl(user.avatarUrl)} alt=""/>
+            : (user.firstName?.[0] || "") + (user.lastName?.[0] || "")}</span>
+        <div className="person-copy"><strong title={name}>{name}</strong><small title={user.email}>{user.email}</small>
+            <small>{role} · {plans}</small></div>
+        <div className="person-controls"><Badge value={status}/>{children}</div>
+    </article>;
+}
+
 /** Presenta las membresías por estado y permite documentar el motivo de la retirada. */
 function Members({club}:{club:string}){
  const [version,setVersion]=useState(0);
  const state=useData(`/api/clubs/${club}/members`,version);
  const members:Row[]=state.data?.members||[];
+ // La misma colección y la misma comprobación de permisos alimentan las dos presentaciones.
+ const mobile = useMobile();
  const current=(m:Row)=>m.status==="ACTIVE"&&(m.role==="CLUB_ADMIN"||m.plans?.length>0);
- return <><h2>Miembros del club</h2><Status state={state}>{[true,false].map(active=><section className="member-section" key={String(active)}><h3>{active?"Miembros activos":"Historial de miembros"}</h3><div className="bounded-cards member-cards">{members.filter(m=>Boolean(current(m))===active).map(m=><Panel key={m.membershipId} title={m.user.firstName+" "+m.user.lastName}>
+ return <><h2>Miembros del club</h2><Status state={state}>{[true,false].map(active=><section className="member-section" key={String(active)}><h3>{active?"Miembros activos":"Historial de miembros"}</h3><div className="bounded-cards member-cards">{members.filter(m=>Boolean(current(m))===active).map(m=>{
+ // La acción de retiro se construye una vez y conserva el motivo y el refresco de la lista.
+ const action = active&&m.role==="MEMBER"&&<EditorModal destructive title="Retirar del club"><p>Confirma el retiro de {m.user.firstName}.</p><Form fields={[{name:"reason",label:"Motivo",type:"textarea"}]} url={`/api/clubs/${club}/members/${m.user.id}`} method="DELETE" submit="Confirmar retiro" onDone={()=>setVersion(v=>v+1)}/></EditorModal>;
+ if (mobile) return <PersonRow key={m.membershipId} user={m.user} role={label(m.role)}
+     plans={m.plans?.map((item:Row)=>item.plan.name).join(", ") || "Sin plan vigente"}
+     status={m.status}>{action}</PersonRow>;
+ return <Panel key={m.membershipId} title={m.user.firstName+" "+m.user.lastName}>
  <span className="member-avatar">{safeUrl(m.user.avatarUrl)?<AvatarImage src={safeUrl(m.user.avatarUrl)} alt=""/>:m.user.firstName.slice(0,1)+m.user.lastName.slice(0,1)}</span><p>{m.user.email}</p><p>{label(m.role)} · <Badge value={m.status}/></p>{m.role!=="CLUB_ADMIN"&&<p>{m.plans?.map((p:Row)=>p.plan.name).join(", ")||"Sin plan vigente"}</p>}
- {active&&m.role==="MEMBER"&&<EditorModal destructive title="Retirar del club"><p>Confirma el retiro de {m.user.firstName}.</p><Form fields={[{name:"reason",label:"Motivo",type:"textarea"}]} url={`/api/clubs/${club}/members/${m.user.id}`} method="DELETE" submit="Confirmar retiro" onDone={()=>setVersion(v=>v+1)}/></EditorModal>}
- </Panel>)}</div>{!members.some(m=>Boolean(current(m))===active)&&<p>No hay miembros en esta sección.</p>}</section>)}</Status></>;
+ {action}
+ </Panel>})}</div>{!members.some(m=>Boolean(current(m))===active)&&<p>No hay miembros en esta sección.</p>}</section>)}</Status></>;
 }
 /** Lista las solicitudes del club y abre el expediente seleccionado para revisión. */
 function Applications({ club }: {
     club: string;
 }) {
     const [v, setV] = useState(0);
+    // Móvil muestra el solicitante y el plan en la misma fila, conservando la revisión del expediente.
+    const mobile = useMobile();
     const state = useData(`/api/clubs/${club}/membership-applications`, v);
     return (<>
       <h2>Solicitudes de ingreso</h2>
 
       <Status state={state}>
         <Empty rows={state.data?.applications || []}/>
-        <div className="grid">
-        {state.data?.applications.map((a: Row) => (<Panel key={a.id} title={`${a.user.firstName} ${a.user.lastName}`}>
+        <div className={mobile ? "person-list" : "grid"}>
+        {state.data?.applications.map((a: Row) => {
+            // Compartir el mismo diálogo impide que la vista compacta omita documentos o decisiones.
+            const review = <EditorModal title="Revisar documentos y solicitud" lazy>
+              <ApplicationReview club={club} application={a} onDone={() => setV(v + 1)}/>
+            </EditorModal>;
+            if (mobile) return <PersonRow key={a.id} user={a.user} role="Solicitante" plans={a.plan.name} status={a.status}>{review}</PersonRow>;
+            return <Panel key={a.id} title={`${a.user.firstName} ${a.user.lastName}`}>
             <p>
               {a.user.email} · {a.plan.name} · <Badge value={a.status}/>
             </p>
-            <EditorModal title="Revisar documentos y solicitud" lazy>
-              <ApplicationReview club={club} application={a} onDone={() => setV(v + 1)}/>
-            </EditorModal>
-          </Panel>))}
+            {review}
+          </Panel>})}
         </div>
       </Status>
     </>);
@@ -294,7 +381,8 @@ function ClubPayments({ club }: {
             </small>
           </Panel>)}
       </Status>
-      <Status state={activity}><Bars title="Ingresos diarios (USD)" yAxis="Ingresos (USD)" xAxis="Días" calendar="day" series={["Pagos confirmados"]} rows={Object.entries(activity.data?.series || {}).map(([label, r]) => ({ label, values: [Object.values((r as Row).incomeCents).reduce((sum: number, v) => sum + Number(v), 0) / 100] }))}/></Status>
+      {/* El formato USD se aplica únicamente a las etiquetas visibles en el diagrama móvil. */}
+      <Status state={activity}><Bars mobileTimeline currency title="Ingresos diarios (USD)" yAxis="Ingresos (USD)" xAxis="Días" calendar="day" series={["Pagos confirmados"]} rows={Object.entries(activity.data?.series || {}).map(([label, r]) => ({ label, values: [Object.values((r as Row).incomeCents).reduce((sum: number, v) => sum + Number(v), 0) / 100] }))}/></Status>
       <Status state={state}>
         <Empty rows={state.data?.payments || []}/>
         <div className="grid">

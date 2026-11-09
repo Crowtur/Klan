@@ -1279,3 +1279,388 @@
 
 .workspace-view:has(> .club-hero) { animation:none; }
 .hero-logo:has(.hero-image-host img) > svg { visibility:hidden; }
+
+/* Parte 8. El límite excluye 768 px; por encima rige exclusivamente la hoja de la entrega Vercel. */
+@media (width < 768px) {
+  /* Espacio de lectura continuo: márgenes de 14 px y cajas que crecen con el contenido. */
+  .workspace { padding:16px 14px 32px; }
+  .workspace-view, .workspace-view :is(section,article,aside,fieldset) { min-width:0; }
+  .workspace .panel, .workspace .membership-plan { padding:14px; border-radius:12px; box-shadow:none; }
+  .workspace .panel { margin-block:12px; }
+  /* Encabezados y acciones pueden repartirse en varias líneas sin estrechar textos ni controles. */
+  .workspace :is(.list-heading,.actions,.facility-meta,.plan-actions,.club-filter,.dashboard-controls) {
+    flex-wrap:wrap; gap:8px; max-width:100%;
+  }
+  .workspace :is(h1,h2,h3,p,small,dd,label,.badge,.btn) { overflow-wrap:anywhere; }
+  .workspace h1 { font-size:clamp(1.35rem,5vw,1.8rem); }
+  .workspace h2 { font-size:clamp(1.1rem,4.4vw,1.4rem); }
+  /* Navegación general: todas las opciones conservan nombre y contador y pasan a una nueva fila. */
+  .workspace-nav>div { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,7.25rem),1fr)); gap:0; overflow:visible; padding:0 12px; }
+  .workspace-nav a { min-width:0; min-height:44px; padding:6px; gap:4px; justify-content:center; text-align:center; white-space:normal; font-size:.8rem; }
+
+  /* Selector del club: una sola lista de enlaces en el flujo de la página, sin superposición ni desplazamiento propio. */
+  .workspace .tabs.club-sections { display:grid; gap:0; margin:12px 0 16px; border:1px solid var(--line); border-radius:10px; background:var(--surface); overflow:visible; }
+  /* Prevalece solo en móvil sobre el display:none de origen para que el disparador jamás ocupe espacio en escritorio. */
+  .workspace .club-sections .club-section-trigger { display:flex !important; align-items:center; justify-content:space-between; width:100%; min-height:44px; padding:10px 14px; border:0; border-radius:inherit; color:var(--foreground); background:var(--surface); }
+  /* La flecha y aria-expanded indican el mismo estado a lectores y usuarios táctiles. */
+  .club-sections[data-open="true"] .club-section-trigger span { transform:rotate(180deg); }
+  /* Los enlaces cerrados salen del orden de tabulación; abiertos ocupan el ancho completo y mantienen el indicador activo. */
+  .workspace .club-sections[data-open="false"] > a { display:none; }
+  .workspace .club-sections[data-open="true"] > a { display:flex; align-items:center; gap:8px; min-height:44px; padding:10px 14px; border:0; border-top:1px solid var(--line); white-space:normal; }
+
+  /* Portada compartida: compensar exactamente el margen de la página y conservar el recorte de la fotografía. */
+  .workspace .club-hero { margin-inline:-14px; margin-bottom:14px; }
+  .workspace .club-hero .hero-cover { height:clamp(140px,38vw,220px); }
+  /* El contador tiene su propia fila. Ni el año ni la cifra compiten con el nombre por el ancho de una columna. */
+  .workspace .club-hero .hero-identity { margin:-22px 12px 0; padding:12px; grid-template-columns:42px minmax(0,1fr); align-items:start; gap:10px; box-shadow:none; }
+  .workspace .club-hero .hero-logo { width:42px; height:42px; border-radius:10px; }
+  /* La capa real participa en el cálculo de altura desde que llegan los datos; el marcador sigue superpuesto para el fundido. */
+  .club-hero .hero-copy-slot { height:auto; min-height:4rem; }
+  .club-hero .hero-copy-slot > .hero-copy { position:relative; inset:auto; overflow:visible; width:100%; display:grid; gap:4px; justify-content:stretch; }
+  .workspace .hero-copy :is(h1,p,.location-line,a) { min-width:0; max-width:100%; margin:0; white-space:normal; overflow-wrap:anywhere; }
+  .workspace .hero-copy .location-line { align-items:baseline; }
+  /* El alto mínimo reserva la línea de socios durante la precarga sin limitarla con zoom o cifras largas. */
+  .workspace .hero-identity .hero-count-slot { grid-column:1/-1; width:100%; min-height:28px; padding-top:6px; border-top:1px solid var(--line); }
+  .workspace .hero-count-slot > .hero-final { position:relative; inset:auto; flex-direction:row; flex-wrap:wrap; justify-content:flex-start; gap:6px; }
+  .workspace .hero-count-slot strong { font-size:1rem; }
+  /* Eliminar la reserva de altura de escritorio: el final de la ficha lo determina la última tarjeta. */
+  .workspace-view:has(.club-hero) { min-height:0; }
+
+  /* Una columna para el feed, la ficha pública y los paneles laterales, incluso al girar el dispositivo. */
+  .workspace :is(.feed-layout,.public-columns,.club-post-layout,.charts-grid) { display:grid; grid-template-columns:minmax(0,1fr); gap:12px; }
+  .workspace :is(.public-columns,.club-post-layout)>* { display:block; grid-row:auto; }
+  .workspace :is(.feed-card,.club-post,.club-card) { min-width:0; margin-block:12px; box-shadow:none; }
+  .workspace :is(.feed-card-top,.feed-copy,.feed-card-bottom) { padding-inline:12px; }
+  /* Indicadores compactos: cada cifra puede envolver y la última fila conserva su altura natural. */
+  .workspace .metrics-grid { grid-template-columns:repeat(auto-fit,minmax(min(100%,8rem),1fr)); gap:8px; margin:12px 0; }
+  .workspace .metric-card { padding:12px; }
+  .workspace .metric-card dd { font-size:clamp(1.1rem,4.5vw,1.5rem); }
+  /* Quitar el segundo desplazamiento dentro del selector de filtros: el diálogo mantiene su desplazamiento principal. */
+  .workspace .filter-list { max-height:none; overflow:visible; }
+  .workspace .finance-chart .filter-trigger { position:static; margin:8px 0; }
+  .workspace .finance-chart .chart-panel h3 { padding-right:0; }
+
+  /* Tablas financieras y de actividad: filas como fichas y etiquetas tomadas de sus columnas originales. */
+  .workspace :is(.table-scroll,.table-wrap) { overflow:visible; max-width:100%; }
+  .workspace .table-scroll :is(table,tbody,tr) { display:block; min-width:0; width:100%; }
+  /* Mantener los encabezados en el árbol accesible aunque su presentación visual pase a cada celda. */
+  .workspace .table-scroll thead { position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); }
+  .workspace .table-scroll tbody tr { padding-block:8px; border-bottom:1px solid var(--line); }
+  .workspace .table-scroll td { display:block; position:relative; padding:5px 0 5px 40%; min-height:1.75rem; border:0; text-align:start; overflow-wrap:anywhere; white-space:normal; }
+  /* Usar dos columnas intrínsecas evita que nombres de serie extensos se superpongan a su valor. */
+  .workspace .table-scroll td[data-label] { display:grid; grid-template-columns:minmax(0,.85fr) minmax(0,1.25fr); gap:2px 10px; align-items:start; padding:5px 0; }
+  .workspace .table-scroll td[data-label]::before { content:attr(data-label); grid-column:1; grid-row:1; font-weight:600; color:var(--muted); }
+  .workspace .table-scroll td[data-label] > * { grid-column:2; min-width:0; justify-self:start; }
+
+  /* Gráficas: mostrar cada período en una fila con barras horizontales. Se conservan todos los días y valores. */
+  .workspace .chart-scroll { overflow:visible; }
+  .workspace .chart-scroll > div { min-width:0 !important; }
+  .workspace .chart-bars { display:flex; flex-direction:column; align-items:stretch; min-height:0; padding:8px 0; gap:6px; }
+  .workspace .chart-column { display:grid; grid-template-columns:minmax(0,6rem) minmax(0,1fr); align-items:center; gap:8px; padding:0; text-align:start; }
+  /* La fecha completa sustituye a la franja mensual para que días repetidos se distingan al recorrer el listado. */
+  .workspace .chart-column::before { content:attr(data-period); font-size:.78rem; overflow-wrap:anywhere; }
+  .workspace .chart-column small, .workspace .chart-months { display:none; }
+  /* Series apiladas suman sus longitudes; las agrupadas parten de un origen común en renglones separados. */
+  .workspace .chart-column .bar-stack { height:auto; display:flex; flex-direction:row; justify-content:flex-start; align-items:center; gap:0; animation:none; }
+  .workspace .chart-column .bar-stack.grouped { flex-direction:column; align-items:flex-start; gap:2px; }
+  .workspace .chart-column .bar-stack > div { flex:none; width:var(--mobile-bar-width); height:8px !important; }
+}
+
+/* El editor admite varios intervalos. Cada uno ocupa todo el ancho útil del diálogo. */
+.workspace fieldset.schedule-intervals { grid-template-columns:minmax(0,1fr); min-width:0; gap:16px; }
+/* Día puede crecer más que las horas. El botón y los tres controles comparten el borde inferior. */
+.schedule-interval { display:grid; grid-template-columns:minmax(0,1.25fr) repeat(2,minmax(0,1fr)) auto; align-items:end; gap:10px; }
+/* El margen común de formularios no debe separar las etiquetas del eje inferior del botón. */
+.workspace .schedule-interval > label { min-width:0; margin:0; gap:4px; }
+/* Alturas y modelo de caja iguales permiten alinear también el borde superior de cada control. */
+.workspace .schedule-interval :is(input,select,button) { box-sizing:border-box; width:100%; height:44px; margin:0; padding:6px 8px; }
+/* La confirmación en dos pasos pertenece a U10 móvil; escritorio conserva sus acciones por franja. */
+.mobile-booking { display:none; }
+
+/* Los cuatro prototipos usan una sola columna, márgenes cortos y niveles de texto discretos. */
+@media (width < 768px) {
+  /* Escala base para textos informativos y metadatos sin reducir el área de interacción. */
+  .workspace { font-size:.875rem; line-height:1.45; }
+  /* Título de vista con una altura de línea corta que admite nombres extensos. */
+  .workspace h1 { font-size:clamp(1.25rem,5vw,1.55rem); line-height:1.18; }
+  /* Títulos de sección y cifras tienen jerarquía sin ocupar dos filas innecesariamente. */
+  .workspace h2 { font-size:1.0625rem; line-height:1.3; }
+  /* Notas secundarias legibles incluso al ampliar el tamaño de fuente del navegador. */
+  .workspace small { font-size:.75rem; }
+  /* U01 mantiene los accesos principales juntos; sus nombres pueden envolver sin scroll lateral. */
+  .workspace-nav > div { grid-template-columns:repeat(4,minmax(0,1fr)); padding-inline:6px; }
+  /* El indicador activo heredado permanece visible en la fila compacta. */
+  .workspace-nav a { flex-wrap:wrap; font-size:.75rem; line-height:1.2; }
+  /* Cabecera de publicación compacta; la imagen del post conserva su botón de ampliación. */
+  .workspace .feed-card-top { padding:10px 12px 6px; }
+  /* Los avatares del feed forman una columna angosta, como en U01 y U09. */
+  .workspace .feed-card-top .avatar { width:32px; height:32px; flex:0 0 32px; }
+  /* Título y contenido conservan los saltos de línea del autor y la misma sangría. */
+  .workspace .feed-copy { padding:4px 12px 10px; }
+  /* Espaciado entre título y descripción de una publicación. */
+  .workspace .feed-copy h2 { font-size:1rem; margin:2px 0 5px; }
+  /* Texto del feed sin márgenes verticales heredados de escritorio. */
+  .workspace .feed-copy p { font-size:.875rem; line-height:1.45; margin:0; }
+  /* La fotografía ocupa todo el ancho de su tarjeta; el diálogo conserva el original. */
+  .workspace .club-post .feed-image { width:100%; height:auto; aspect-ratio:16/9; object-fit:cover; }
+  /* U09 coloca el avatar por encima del nombre en la ficha superpuesta a la portada. */
+  .workspace .club-hero .hero-identity { grid-template-columns:minmax(0,1fr); gap:8px; margin-top:-30px; }
+  /* El retrato circular se recorta en su propio contenedor sin afectar el fundido. */
+  .workspace .club-hero .hero-logo { width:48px; height:48px; border-radius:50%; }
+  /* Los horarios y la reserva se leen en orden, incluso entre 761 y 767 píxeles. */
+  .workspace .facility-booking { grid-template-columns:minmax(0,1fr); gap:0; }
+  /* U10 representa la semana como un listado vertical de siete días. */
+  .workspace .week-schedule { grid-template-columns:minmax(0,1fr); gap:0; }
+  /* Una línea discreta separa los días y sustituye los fondos de las tarjetas. */
+  .workspace .week-schedule > div { grid-template-columns:minmax(0,1fr) auto; align-items:baseline; padding:8px 0; border:0; border-bottom:1px solid var(--line); background:transparent; border-radius:0; }
+  /* Varios intervalos del mismo día permanecen en la columna derecha. */
+  .workspace .week-schedule small { grid-column:2; text-align:end; }
+  /* Fecha y duración aprovechan el ancho completo y mantienen sus etiquetas visibles. */
+  .workspace .facility-booking .panel > .actions { display:grid; grid-template-columns:minmax(0,1fr); }
+  /* Ocultar el disparador de escritorio evita ofrecer dos maneras simultáneas de confirmar. */
+  .workspace .facility-booking .reservation-slots { display:none; }
+  /* U10 separa la elección de una franja del envío al servidor. */
+  .mobile-booking { display:grid; gap:12px; }
+  /* Dos opciones por fila; en pantallas muy estrechas el ancho mínimo permite una sola. */
+  .booking-options { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,max(7rem,45%)),1fr)); gap:8px; }
+  /* Contraste de las franjas libres con ambos temas y área táctil de 44 px. */
+  .workspace .booking-options button { min-height:44px; padding:6px; background:var(--accent); color:#103925; }
+  /* El borde interior y el estado accesible señalan la opción elegida. */
+  .workspace .booking-options button[aria-pressed=true] { box-shadow:inset 0 0 0 2px var(--primary); background:var(--soft); color:var(--foreground); }
+  /* Resumen de selección inmediatamente antes de enviar al endpoint. */
+  .booking-selection { display:grid; gap:5px; padding:12px; background:var(--soft); border-radius:8px; }
+  /* La confirmación ocupa todo el ancho del bloque seleccionado. */
+  .booking-selection .action > button { width:100%; min-height:44px; }
+  /* C04 centra el anillo y deja una fila por categoría debajo del gráfico. */
+  .workspace .pie-layout { display:grid; grid-template-columns:minmax(0,1fr); justify-items:center; gap:8px; }
+  /* La leyenda tiene el ancho de la tarjeta para alinear cifras de distinta longitud. */
+  .workspace .pie-layout ul { width:100%; margin:0; }
+  /* Cada marcador, nombre y cifra usa la misma columna en toda la leyenda. */
+  .workspace .pie-layout li { display:grid; grid-template-columns:auto minmax(0,1fr) auto; align-items:center; gap:5px; margin:5px 0; }
+  /* Los bloques del panel se separan por el gap de la rejilla en lugar de márgenes duplicados. */
+  .workspace .charts-grid > .chart-panel { margin:0; }
+}
+/* Con menos de 540 px una sola fila dejaría los selectores de hora ilegibles. */
+@media (width < 540px) {
+  /* La separación inferior distingue los grupos cuando hay varios intervalos del mismo día. */
+  .schedule-interval { padding-bottom:12px; border-bottom:1px solid var(--line); }
+}
+
+/* El mensaje persistente acompaña exclusivamente al flujo móvil de selección y confirmación. */
+.mobile-booking-notice { display:none; }
+/* Refinamientos U10 y C04 bajo el mismo límite que el selector del club. */
+@media (width < 768px) {
+  /* Mostrar la respuesta del servidor sin reservar espacio antes de la primera confirmación. */
+  .mobile-booking-notice:not(:empty) { display:block; color:var(--primary); font-weight:600; }
+  /* C04 usa columnas para comparar hasta seis meses; series más largas conservan sus filas legibles. */
+  .workspace .chart-bars:has(> .chart-column):not(:has(> :nth-child(7))) { display:grid; align-items:end; gap:4px; }
+  /* El gráfico corto usa dos filas compartidas visualmente: barras arriba y etiquetas debajo. */
+  .workspace .chart-bars:not(:has(> :nth-child(7))) .chart-column { display:flex; flex-direction:column; align-items:stretch; min-width:0; }
+  /* La fecha ya se imprime bajo cada columna en este formato. */
+  .workspace .chart-bars:not(:has(> :nth-child(7))) .chart-column::before { display:none; }
+  /* Etiquetas completas que pueden envolver sin ocultar los valores accesibles en la tabla. */
+  .workspace .chart-bars:not(:has(> :nth-child(7))) .chart-column small { display:block; min-height:3em; font-size:.7rem; text-align:center; overflow-wrap:anywhere; }
+  /* Convertir la escala porcentual existente a alturas dentro de un área de trazado común. */
+  .workspace .chart-bars:not(:has(> :nth-child(7))) .bar-stack { height:112px; flex-direction:column-reverse; align-items:center; justify-content:flex-start; }
+  /* Las series agrupadas nacen del mismo eje; las apiladas suman sus porcentajes en vertical. */
+  .workspace .chart-bars:not(:has(> :nth-child(7))) .bar-stack.grouped { flex-direction:row; align-items:flex-end; justify-content:center; }
+  /* Limitar el ancho por serie permite comparar varios colores incluso en 320 px. */
+  .workspace .chart-bars:not(:has(> :nth-child(7))) .bar-stack > div { height:var(--mobile-bar-width) !important; width:65%; max-width:22px; flex-shrink:1; }
+}
+/* En teléfonos estrechos el día ocupa la primera línea y ambas horas comparten eje con Quitar. */
+@media (width < 540px) {
+  /* El ancho intrínseco del botón se reserva antes de repartir el resto entre las dos horas. */
+  .schedule-interval { grid-template-columns:repeat(2,minmax(0,1fr)) auto; }
+  /* Una etiqueta por encima de las horas deja leer el nombre completo del día. */
+  .schedule-interval > label:first-child { grid-column:1/-1; }
+}
+
+/* El diálogo es transparente a la rejilla de escritorio: el aside sigue en su columna original. */
+.requirement-shell { display:contents; color:inherit; }
+/* Los controles adicionales de lectura y cierre solo se necesitan en móvil. */
+.hero-more, .workspace button.requirement-close { display:none; }
+/* Cambio global: agrupar guardar/cancelar a la izquierda y empujar la baja al borde opuesto. */
+.requirement-actions:has(>.action) { justify-content:flex-start; align-items:center; gap:6px; }
+/* El botón destructivo conserva su propia confirmación antes del DELETE. */
+.workspace .requirement-actions > .action { margin:0 0 0 auto; }
+
+/* Todos los ajustes siguientes se limitan a teléfonos, incluido el extremo de 767 px. */
+@media (width < 768px) {
+  /* Parte 10: al recibir los datos, la ficha adopta la altura del texto hasta el límite de lectura compacta. */
+  .workspace .club-hero .hero-copy-slot { height:auto; min-height:0; max-height:8rem; overflow:clip; }
+  /* Reservar altura solo en el esqueleto inicial, que aún no conoce el tamaño del contenido. */
+  .workspace .club-hero[aria-busy=true] .hero-copy-slot { min-height:4rem; }
+  /* La expansión manual revela todo el texto sin crear barras internas. */
+  .workspace .club-hero .hero-copy-slot[data-expanded=true] { height:auto; max-height:none; overflow:visible; }
+  /* Una fila vacía dejaría también un gap en la rejilla; crearla solo cuando hay un control de lectura. */
+  .workspace .hero-more:not(:empty) { display:block; }
+  /* El control de lectura debe ser secundario al enlace principal del club. */
+  .workspace .hero-more button { padding:0; min-height:1.5rem; color:var(--primary); background:none; border:0; font-size:.8rem; }
+  /* El aside hereda justify-items:center. Estirar la capa de datos hasta ambos bordes permite distribuir fecha y contador. */
+  .workspace .hero-count-slot > .hero-final { width:100%; justify-self:stretch; box-sizing:border-box; justify-content:space-between; align-items:center; flex-wrap:nowrap; gap:4px; padding:4px 2px; }
+  /* Agrupar cifra y unidad al final sin introducir un contenedor que altere la composición en escritorio. */
+  .workspace .hero-count-slot > .hero-final > span { flex:none; }
+
+  /* La antigüedad queda en el extremo opuesto con menor peso visual. */
+  .workspace .hero-count-slot small { font-size:.75rem; color:var(--muted); }
+  /* La cifra deja de usar la escala de indicadores grandes de escritorio. */
+  .workspace .hero-count-slot strong { margin-inline-start:auto; font-size:.8rem; line-height:1; }
+  /* La unidad se lee en la misma línea que la cifra. */
+  .workspace .hero-count-slot .hero-final > span { font-size:.8rem; }
+  /* Solo se acoplan las fichas con selector inmediatamente después del hero. */
+  .workspace .club-hero:has(+.club-sections) { margin-bottom:0; }
+  /* Igualar los bordes laterales y retirar las esquinas entre superficies contiguas. */
+  .workspace .club-hero:has(+.club-sections) .hero-identity { margin-inline:14px; border-bottom-left-radius:0; border-bottom-right-radius:0; }
+  /* Una sola línea horizontal separa la información del selector. */
+  .workspace .club-hero + .tabs.club-sections { margin-top:0; border-top:0; border-radius:0 0 12px 12px; }
+  /* La semana recupera dos columnas iguales sin depender de la longitud de los nombres. */
+  .workspace .week-schedule { grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
+  /* El fondo neutro distingue los días sin intervalos configurados. */
+  .workspace .week-schedule > div { grid-template-columns:minmax(0,1fr); align-content:start; gap:4px; padding:10px; border:1px solid var(--line); border-radius:10px; background:light-dark(#f8fafc,#202824); }
+  /* El estado abierto procede de los intervalos reales recibidos del servidor. */
+  .workspace .week-schedule > .open-day { background:light-dark(#ecfdf5,#17372b); border-color:light-dark(#a7f3d0,#32684c); }
+  /* Cada intervalo aparece debajo del día, incluidos los horarios partidos. */
+  .workspace .week-schedule small { grid-column:1; text-align:start; color:var(--muted); }
+  /* La grilla interna puede encogerse incluso dentro de un fieldset nativo. */
+  .workspace .editor-modal .editor fieldset.icon-picker { min-width:0; width:100%; gap:6px; grid-template-columns:repeat(5,minmax(0,1fr)); }
+  /* Las celdas conservan sus áreas táctiles sin exigir anchos mínimos heredados. */
+  .workspace .editor-modal .icon-picker label { min-width:0; max-width:100%; padding:3px; min-height:44px; }
+  /* Igualar márgenes y borde inferior de los tres controles de la fila horaria. */
+  .workspace .schedule-interval > :is(label,button) { align-self:end; margin-block:0; min-width:0; }
+  /* El buscador y el filtro tienen recuadros distintos, con espacio para el texto. */
+  .workspace .club-filter { display:grid; grid-template-columns:minmax(0,1fr); background:none; border:0; padding:0; gap:8px; }
+  /* El contorno del buscador solo contiene la lupa y el campo editable. */
+  .workspace .club-filter label { background:var(--surface); border:1px solid var(--line); border-radius:10px; padding:0 10px; }
+  /* Un input encogible deja espacio para la lupa en ambos buscadores. */
+  .workspace :is(.search-bar,.club-filter) input { min-width:0; flex:1; width:100%; }
+  /* Escalar solo la pista; lo que escribe el usuario mantiene el tamaño de lectura. */
+  .workspace :is(.search-bar,.club-filter) input::placeholder { font-size:.8rem; }
+  /* El nombre cede ancho a la píldora sin empujarla fuera de la tarjeta. */
+  .workspace .global-club header > div { min-width:0; flex:1; }
+  /* Evitar medidas fijas y saltos dentro del estado incluso cuando el nombre del club es largo. */
+  .workspace .global-club header > .badge { flex:0 0 auto; width:auto; height:auto; border-radius:999px; padding:4px 12px; white-space:nowrap; overflow-wrap:normal; }
+  /* Tarjeta única: los controles del resumen comparten jerarquía y superficie. */
+  .overview-mobile { padding:clamp(16px,5vw,24px); background:var(--surface); border-radius:24px; border:1px solid var(--line); box-shadow:0 2px 8px #0001; }
+  /* Título específico del resumen, seguido de una descripción breve. */
+  .workspace .overview-mobile h2 { font-size:1.5rem; margin:0; }
+  /* La leyenda informativa se distingue con un tono secundario. */
+  .overview-mobile p, .overview-mobile small { margin:4px 0; color:var(--muted); }
+  /* Dos columnas iguales para año y mes; la sección utiliza la fila superior completa. */
+  .overview-mobile > div { margin-top:16px; display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
+  /* Maximizar el espacio disponible para el nombre de la sección. */
+  .overview-mobile label:first-child { grid-column:1/-1; }
+  /* Campos uniformes: sus textos nunca imponen un ancho mínimo a la grilla. */
+  .overview-mobile :is(label,select) { width:100%; min-width:0; }
+  /* El período encabeza cada bloque de días o meses con un separador visible. */
+  .timeline-period { margin:8px 0 4px; border-bottom:1px solid var(--line); font-size:.75rem; color:var(--muted); }
+  /* El tiempo se lee en la columna izquierda y el valor aumenta hacia la derecha. */
+  .timeline-row { display:grid; grid-template-columns:minmax(3rem,25%) 1fr; align-items:center; min-height:22px; gap:6px; font-size:.75rem; }
+  /* Las series apiladas suman sus longitudes sobre una escala compartida. */
+  .timeline-bars { display:flex; align-items:center; min-width:0; }
+  /* Series independientes parten del mismo origen horizontal. */
+  .timeline-bars.grouped { flex-direction:column; align-items:flex-start; gap:2px; }
+  /* La altura es fija; la anchura proporcional se calcula en el componente. */
+  .timeline-bars i { display:block; height:8px; }
+  /* Las filas adicionales se revelan con una transición de altura intrínseca y opacidad. */
+  .timeline-extra { display:grid; grid-template-rows:0fr; opacity:0; transition:grid-template-rows .3s ease-in-out,opacity .3s ease-in-out; }
+  /* Liberar la altura al solicitar el período completo. */
+  .timeline-extra[data-expanded=true] { grid-template-rows:1fr; opacity:1; }
+  /* El contenido puede reducirse a cero sin producir un segundo scroll. */
+  .timeline-extra > div { min-height:0; overflow:hidden; }
+  /* El control indica cuántas barras se mantienen ocultas. */
+  .workspace .timeline-toggle { background:var(--soft); color:var(--primary); padding:7px 12px; border-radius:10px; font-size:.8rem; }
+  /* Miembros, historial y solicitudes comparten una superficie continua de filas. */
+  .workspace :is(.bounded-cards.member-cards,.person-list) { display:block; width:100%; max-width:none; background:var(--surface); border:1px solid var(--line); border-radius:12px; }
+  /* Avatar, identidad y acciones ocupan columnas independientes de ancho limitado. */
+  .person-row { display:grid; grid-template-columns:40px minmax(0,1fr) auto; gap:8px; align-items:center; padding:10px 12px; border-bottom:1px solid var(--line); }
+  /* La última fila comparte el borde de la lista. */
+  .person-row:last-child { border-bottom:0; }
+  /* Dimensiones uniformes para imágenes e iniciales. */
+  .workspace .person-row .member-avatar { width:40px; height:40px; min-width:40px; min-height:40px; margin:0; font-size:.8rem; }
+  /* Permitir que nombre y correo se acorten mientras el rol y el plan siguen visibles. */
+  .person-copy { display:grid; min-width:0; line-height:1.3; }
+  /* Los metadatos extensos pueden ocupar una segunda línea. */
+  .person-copy small { color:var(--muted); overflow-wrap:anywhere; }
+  /* Mantener acceso al texto completo mediante el título nativo. */
+  .person-copy :is(strong,small:first-of-type) { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  /* Las acciones quedan al extremo derecho; los diálogos internos mantienen sus controles originales. */
+  .person-controls { display:grid; justify-items:end; max-width:6rem; }
+  /* El texto accesible original identifica la acción aunque el disparador visual sea compacto. */
+  .workspace .person-controls > button { font-size:0; min-width:44px; min-height:44px; padding:0; }
+  /* Icono de opciones de la fila; la interacción continúa en el diálogo existente. */
+  .person-controls > button::after { content:"⋮"; font-size:1rem; }
+  /* Mientras el diálogo aún no se ha abierto, evitar que aparezca al pie de la lista. */
+  .requirement-shell:not([open]) { display:none; }
+  /* El diálogo modal nativo se centra en el viewport y gestiona foco, escape y capa superior. */
+  .requirement-shell[open] { position:fixed; inset:0; padding:0; margin:auto; border:0; border-radius:16px; background:var(--surface); color:var(--foreground); width:min(32rem,calc(100% - 32px)); max-height:90dvh; overflow-y:auto; overscroll-behavior:contain; }
+  /* Separar el editor del contexto de los planes que permanecen de fondo. */
+  .requirement-shell::backdrop { background:#0008; backdrop-filter:blur(4px); }
+  /* El aside deja de ser sticky dentro del modal y ancla la X superior. */
+  .workspace .requirement-shell .requirement-editor { position:relative; top:auto; margin:0; padding:16px; }
+  /* Botón de cierre localizable por teclado y con área táctil suficiente. */
+  .workspace button.requirement-close { display:block; float:right; min-width:44px; min-height:44px; }
+  /* Mantener las tres acciones en una fila permitiendo partir etiquetas largas dentro del botón. */
+  .workspace .requirement-actions { display:flex; flex-wrap:nowrap; gap:4px; }
+  /* Ajustar el ancho de cada acción al espacio real en teléfonos pequeños. */
+  .workspace .requirement-actions :is(button,.action) { min-width:0; font-size:.75rem; }
+  /* El padding reducido preserva la alineación sin reducir la altura táctil. */
+  .workspace .requirement-actions button { padding:6px; min-height:44px; }
+}
+/* Entre teléfonos pequeños y medianos, cuatro opciones caben en cada fila. */
+@media (width < 480px) {
+  /* El selector de iconos se usa tanto en la creación como en la edición. */
+  .workspace .editor-modal .editor fieldset.icon-picker { grid-template-columns:repeat(4,minmax(0,1fr)); }
+}
+/* A menos de 360 px se prioriza la superficie táctil sobre el número de columnas. */
+@media (width < 360px) {
+  /* Tres columnas evitan que el último icono quede fuera del modal. */
+  .workspace .editor-modal .editor fieldset.icon-picker { grid-template-columns:repeat(3,minmax(0,1fr)); }
+}
+/* Respetar la preferencia de movimiento reducido también al desplegar series largas. */
+@media (width < 768px) and (prefers-reduced-motion:reduce) {
+  /* Mostrar de inmediato el estado elegido del acordeón. */
+  .timeline-extra { transition:none; }
+}
+
+/* Parte 10: todos los ajustes de cifras y del control de retiro se limitan a teléfonos. */
+@media (width < 768px) {
+  /* La celda de datos puede contraerse junto al nombre del mes y conservar el número legible. */
+  .mobile-timeline .timeline-values { display:grid; min-width:0; gap:3px; }
+  /* La etiqueta comparte ancho entre filas. Solo la superficie disponible para las barras se reduce. */
+  .timeline-value-line { display:grid; grid-template-columns:minmax(0,1fr) max-content; align-items:center; gap:6px; }
+  /* Dígitos tabulares para comparar valores y evitar particiones dentro de un importe. */
+  .timeline-value { min-width:var(--timeline-value-width); text-align:end; font-size:.75rem; font-weight:600; font-variant-numeric:tabular-nums; white-space:nowrap; color:var(--foreground); }
+  /* El disparador de retiro comparte el mismo botón y nombre accesible; solo se sustituye su aspecto. */
+  .workspace .person-controls > button.outline-destructive {
+    min-width:32px; min-height:32px; width:32px; height:32px; padding:0;
+    border:0; border-radius:8px; color:var(--muted); background:transparent;
+    transition:color .18s ease,background-color .18s ease;
+  }
+  /* La máscara dibuja una papelera de 17 px en el color actual sin modificar el diálogo ni las solicitudes. */
+  .person-controls > button.outline-destructive::after {
+    content:""; width:17px; height:17px; background:currentColor;
+    mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7m4-7v7'/%3E%3C/svg%3E") center/contain no-repeat;
+  }
+  /* Resaltar la intención destructiva al apuntar o enfocar manteniendo el foco de teclado. */
+  .workspace .person-controls > button.outline-destructive:is(:hover,:focus-visible) { color:light-dark(#b91c1c,#ffafaf); background:light-dark(#fef2f2,#452327); }
+}
+
+/* Perfil público móvil: dar prioridad a la oferta desde el primer render, incluso antes de hidratar React. */
+@media (width < 768px) {
+  .workspace .public-columns {
+    /* Flexbox apila únicamente los dos bloques hermanos de la ficha pública. */
+    display:flex;
+    /* Una columna mantiene los planes inmediatamente después de la identidad del club. */
+    flex-direction:column;
+    /* Estirar los bloques aprovecha el ancho de la pantalla también cuando hay pocos planes. */
+    align-items:stretch;
+    /* Un único espacio entre oferta y publicaciones evita depender de la altura del carrusel. */
+    gap:12px;
+  }
+  /* El mismo orden visual que el DOM móvil se aplica al HTML inicial enviado por el servidor. */
+  .workspace .public-columns > .public-plans { order:0; }
+  /* El feed comienza después de los planes, conservando los enlaces directos a cada publicación. */
+  .workspace .public-columns > section { order:1; }
+  /* El margen exterior del último panel no se suma al espacio entre secciones. */
+  .workspace .public-columns .public-plan-panel { margin-bottom:0; }
+}

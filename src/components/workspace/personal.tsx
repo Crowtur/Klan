@@ -43,6 +43,7 @@
  */
 
 "use client";
+import {useMobile} from "../use-mobile";
 import {AvatarImage} from "@/components/avatar-image";
 import {PublicPlans} from "./public-plans";
 import { Location } from "./location";
@@ -210,11 +211,18 @@ export function PublicClub({club,target=""}:{club:string;target?:string}){
       document.getElementById("post-"+target)?.scrollIntoView({block:"start",behavior:"instant"});
   },[target,page,posts.data,state.data]);
   const plans:Row[]=state.data?.plans||[];
-  return <>{!state.error && <ClubHero club={state.data?.club?.id===club ? state.data.club : undefined}/>}<div className="public-columns"><section><div className="list-heading"><h2>Publicaciones públicas</h2><small>Últimas novedades</small></div>
+  // El mismo umbral que usa el CSS mantiene el orden de lectura y de tabulación coherente con la pantalla.
+  const mobile = useMobile();
+  // Las claves estables conservan la paginación y el carrusel si el dispositivo cambia de orientación.
+  const publications = <section key="posts"><div className="list-heading"><h2>Publicaciones públicas</h2><small>Últimas novedades</small></div>
     <div><Status state={posts}><Empty rows={posts.data?.posts||[]}/>{posts.data?.posts.map((p:Row)=><PostCard key={p.id} post={p}/>)}
     {target && page===null && posts.data?.anchorMissing && <p>La publicación compartida ya no está disponible.</p>}
-    <Pager data={posts.data} page={posts.data?.pagination.page||1} onPage={setPage}/>{!!posts.data?.posts.length&&!posts.data.pagination.hasNextPage&&<p className="feed-end">✓ Estás al día con las novedades del club</p>}</Status></div></section>
-    <aside className="public-plans"><small>Tu próximo club empieza aquí</small><div><Status state={state}><PublicPlans club={club} plans={plans}/></Status></div></aside></div></>;
+    <Pager data={posts.data} page={posts.data?.pagination.page||1} onPage={setPage}/>{!!posts.data?.posts.length&&!posts.data.pagination.hasNextPage&&<p className="feed-end">✓ Estás al día con las novedades del club</p>}</Status></div></section>;
+  const offer = <aside key="plans" className="public-plans"><small>Tu próximo club empieza aquí</small><div><Status state={state}><PublicPlans club={club} plans={plans}/></Status></div></aside>;
+  // En el perfil público móvil se ofrecen los planes antes del feed. Escritorio conserva las columnas originales.
+  return <>{!state.error && <ClubHero club={state.data?.club?.id===club ? state.data.club : undefined}/>}<div className="public-columns">
+    {mobile ? [offer, publications] : [publications, offer]}
+  </div></>;
 }
 /** Solicita el detalle autorizado y presenta la confirmación y el importe del pago. */
 export function Payment({ id }: {

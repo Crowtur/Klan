@@ -112,6 +112,20 @@ export function ClubHero({club}:{club?:Row}){
     return ()=>controller.abort();
   },[id,cover,logo]);
 
+  // Si el texto supera la altura reservada en móvil, ofrecer expansión manual sin mover la ficha al hidratar.
+  const copy = useRef<HTMLDivElement>(null);
+  const [expanded,setExpanded] = useState(false);
+  const [longCopy,setLongCopy] = useState(false);
+  useEffect(() => {
+    const node = copy.current;
+    if (!node) return;
+    /** Medir también al rotar o cambiar el tamaño de letra, utilizando la misma unidad rem que el CSS. */
+    const measure = () => setLongCopy(node.scrollHeight > 8 * parseFloat(getComputedStyle(document.documentElement).fontSize) + 1);
+    const observer = new ResizeObserver(measure);
+    observer.observe(node);
+    measure();
+    return () => observer.disconnect();
+  }, [club?.name,club?.description,club?.address,club?.googleMapsUrl]);
   const maps=safeUrl(club?.googleMapsUrl);
   return <header className="club-hero" data-ready={ready} aria-busy={!ready} aria-label={ready ? club?.name : "Cargando club"}>
     <div className="hero-cover hero-media-slot" aria-hidden="true">
@@ -124,8 +138,11 @@ export function ClubHero({club}:{club?:Row}){
         <span className="hero-final hero-image-host" ref={logoHost}/>
         <span className="hero-placeholder hero-logo-skeleton"/>
       </span>
-      <div className="hero-copy-slot">
-        <div className="hero-final hero-copy" inert={!ready}>
+      <div className="hero-copy-slot" data-expanded={expanded}>
+        <div ref={copy} className="hero-final hero-copy" inert={!ready} onFocusCapture={() => {
+          // Si un enlace queda fuera de la porción visible, tabular hacia él revela el texto completo.
+          if (longCopy && window.matchMedia("(width < 768px)").matches) setExpanded(true);
+        }}>
           <h1>{club?.name}</h1>
           {club?.description && <p>{club.description}</p>}
           <Location value={club?.address}/>
@@ -133,6 +150,9 @@ export function ClubHero({club}:{club?:Row}){
         </div>
         <div className="hero-placeholder hero-lines" aria-hidden="true"><i/><i/><i/></div>
       </div>
+      {/* Móvil: la fila solo ocupa espacio si el texto largo necesita el control de expansión. */}
+      <div className="hero-more">{ready && longCopy && <button type="button" aria-expanded={expanded}
+          onClick={()=>setExpanded(value=>!value)}>{expanded ? "Ver menos" : "Ver información completa"}</button>}</div>
       <aside className="hero-count-slot">
         <div className="hero-final" inert={!ready}>
           {club?.createdAt && <small>DESDE {new Date(club.createdAt).getFullYear()}</small>}

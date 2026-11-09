@@ -281,3 +281,51 @@
   .profilePanel { max-height: calc(100dvh - 90px); overflow-y: auto; }
   .main { padding: 24px 16px; }
 }
+
+/* Parte 8: solo en móvil, ajustar cabecera y accesos de cuenta a la misma retícula que las fichas. */
+@media (width < 768px) {
+  /* El logo mantiene su proporción y los controles pueden saltar de fila con zoom o texto grande. */
+  .headerInner { padding:8px 14px; min-height:60px; gap:8px; flex-wrap:wrap; }
+  /* Ampliar el área táctil del perfil y de los accesos de autenticación sin agrandar sus iconos. */
+  .avatarButton, .actions a { min-height:44px; }
+  /* Compactar el acceso y el registro y permitir zoom de texto sin desbordar el formulario. */
+  .main { padding:16px; }
+  .card { padding:16px; border-radius:12px; }
+  .formContainer, .field { min-width:0; }
+  .input { font-size:1rem; }
+}
+
+/* Escritorio mantiene los enlaces como hijos visuales de la barra original. */
+.guestDesktop { display:contents; }
+/* El control alternativo no ocupa espacio ni recibe foco en escritorio. */
+.guestMenu { display:none; }
+/* Móvil: desplegable nativo compartido por portada, login y registro. */
+@media (width < 768px) {
+  /* Retirar los enlaces horizontales del flujo y del orden de tabulación. */
+  .guestDesktop { display:none; }
+  /* Parte 10: el panel toma como referencia la barra completa, aunque el disparador mida solo 44 px. */
+  .headerInner { position:relative; }
+  /* details conserva el cierre nativo y el botón se mantiene a la derecha. */
+  .guestMenu { display:block; position:static; margin-inline-start:auto; }
+  /* Objetivo táctil de 44 px; el icono de tres líneas sustituye al marcador nativo. */
+  .guestMenu summary { display:grid; place-items:center; width:44px; height:44px; color:var(--primary); cursor:pointer; list-style:none; }
+  /* Safari añade un triángulo propio a summary. */
+  .guestMenu summary::-webkit-details-marker { display:none; }
+  /* El ancho resulta de los dos márgenes laterales del encabezado. Evita heredar el tope del disparador. */
+  .guestMenu .actions {
+    position:absolute; inset:calc(100% + 6px) 16px auto; z-index:50;
+    width:auto; max-width:none; box-sizing:border-box;
+    display:flex; flex-flow:column nowrap; align-items:stretch; gap:12px;
+    padding:16px; border:1px solid var(--line); border-radius:16px;
+    background:var(--surface); box-shadow:0 10px 28px #0002;
+  }
+  /* Cada acceso ocupa una fila completa, con texto en una sola línea y altura táctil suficiente. */
+  .guestMenu .actions > a {
+    display:flex; justify-content:center; align-items:center; width:100%;
+    box-sizing:border-box; min-height:44px; white-space:nowrap; font-size:.875rem;
+  }
+  /* Explorar es un enlace de lectura; ingreso y registro conservan sus estilos de acción. */
+  .guestMenu .actions > a:first-child { justify-content:flex-start; padding:8px 4px; font-weight:500; }
+  /* Redondear ambos botones manteniendo el contraste de los dos temas. */
+  .guestMenu .actions > a:not(:first-child) { padding:10px 12px; border-radius:12px; }
+}

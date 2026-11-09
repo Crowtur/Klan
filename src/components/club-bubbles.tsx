@@ -45,13 +45,19 @@
 "use client";
 import {AvatarImage} from "@/components/avatar-image";
 import { useEffect,useRef,useState } from "react";
+import { useMobile } from "./use-mobile";
 import Link from "next/link";
 import { Icon } from "./ui";
 type Club={id:string;name:string;logoUrl:string|null};
 type Ball={x:number;y:number;vx:number;vy:number};
 /** Distribuye los clubes de la portada en posiciones animadas y conserva marcadores mientras carga el catálogo. */
 export function ClubBubbles(){
+  // Móvil (<768 px): reservar cinco plazas incluso antes de cargar el catálogo. Cada plaza conserva su clave al recibir el logo.
+  const mobile = useMobile();
+  const slotCount = mobile ? 5 : 7;
   const [clubs,setClubs]=useState<Club[]>([]);
+  // El corte solo selecciona datos; la respuesta HTTP no reinicia la animación ni modifica el número de plazas.
+  const visibleClubs = clubs.slice(0,slotCount);
   const physics=useRef<Ball[]>([]);
   const canvas=useRef<HTMLDivElement>(null);
   useEffect(()=>{
@@ -60,6 +66,12 @@ export function ClubBubbles(){
     return ()=>controller.abort();
   },[]);
   useEffect(()=>{
+    // Las cinco trayectorias móviles están delimitadas por CSS. El motor original solo mueve las siete de escritorio.
+    // Comprobar también la media query evita arrancar ese motor durante la primera hidratación en un teléfono.
+    if (mobile || window.matchMedia("(width < 768px)").matches) {
+      physics.current = [];
+      return;
+    }
     const box=canvas.current!;
     const nodes=Array.from(box.children) as HTMLElement[];
     const motion=matchMedia("(prefers-reduced-motion: reduce)");
@@ -117,9 +129,9 @@ export function ClubBubbles(){
     const resize=new ResizeObserver(place);resize.observe(box);place();start();
     motion.addEventListener("change",start);document.addEventListener("visibilitychange",start);
     return ()=>{resize.disconnect();cancelAnimationFrame(frame);motion.removeEventListener("change",start);document.removeEventListener("visibilitychange",start)};
-  },[]);
-  return <div ref={canvas} className="club-bubbles" aria-label="Explorar clubes">{Array.from({length:7},(_,i)=>{
-    const c=clubs[i],name=c?.name||"Club "+(i+1);
+  },[mobile]);
+  return <div ref={canvas} className="club-bubbles" aria-label="Explorar clubes">{Array.from({length:slotCount},(_,i)=>{
+    const c=visibleClubs[i],name=c?.name||"Club "+(i+1);
     const content=<><BubblePhoto key={c?.logoUrl || "placeholder"} src={c?.logoUrl}/><strong>{name}</strong></>;
     return <div className="bubble-position" key={i}>{c?<Link href={"/explore/"+c.id} title={name}>{content}</Link>:<span>{content}</span>}</div>;
   })}</div>;

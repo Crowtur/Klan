@@ -51,7 +51,7 @@ import Link from "next/link";
 import { Suspense, useEffect, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { UploadButton } from "@/lib/uploadthing";
-import { Brand, Icon } from "./ui";
+import { Icon } from "./ui";
 import s from "./basic.module.css";
 type User = {
     firstName: string;
@@ -129,7 +129,8 @@ export default function MemberHeader() {
     }
     return (<header className={s.header}>
       <div className={s.headerInner}>
-      <Brand href={user ? "/app" : "/"}/>
+      {/* La cabecera global utiliza la marca tipográfica; el destino sigue dependiendo de la sesión. */}
+      <Link className="brand" href={user ? "/app" : "/"}>Klubo</Link>
       {user ? (<>
 
           {path!=="/" && <><ThemeToggle /><Suspense fallback={null}><Notifications /></Suspense></>}<div ref={box} style={{ position: "relative" }}>
@@ -161,13 +162,44 @@ export default function MemberHeader() {
                 {error && <p role="alert">{error}</p>}
               </section>)}
           </div>
-        </>) : (<nav className={s.actions}>
+        </>) : (<GuestNavigation/>)}
+      </div>
+    </header>);
+}
+
+
+/** Reutiliza los tres destinos del encabezado en portada, ingreso y registro. */
+function GuestNavigation() {
+    // Identifico el menú y su disparador para cerrarlo al salir o devolver el foco con Escape.
+    const menu = useRef<HTMLDetailsElement>(null);
+    useEffect(() => {
+        const element = menu.current;
+        if (!element) return;
+        /** Un toque fuera del desplegable lo cierra sin interceptar la navegación. */
+        function outside(event: PointerEvent) {
+            if (event.target instanceof Node && !element?.contains(event.target)) element?.removeAttribute("open");
+        }
+        document.addEventListener("pointerdown", outside);
+        return () => document.removeEventListener("pointerdown", outside);
+    }, []);
+    // Los estilos presentan una sola navegación por ancho; details funciona también antes de hidratar.
+    const links = <nav className={s.actions}>
           <Link href="/explore">Explorar clubes</Link>
           <Link className="btn btn-outline" href="/login">Iniciar sesión</Link>
           <Link className={s.button} href="/register">
             Registrarse
           </Link>
-        </nav>)}
-      </div>
-    </header>);
+        </nav>;
+    return <><div className={s.guestDesktop}>{links}</div>
+        <details className={s.guestMenu} ref={menu} onKeyDown={e => {
+            // Escape cierra el panel y devuelve el foco al mismo botón que lo abrió.
+            if (e.key === "Escape" && menu.current?.open) {
+                menu.current.open = false;
+                menu.current.querySelector("summary")?.focus();
+            }
+        }}>
+            <summary aria-label="Menú de navegación"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18"/></svg></summary>
+            {/* Retirar el desplegable incluso cuando se vuelve a elegir la ruta actual. */}
+            <div onClick={e => { if ((e.target as Element).closest("a") && menu.current) menu.current.open = false; }}>{links}</div>
+        </details></>;
 }

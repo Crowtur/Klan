@@ -120,6 +120,30 @@ export function Reservations({ club, facility, admin = false, onChanged, }: {
       </Status>
     </>);
 }
+/** Reserva móvil del prototipo U10. La selección guarda solo el inicio; antes de confirmar
+ * se recupera la franja de la disponibilidad vigente para evitar enviar opciones obsoletas. */
+function MobileBooking({ slots, base, onDone }: { slots: Row[]; base: string; onDone: () => void }) {
+    const [start, setStart] = useState<string | null>(null);
+    const selected = slots.find(slot => slot.startAt === start);
+
+    return <div className="mobile-booking">
+        {/* La cuadrícula permite comparar las horas. Tocar una opción todavía no crea la reserva. */}
+        <div className="booking-options" role="group" aria-label="Franjas disponibles">
+            {slots.map(slot => <button key={slot.startAt} type="button"
+                aria-pressed={selected?.startAt === slot.startAt}
+                onClick={() => setStart(slot.startAt)}>{slot.start} – {slot.end}</button>)}
+        </div>
+        {/* La acción reutiliza el bloqueo de doble envío y los mensajes de error del flujo de escritorio. */}
+        {selected && <div className="booking-selection">
+            <small>Franja seleccionada</small>
+            <strong>{selected.start} – {selected.end}</strong>
+            <Action key={selected.startAt} url={base + "/reservations"}
+                body={{ startAt: selected.startAt, endAt: selected.endAt }}
+                onDone={onDone}>Confirmar reserva</Action>
+        </div>}
+    </div>;
+}
+
 /** Combina la ficha con disponibilidad por día y duración. Actualiza horarios y reservas después de cada operación. */
 export function Facility({ club, id, admin, }: {
     club: string;
@@ -129,6 +153,8 @@ export function Facility({ club, id, admin, }: {
     const base = `/api/clubs/${club}/facilities/${id}`;
     const [v, setV] = useState(0), [day, setDay] = useState(new Date().toLocaleDateString("en-CA", { timeZone: "America/Guayaquil" })), [duration, setDuration] = useState(60);
     const state = useData(base, v);
+    // El aviso persiste mientras la consulta se actualiza y desmonta la franja recién reservada.
+    const [bookingNotice, setBookingNotice] = useState("");
     const available = useData(`${base}/availability?date=${day}&duration=${duration}&step=30`, v);
     const schedule = useData(`${base}/schedule`, v);
     const identity=useData(`/api/clubs/${club}`);
@@ -175,15 +201,24 @@ export function Facility({ club, id, admin, }: {
           <label>
             Fecha
             <input type="date" value={day} onChange={(e) => {
-            if (e.target.value)
+            // La nueva consulta corresponde a otra fecha; retirar la confirmación de la anterior.
+            if (e.target.value) {
+                setBookingNotice("");
                 setDay(e.target.value);
+            }
         }}/>
           </label>
           <label>
             Duración en minutos
-            <input type="number" min={1} max={1440} value={duration} onChange={(e) => setDuration(Math.max(1, Number(e.target.value)))}/>
+            <input type="number" min={1} max={1440} value={duration} onChange={(e) => {
+                // La duración cambia las franjas disponibles y deja atrás la operación anterior.
+                setBookingNotice("");
+                setDuration(Math.max(1, Number(e.target.value)));
+            }}/>
           </label>
         </div>
+        {/* El aviso queda fuera del estado de carga para que el lector de pantalla anuncie la confirmación. */}
+        <p className="mobile-booking-notice" role="status">{bookingNotice}</p>
         <Status state={available}>
           {available.data && !available.data.membershipAccess.canReserve && (<p className="notice">
               Tu membresía o plan no permite reservar esta instalación en este
@@ -194,6 +229,12 @@ export function Facility({ club, id, admin, }: {
               {available.data.membershipLimits.remainingMinutes}
             </p>)}
           <Empty rows={available.data?.bookingOptions.slots || []}/>
+          {/* Reiniciar la selección al cambiar la consulta o después de confirmar una reserva. */}
+          {available.data?.membershipAccess.canReserve && <MobileBooking key={JSON.stringify([base, day, duration, v])}
+              slots={available.data.bookingOptions.slots} base={base} onDone={() => {
+                  setBookingNotice("Reserva confirmada.");
+                  setV(version => version + 1);
+              }}/>}
           <div className="reservation-slots">
             {available.data?.membershipAccess.canReserve &&
             available.data.bookingOptions.slots.map((slot: Row) => (<Action key={slot.startAt} url={`${base}/reservations`} body={{ startAt: slot.startAt, endAt: slot.endAt }} confirm={`¿Confirmar reserva de ${slot.start} a ${slot.end}?`} onDone={() => setV(v + 1)}>
@@ -248,8 +289,9 @@ function ScheduleForm({ base, initial, onDone, }: {
         Los días sin intervalos quedan cerrados. Puedes añadir varios intervalos
         por día.
       </p>
-      <fieldset disabled={busy}>
-        {rows.map((r, i) => (<div className="actions" key={i}>
+      {/* Cada intervalo ocupa una fila completa; la rejilla alinea los controles por su borde inferior. */}
+      <fieldset className="schedule-intervals" disabled={busy}>
+        {rows.map((r, i) => (<div className="schedule-interval" key={i}>
             <label>
               Día
               <select value={r.dayOfWeek} onChange={(e) => setRows(rows.map((x, j) => j === i ? { ...x, dayOfWeek: e.target.value } : x))}>
