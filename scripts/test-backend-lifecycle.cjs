@@ -49,12 +49,13 @@ const fs = require("node:fs");
 const ts = require("typescript");
 const vm = require("node:vm");
 
-function webhook(event, tx) {
+// Inyecta el cliente Stripe para reproducir la secuencia de facturas sin llamar a la cuenta real.
+function webhook(event, tx, stripe = {}) {
   const exports = {};
   const prisma = { $transaction: work => work(tx) };
   const modules = {
     "@/lib/prisma": { prisma },
-    "@/lib/stripe": { stripe: { webhooks: { constructEvent: () => event } } },
+    "@/lib/stripe": { stripe: { ...stripe, webhooks: { constructEvent: () => event } } },
     "next/server": { NextResponse: Response },
     "@prisma/client": {}
   };
@@ -107,4 +108,90 @@ test("expired pass is FINISHED and another valid access protects the membership"
   assert.equal(memberWhere.role,"MEMBER");
   assert.equal(memberWhere.subscriptions.none.OR[0].status,"ACTIVE");
   assert.equal(events,0);
+});
+
+// Reproduce un Test Clock adelantado: la liquidación puede llevar fecha simulada,
+// mientras que el plazo de gracia se cuenta desde la creación real del evento fallido.
+test("recupera una factura en gracia sin duplicar deuda ni retroceder el período", async () => {
+  const time = 1_800_000_000;
+  const start = time + 60 * 86400;
+  const end = start + 31 * 86400;
+  const subscription = {
+    id: "sub_local", status: "ACTIVE", startedAt: new Date(time * 1000),
+    expiresAt: new Date(start * 1000), clubMembershipId: "member",
+    clubMembership: { userId: "user", clubId: "club", status: "ACTIVE" },
+    gracePeriodEndsAt: null,
+  };
+  const remote = { id: "sub_stripe", status: "active", start_date: time,
+    items: { data: [{ current_period_start: start, current_period_end: end }] } };
+  const invoice = { id: "in_test", subscription: remote.id, amount_due: 500, amount_paid: 500,
+    currency: "usd", status_transitions: { paid_at: start + 240 } };
+  const stripe = { subscriptions: { retrieve: async () => remote }, invoices: { retrieve: async () => ({ status: "open" }) } };
+  let obligation, payment;
+  const processed = new Set();
+  const tx = {
+    $queryRaw: async () => [],
+    stripeWebhookEvent: {
+      findUnique: async ({ where }) => processed.has(where.id) ? { status: "PROCESSED" } : null,
+      upsert: async ({ where }) => processed.add(where.id),
+    },
+    subscription: {
+      findUnique: async () => subscription,
+      update: async ({ data }) => Object.assign(subscription, data),
+      updateMany: async ({ data }) => {
+        assert.equal(obligation.status, "PAID");
+        Object.assign(subscription, data);
+        return { count: 1 };
+      },
+    },
+    club: { findUnique: async () => ({ status: "ACTIVE" }) },
+    clubMembership: { update: async () => ({}) },
+    payment: {
+      findFirst: async () => payment,
+      create: async ({ data }) => { assert.equal(payment, undefined); payment = { ...data, id: "p" }; },
+      update: async ({ data }) => Object.assign(payment, data),
+    },
+    paymentObligation: { upsert: async ({ where, create, update }) => {
+      // Prisma exige una clave en create aun cuando se actualiza por ID.
+      assert.equal(create.obligationKey, "invoice:in_test");
+      if (obligation) {
+        assert.equal(where.id, obligation.id);
+        Object.assign(obligation, update);
+      } else {
+        assert.equal(where.obligationKey, create.obligationKey);
+        obligation = { ...create, id: "o" };
+      }
+      return obligation;
+    } },
+  };
+  async function deliver(type, id, offset, object = invoice) {
+    const response = await webhook({ type, id, created: time + offset, data: { object } }, tx, stripe);
+    assert.equal(response.status, 200);
+    return response.json();
+  }
+  await deliver("invoice.payment_failed", "evt_fail", 0);
+  await deliver("invoice.payment_failed", "evt_retry_failed", 120);
+  assert.equal(obligation.status, "OPEN");
+  assert.equal(payment.status, "FAILED");
+  assert.equal(+subscription.gracePeriodEndsAt, (time + 7 * 86400) * 1000);
+  await deliver("invoice.payment_succeeded", "evt_paid", 240);
+  assert.equal(subscription.status, "ACTIVE");
+  assert.equal(subscription.gracePeriodEndsAt, null);
+  assert.equal(+subscription.nextBillingAt, end * 1000);
+  assert.equal(+subscription.expiresAt, end * 1000);
+  assert.equal(+subscription.startedAt, start * 1000);
+  assert.equal((await deliver("invoice.payment_succeeded", "evt_paid", 240)).duplicate, true);
+  await deliver("invoice.payment_failed", "evt_late_failure", 300);
+  assert.equal(payment.status, "PAID");
+  assert.equal(obligation.status, "PAID");
+  assert.equal(payment.obligationId, obligation.id);
+  // El siguiente ciclo se sincroniza también cuando el único evento nuevo actualiza la suscripción.
+  remote.items.data[0] = { current_period_start: end, current_period_end: end + 28 * 86400 };
+  await deliver("customer.subscription.updated", "evt_period", 360, remote);
+  assert.equal(+subscription.nextBillingAt, remote.items.data[0].current_period_end * 1000);
+  // Una línea de servicio antigua acredita ese pago sin acortar el último ciclo confirmado.
+  invoice.lines = { data: [{ parent: { subscription_item_details: { subscription: remote.id, proration: false } },
+    period: { start, end } }] };
+  await deliver("invoice.payment_succeeded", "evt_old_invoice", 240);
+  assert.equal(+subscription.startedAt, end * 1000);
 });

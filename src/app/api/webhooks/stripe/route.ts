@@ -44,7 +44,7 @@
 
 import { prisma } from "@/lib/prisma";
 import { stripe } from "@/lib/stripe";
-import { Prisma, DurationUnit } from "@prisma/client";
+import { Prisma } from "@prisma/client";
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
 
@@ -67,7 +67,6 @@ type StripeInvoicePayload = Stripe.Invoice & {
 type StripeSubscriptionPayload = Stripe.Subscription & {
   current_period_start?: number;
   current_period_end?: number;
-  start_date?: number;
   latest_invoice?: string | StripeInvoicePayload | null;
 };
 
@@ -112,61 +111,40 @@ function extractSubscriptionIdFromInvoice(
   return null;
 }
 
-/**
- * Convierte timestamps de Stripe a objetos Date de forma segura.
- */
-function safeStripeDate(
-  timestamp: number | null | undefined,
-  fallbackDate: Date
-): Date {
-  if (!timestamp || typeof timestamp !== "number") {
-    return fallbackDate;
-  }
-  const date = new Date(timestamp * 1000);
-  return isNaN(date.getTime()) ? fallbackDate : date;
+/** Valida ambos extremos antes de entregar un intervalo de Stripe a Prisma. */
+function billingPeriod(start?: number, end?: number) {
+  if (!start || !end || end <= start) return null;
+  const startedAt = new Date(start * 1000);
+  const expiresAt = new Date(end * 1000);
+  return Number.isFinite(+startedAt) && Number.isFinite(+expiresAt)
+    ? { startedAt, expiresAt }
+    : null;
 }
 
-/**
- * Calcula la fecha de expiración sumando meses o años exactos según el calendario.
+/** La línea recurrente describe el servicio pagado incluso si la factura llega con retraso.
+ * Klubo contrata un solo ítem por suscripción. Las API anteriores colocaban el ciclo en la raíz.
+ * Un prorrateo o una línea manual no acreditan por sí solos un período de renovación entero.
  */
-function calculateExpirationFromPlan(
-  startDate: Date,
-  durationValue: number,
-  durationUnit: DurationUnit
-): Date {
-  const expiresAt = new Date(startDate);
-
-  if (durationUnit === "YEAR") {
-    expiresAt.setFullYear(expiresAt.getFullYear() + durationValue);
-  } else if (durationUnit === "MONTH") {
-    expiresAt.setMonth(expiresAt.getMonth() + durationValue);
+function resolveBillingPeriod(subscription: StripeSubscriptionPayload, invoice?: StripeInvoicePayload) {
+  for (const line of invoice?.lines?.data ?? []) {
+    const details = line.parent?.subscription_item_details;
+    const legacy = line as typeof line & { type?: string; proration?: boolean; subscription?: string };
+    const recurring = details
+      ? details.subscription === subscription.id && !details.proration
+      : legacy.type === "subscription" && !legacy.proration && (!legacy.subscription || legacy.subscription === subscription.id);
+    const period = recurring && billingPeriod(line.period?.start, line.period?.end);
+    if (period) return period;
   }
-
-  return expiresAt;
+  const item = subscription.items?.data[0];
+  const period = billingPeriod(item?.current_period_start, item?.current_period_end)
+    ?? billingPeriod(subscription.current_period_start, subscription.current_period_end);
+  if (!period) throw new Error("Stripe no proporcionó un período de facturación válido");
+  return period;
 }
 
-/**
- * Determina la fecha de expiración priorizando el cálculo exacto de Stripe
- * y usando las propiedades del MembershipPlan como fallback dinámico.
- */
-/** Determina la vigencia del ciclo utilizando las fechas disponibles del procesador y del plan. */
-function resolveExpirationDate(
-  stripePeriodEndTimestamp: number | null | undefined,
-  startDate: Date,
-  plan: { durationValue: number; durationUnit: DurationUnit }
-): Date {
-  if (stripePeriodEndTimestamp && typeof stripePeriodEndTimestamp === "number") {
-    const stripeDate = new Date(stripePeriodEndTimestamp * 1000);
-    if (!isNaN(stripeDate.getTime())) {
-      return stripeDate;
-    }
-  }
-
-  return calculateExpirationFromPlan(
-    startDate,
-    plan.durationValue,
-    plan.durationUnit
-  );
+/** Serializa eventos distintos de una misma suscripción antes de leer su estado contable. */
+async function lockSubscription(tx: Prisma.TransactionClient, id: string) {
+  await tx.$queryRaw`SELECT pg_advisory_xact_lock(hashtextextended(${"subscription:" + id},0))::text`;
 }
 
 /** Comprueba si el estado del club impide reactivar su acceso a partir de un evento de Stripe. */
@@ -381,22 +359,8 @@ export async function POST(request: Request) {
         )) as unknown as StripeSubscriptionPayload;
 
         const now = new Date();
-        const plan = payment.subscription.plan;
-
-        const startedAt = safeStripeDate(
-          stripeSubscription?.current_period_start ??
-            stripeSubscription?.start_date,
-          now
-        );
-
-        const expiresAt = resolveExpirationDate(
-          stripeSubscription?.current_period_end,
-          startedAt,
-          {
-            durationValue: plan.durationValue,
-            durationUnit: plan.durationUnit,
-          }
-        );
+        // El primer pago usa el mismo ciclo confirmado por Stripe que las renovaciones.
+        const { startedAt, expiresAt } = resolveBillingPeriod(stripeSubscription);
 
         await run(async (tx) => {
           await tx.payment.update({
@@ -476,6 +440,7 @@ export async function POST(request: Request) {
           break;
         }
 
+        await lockSubscription(db, stripeSubscriptionId);
         const subscription = await db.subscription.findUnique({
           where: { stripeSubscriptionId },
           include: {
@@ -489,26 +454,17 @@ export async function POST(request: Request) {
         }
 
         const paymentIntentId = extractId(invoice.payment_intent);
-        const now = new Date();
+        // La gracia usa event.created igual que el fallo inicial. El reloj simulado de la
+        // factura sirve para paidAt, pero no para decidir si vencieron los siete días locales.
+        const eventTime = new Date(event.created * 1000);
+        const paidAt = new Date((invoice.status_transitions?.paid_at || event.created) * 1000);
 
         const stripeSubscription = (await stripe.subscriptions.retrieve(
           stripeSubscriptionId
         )) as unknown as StripeSubscriptionPayload;
 
-        const startedAt = safeStripeDate(
-          stripeSubscription.current_period_start ??
-            stripeSubscription.start_date,
-          now
-        );
-
-        const expiresAt = resolveExpirationDate(
-          stripeSubscription.current_period_end,
-          startedAt,
-          {
-            durationValue: subscription.plan.durationValue,
-            durationUnit: subscription.plan.durationUnit,
-          }
-        );
+        // Se acredita el intervalo real de la factura y se conserva el alta histórica por separado.
+        const { startedAt, expiresAt } = resolveBillingPeriod(stripeSubscription, invoice);
 
         const amount =
           typeof invoice.amount_paid === "number"
@@ -530,14 +486,14 @@ export async function POST(request: Request) {
 
         const gracePeriodStillValid =
           subscription.gracePeriodEndsAt !== null &&
-          subscription.gracePeriodEndsAt > now;
+          subscription.gracePeriodEndsAt > eventTime;
 
         const graceAlreadyExpired =
           subscription.status === "EXPIRED" ||
           subscription.status === "CANCELLED" ||
           (
             subscription.gracePeriodEndsAt !== null &&
-            subscription.gracePeriodEndsAt <= now
+            subscription.gracePeriodEndsAt <= eventTime
           );
 
         const clubBlocked = await isClubSuspensionBlocked(db,
@@ -557,15 +513,26 @@ export async function POST(request: Request) {
 
         await run(async (tx) => {
           // Una factura identifica la misma obligación incluso cuando Stripe informa varios intentos de cobro.
-          const obligationKey=existingPayment?.obligationId ? undefined : "invoice:"+invoice.id;
-          const obligation=await tx.paymentObligation.upsert({where:existingPayment?.obligationId?{id:existingPayment.obligationId}:{obligationKey},update:{status:"PAID",stripeInvoiceId:invoice.id,paidAt:now},create:{obligationKey:obligationKey!,subscriptionId:subscription.id,userId:subscription.clubMembership.userId,clubId:subscription.clubMembership.clubId,amount,currency,stripeInvoiceId:invoice.id,status:"PAID",paidAt:now}});
+          // Prisma valida create incluso cuando where encuentra la obligación vinculada por ID.
+          // La clave de factura permanece estable en todos los intentos de cobro.
+          const obligationKey = `invoice:${invoice.id}`;
+          const settlement = { status: "PAID" as const, stripeInvoiceId: invoice.id, paidAt };
+          const obligation = await tx.paymentObligation.upsert({
+            where: existingPayment?.obligationId ? { id: existingPayment.obligationId } : { obligationKey },
+            update: settlement,
+            create: {
+              ...settlement, obligationKey, subscriptionId: subscription.id,
+              userId: subscription.clubMembership.userId, clubId: subscription.clubMembership.clubId,
+              amount, currency,
+            },
+          });
           if (existingPayment) {
             // Recuperar el registro existente, incluso si estaba FAILED.
             await tx.payment.update({
               where: { id: existingPayment.id },
               data: {
                 status: "PAID",
-                paidAt: now,
+                paidAt,
                 amount,
                 currency,
                 stripeSubscriptionId,
@@ -585,7 +552,7 @@ export async function POST(request: Request) {
                 amount,
                 currency,
                 status: "PAID",
-                paidAt: now,
+                paidAt,
                 stripeSubscriptionId,
                 stripeInvoiceId: invoice.id, obligationId:obligation.id,
                 stripePaymentIntentId: paymentIntentId,
@@ -597,33 +564,38 @@ export async function POST(request: Request) {
           if (
             !clubBlocked &&
             !graceAlreadyExpired &&
+            subscription.clubMembership.status !== "REMOVED" &&
+            subscription.status !== "FINISHED" &&
+            (!subscription.expiresAt || expiresAt >= subscription.expiresAt) &&
             subscription.status !== "SUSPENDED"
           ) {
-            await tx.subscription.updateMany({
+            const recovered = await tx.subscription.updateMany({
               where: {
+                obligations: { none: { status: "OPEN" } },
                 id: subscription.id,
                 status: {
                   notIn: ["EXPIRED", "CANCELLED"],
                 },
                 OR: [
                   { gracePeriodEndsAt: null },
-                  { gracePeriodEndsAt: { gt: now } },
+                  { gracePeriodEndsAt: { gt: eventTime } },
                 ],
               },
               data: {
-                status: "ACTIVE", nextBillingAt:expiresAt,
+                status: "ACTIVE", startedAt, nextBillingAt: expiresAt,
                 expiresAt,
                 gracePeriodEndsAt: null,
               },
             });
-          }
+            if (!recovered.count) return;
 
-          // Solo recuperar la membresía si no perdió ya el acceso por haber terminado su periodo de gracia.
-          if (canReactivateMembership && !graceAlreadyExpired) {
-            await tx.clubMembership.update({
-              where: { id: subscription.clubMembershipId },
-              data: { status: "ACTIVE" },
-            });
+            // La membresía sólo recupera acceso tras confirmar la actualización de la suscripción.
+            if (canReactivateMembership) {
+              await tx.clubMembership.update({
+                where: { id: subscription.clubMembershipId },
+                data: { status: "ACTIVE" },
+              });
+            }
           }
         });
 
@@ -652,6 +624,7 @@ export async function POST(request: Request) {
           break;
         }
 
+        await lockSubscription(db, stripeSubscriptionId);
         const subscription = await db.subscription.findUnique({
           where: { stripeSubscriptionId },
           include: {
@@ -696,8 +669,6 @@ export async function POST(request: Request) {
             : 0;
 
         const currency = invoice.currency || "usd";
-
-        const now = new Date();
 
         let existingPayment = await db.payment.findFirst({
           where: { stripeInvoiceId: invoice.id },
@@ -759,8 +730,19 @@ export async function POST(request: Request) {
           );
 
         await run(async (tx) => {
-          const obligationKey=existingPayment?.obligationId ? undefined : "invoice:"+invoice.id;
-          const obligation=await tx.paymentObligation.upsert({where:existingPayment?.obligationId?{id:existingPayment.obligationId}:{obligationKey},update:{status:"OPEN",stripeInvoiceId:invoice.id,paidAt:null},create:{obligationKey:obligationKey!,subscriptionId:subscription.id,userId:subscription.clubMembership.userId,clubId:subscription.clubMembership.clubId,amount,currency,stripeInvoiceId:invoice.id,status:"OPEN",paidAt:null}});
+          // Prisma valida create incluso cuando where encuentra la obligación vinculada por ID.
+          // La clave de factura permanece estable en todos los intentos de cobro.
+          const obligationKey = `invoice:${invoice.id}`;
+          const settlement = { status: "OPEN" as const, stripeInvoiceId: invoice.id, paidAt: null };
+          const obligation = await tx.paymentObligation.upsert({
+            where: existingPayment?.obligationId ? { id: existingPayment.obligationId } : { obligationKey },
+            update: settlement,
+            create: {
+              ...settlement, obligationKey, subscriptionId: subscription.id,
+              userId: subscription.clubMembership.userId, clubId: subscription.clubMembership.clubId,
+              amount, currency,
+            },
+          });
           if (existingPayment) {
             await tx.payment.update({
               where: {
@@ -822,6 +804,7 @@ export async function POST(request: Request) {
         const eventSubscription =
           event.data.object as unknown as StripeSubscriptionPayload;
 
+        await lockSubscription(db, eventSubscription.id);
         const localSubscription = await db.subscription.findUnique({
           where: {
             stripeSubscriptionId: eventSubscription.id,
@@ -860,23 +843,6 @@ export async function POST(request: Request) {
           eventSubscription.id
         )) as unknown as StripeSubscriptionPayload;
 
-        const now = new Date();
-
-        const startedAt = safeStripeDate(
-          stripeSubscription.current_period_start ??
-            stripeSubscription.start_date,
-          localSubscription.startedAt ?? now
-        );
-
-        const expiresAt = resolveExpirationDate(
-          stripeSubscription.current_period_end,
-          startedAt,
-          {
-            durationValue: localSubscription.plan.durationValue,
-            durationUnit: localSubscription.plan.durationUnit,
-          }
-        );
-
         switch (stripeSubscription.status) {
           case "active":
           case "trialing": {
@@ -898,10 +864,15 @@ export async function POST(request: Request) {
               break;
             }
 
+            // Sólo se requieren fechas para un ciclo activo. Los eventos terminales también
+            // deben poder procesarse cuando Stripe ya haya retirado los ítems de la suscripción.
+            const { startedAt, expiresAt } = resolveBillingPeriod(stripeSubscription);
+            if (localSubscription.expiresAt && expiresAt < localSubscription.expiresAt) break;
+
             await db.subscription.update({
               where: { id: localSubscription.id },
               data: {
-                status: "ACTIVE", nextBillingAt:expiresAt,
+                status: "ACTIVE", startedAt, nextBillingAt: expiresAt,
                 expiresAt,
                 gracePeriodEndsAt: null,
               },
