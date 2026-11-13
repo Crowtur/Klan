@@ -130,7 +130,7 @@ export default function MemberHeader() {
     return (<header className={s.header}>
       <div className={s.headerInner}>
       {/* La cabecera global utiliza la marca tipográfica; el destino sigue dependiendo de la sesión. */}
-      <Link className="brand" href={user ? "/app" : "/"}>Klubo</Link>
+      <Link className="brand" href={user ? "/app" : "/"}>Klan</Link>
       {user ? (<>
 
           {path!=="/" && <><ThemeToggle /><Suspense fallback={null}><Notifications /></Suspense></>}<div ref={box} style={{ position: "relative" }}>

@@ -47,10 +47,18 @@ import MemberHeader from "@/components/member-header";
 import "@uploadthing/react/styles.css";
 import type { Metadata } from "next";
 import "./globals.css";
+// Parte 10.4: La identidad compartida también se publica en las tarjetas sociales.
 export const metadata: Metadata = {
-    title: { default: "Klubo", template: "%s | Klubo" },
-    icons: { icon: "/brand/klubo-icon.png", apple: "/brand/klubo-icon.png" },
-    description: "Clubes, membresías, reservas y pagos en un solo lugar",
+    title: { default: "Klan", template: "%s | Klan" },
+    icons: { icon: "/brand/klan-icon.png", apple: "/brand/klan-icon.png" },
+    description: "Klan: clubes, membresías, reservas y pagos en un solo lugar",
+    openGraph: {
+        title: "Klan",
+        siteName: "Klan",
+        description: "Klan: clubes, membresías, reservas y pagos en un solo lugar",
+        locale: "es_EC",
+        type: "website",
+    },
 };
 // src/app/layout.tsx
 /** Aplica el idioma, los estilos y la cabecera compartida a todas las rutas. */

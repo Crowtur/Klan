@@ -122,7 +122,7 @@ function billingPeriod(start?: number, end?: number) {
 }
 
 /** La línea recurrente describe el servicio pagado incluso si la factura llega con retraso.
- * Klubo contrata un solo ítem por suscripción. Las API anteriores colocaban el ciclo en la raíz.
+ * Klan contrata un solo ítem por suscripción. Las API anteriores colocaban el ciclo en la raíz.
  * Un prorrateo o una línea manual no acreditan por sí solos un período de renovación entero.
  */
 function resolveBillingPeriod(subscription: StripeSubscriptionPayload, invoice?: StripeInvoicePayload) {

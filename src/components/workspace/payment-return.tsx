@@ -49,7 +49,7 @@ import Link from "next/link";
 import { Payment } from "./personal";
 import { href } from "./common";
 import "./workspace.css";
-/** Recupera el identificador de la transacción desde la URL o la sesión de Checkout para consultar su estado en Klubo. */
+/** Recupera el identificador de la transacción desde la URL o la sesión de Checkout para consultar su estado en Klan. */
 export default function PaymentReturn({ cancelled = false, }: {
     cancelled?: boolean;
 }) {

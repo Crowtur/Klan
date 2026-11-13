@@ -112,7 +112,7 @@ export default function AuthForm({ mode }: Props) {
 
 
       <main id="main-content" className="auth-layout">
-        <aside className="auth-story"><span className="icon-tile"><Icon name="users" size={32}/></span><h2>Tu comunidad empieza aquí.</h2><p>Un espacio para conectar con tus clubes, organizar tus reservas y disfrutar de lo que te une.</p><small>Klubo · Más tiempo para lo importante.</small></aside>
+        <aside className="auth-story"><span className="icon-tile"><Icon name="users" size={32}/></span><h2>Tu comunidad empieza aquí.</h2><p>Un espacio para conectar con tus clubes, organizar tus reservas y disfrutar de lo que te une.</p><small>Klan · Más tiempo para lo importante.</small></aside>
         <section className={`${styles.card} ${styles.formContainer}`}>
           <h1 style={{ fontSize: 28, fontWeight: "bold" }}>
             {isRegister ? "Crear una cuenta" : "Iniciar sesión"}
@@ -129,7 +129,7 @@ export default function AuthForm({ mode }: Props) {
             </div>) : (<>
               <p>
                 {isRegister
-                ? "Completa tus datos para registrarte en Klubo."
+                ? "Completa tus datos para registrarte en Klan."
                 : "Ingresa tu correo y contraseña para acceder."}
               </p>
 

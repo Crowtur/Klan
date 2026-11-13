@@ -42,7 +42,7 @@
  * ==============================================================================
  */
 
-/* Cada tipo de archivo declara sus límites, el permiso necesario y la operación que vincula el resultado con el registro de Klubo. */
+/* Cada tipo de archivo declara sus límites, el permiso necesario y la operación que vincula el resultado con el registro de Klan. */
 import { createUploadthing, type FileRouter } from "uploadthing/next";
 import { UploadThingError } from "uploadthing/server";
 import { z } from "zod";

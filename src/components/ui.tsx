@@ -73,8 +73,8 @@ export function Icon({ name, size = 20 }: {
 /** Enlaza la marca con la portada o el espacio privado según el destino que reciba. */
 export function Brand({ href = "/" }: {
     href?: string;
-}) { return <Link href={href} className="brand"><img src="/brand/klubo-icon.png" alt="" width="36" height="36"/><span>Klubo</span></Link>; }
-/** Agrupa la identificación de Klubo y los accesos de pie de página del sitio. */
+}) { return <Link href={href} className="brand"><img src="/brand/klan-icon.png" alt="" width="36" height="36"/><span>Klan</span></Link>; }
+/** Agrupa la identificación de Klan y los accesos de pie de página del sitio. */
 export function Footer() { return <footer className="site-footer"><div><Brand /><p>Más tiempo para tu comunidad. Menos para la gestión.</p></div></footer>; }
 /** Conserva la jerarquía de títulos y sitúa la acción principal junto a la descripción de la vista. */
 export function PageHeading({ eyebrow, title, description, action, level = 1 }: {

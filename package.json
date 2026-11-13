@@ -1,5 +1,6 @@
 {
   "name": "club-saas",
+  "description": "Klan — Plataforma de clubes, membresías, reservas y pagos",
   "version": "0.1.0",
   "private": true,
   "scripts": {

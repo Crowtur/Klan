@@ -292,7 +292,7 @@ export function Dashboard({ club, filters, onFilters }: {
             "reconciliation",
         ];
     return (<>
-      <PageHeading level={club ? 2 : 1} eyebrow={club ? "Tu club, de un vistazo" : "Administración global"} title={club ? "Resumen y actividad" : "El pulso de Klubo"} description="Consulta las métricas y el movimiento de tu comunidad."/>
+      <PageHeading level={club ? 2 : 1} eyebrow={club ? "Tu club, de un vistazo" : "Administración global"} title={club ? "Resumen y actividad" : "El pulso de Klan"} description="Consulta las métricas y el movimiento de tu comunidad."/>
       <div className="dashboard-controls">
         <label>
           Sección
