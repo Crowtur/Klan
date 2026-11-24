@@ -1,186 +1,221 @@
-﻿===== admin\dashboard\clubs\route.ts =====
-L85: export async function GET(request: Request) {
+Klan — Parte 11
+Exportaciones HTTP verificadas en el código fuente
 
-===== admin\dashboard\finances\route.ts =====
-L87: export async function GET(request: Request) {
+src/app/api/admin/dashboard/entities/route.ts
+  L133: export async function GET
 
-===== admin\dashboard\overview\route.ts =====
-L79: export async function GET(request: Request) {
+src/app/api/admin/dashboard/finances/route.ts
+  L134: export async function GET
 
-===== admin\settlements\[settlementId]\route.ts =====
-L5: export async function GET(
-L78: export async function PATCH(
+src/app/api/admin/dashboard/overview/route.ts
+  L126: export async function GET
 
-===== admin\settlements\route.ts =====
-L7: export async function POST(request: Request) {
+src/app/api/admin/settlements/[settlementId]/route.ts
+  L50: export async function GET
+  L124: export async function PATCH
 
-===== admin\test\route.ts =====
-L5: export async function GET(request: Request) {
+src/app/api/admin/settlements/route.ts
+  L49: export async function GET
+  L52: export async function POST
 
-===== auth\login\route.ts =====
-L6: export async function POST(request: Request) {
+src/app/api/auth/login/route.ts
+  L51: export async function POST
 
-===== auth\logout\route.ts =====
-L3: export async function POST() {
+src/app/api/auth/logout/route.ts
+  L48: export async function POST
 
-===== auth\me\route.ts =====
-L5: export async function GET(request: Request) {
+src/app/api/auth/me/route.ts
+  L50: export async function GET
 
-===== auth\register\route.ts =====
-L5: export async function POST(request: Request) {
+src/app/api/auth/register/route.ts
+  L50: export async function POST
 
-===== clubs\[clubId]\dashboard\alerts\route.ts =====
-L22: export async function GET(
+src/app/api/auth/session/route.ts
+  L48: export async function GET
 
-===== clubs\[clubId]\dashboard\finances\route.ts =====
-L113: export async function GET(
+src/app/api/avatars/[key]/route.ts
+  L47: export async function GET
 
-===== clubs\[clubId]\dashboard\members\route.ts =====
-L42: export async function GET(
+src/app/api/catalog/bubbles/route.ts
+  L50: export async function GET
 
-===== clubs\[clubId]\dashboard\overview\route.ts =====
-L13: export async function GET(
+src/app/api/catalog/entities/[entityId]/route.ts
+  L49: export async function GET
 
-===== clubs\[clubId]\dashboard\reservations\route.ts =====
-L82: export async function GET(
+src/app/api/cron/expired-plans/route.ts
+  L51: export async function POST
 
-===== clubs\[clubId]\dashboard\subscriptions\route.ts =====
-L58: export async function GET(
+src/app/api/cron/read-notifications/route.ts
+  L49: export async function GET
 
-===== clubs\[clubId]\facilities\[facilityId]\availability\route.ts =====
-L192: export async function GET(
+src/app/api/cron/settlements/route.ts
+  L49: export async function POST
 
-===== clubs\[clubId]\facilities\[facilityId]\plan-access\route.ts =====
-L6: export async function PUT(
-L208: export async function GET(
+src/app/api/entities/[entityId]/bank/route.ts
+  L58: export async function PUT
+  L74: export async function GET
 
-===== clubs\[clubId]\facilities\[facilityId]\reservations\[reservationId]\route.ts =====
-L15: export async function GET(
-L129: export async function PATCH(
+src/app/api/entities/[entityId]/dashboard/activity/route.ts
+  L56: export async function GET
 
-===== clubs\[clubId]\facilities\[facilityId]\reservations\route.ts =====
-L62: export async function GET(
-L232: export async function POST(
+src/app/api/entities/[entityId]/dashboard/alerts/route.ts
+  L67: export async function GET
 
-===== clubs\[clubId]\facilities\[facilityId]\route.ts =====
-L5: export async function GET(
-L83: export async function PATCH(
-L243: export async function DELETE(
+src/app/api/entities/[entityId]/dashboard/finances/route.ts
+  L161: export async function GET
 
-===== clubs\[clubId]\facilities\[facilityId]\schedule\route.ts =====
-L23: export async function PUT(
-L247: export async function GET(
+src/app/api/entities/[entityId]/dashboard/members/route.ts
+  L89: export async function GET
 
-===== clubs\[clubId]\facilities\route.ts =====
-L5: export async function POST(
-L115: export async function GET(
+src/app/api/entities/[entityId]/dashboard/overview/route.ts
+  L59: export async function GET
 
-===== clubs\[clubId]\members\[memberId]\route.ts =====
-L16: export async function DELETE(
+src/app/api/entities/[entityId]/dashboard/reservations/route.ts
+  L128: export async function GET
 
-===== clubs\[clubId]\members\route.ts =====
-L8: export async function GET(
+src/app/api/entities/[entityId]/dashboard/subscriptions/route.ts
+  L105: export async function GET
 
-===== clubs\[clubId]\membership-applications\[applicationId]\documents\[documentId]\route.ts =====
-L15: export async function PATCH(
+src/app/api/entities/[entityId]/facilities/[facilityId]/availability/route.ts
+  L239: export async function GET
 
-===== clubs\[clubId]\membership-applications\[applicationId]\documents\route.ts =====
-L7: export async function GET(
-L126: export async function POST() {
+src/app/api/entities/[entityId]/facilities/[facilityId]/plan-access/route.ts
+  L51: export async function PUT
+  L254: export async function GET
 
-===== clubs\[clubId]\membership-applications\[applicationId]\review\route.ts =====
-L51: export async function PATCH(
+src/app/api/entities/[entityId]/facilities/[facilityId]/reservations/[reservationId]/route.ts
+  L60: export async function GET
+  L175: export async function PATCH
 
-===== clubs\[clubId]\membership-applications\[applicationId]\route.ts =====
-L8: export async function GET(
-L122: export async function PATCH(
+src/app/api/entities/[entityId]/facilities/[facilityId]/reservations/route.ts
+  L107: export async function GET
+  L279: export async function POST
 
-===== clubs\[clubId]\membership-applications\route.ts =====
-L7: export async function POST(
-L170: export async function GET(
+src/app/api/entities/[entityId]/facilities/[facilityId]/route.ts
+  L51: export async function GET
+  L130: export async function PATCH
+  L294: export async function DELETE
 
-===== clubs\[clubId]\membership-plans\[planId]\document-requirements\[requirementId]\route.ts =====
-L7: export async function PATCH(
-L202: export async function DELETE(
+src/app/api/entities/[entityId]/facilities/[facilityId]/schedule/route.ts
+  L68: export async function PUT
+  L293: export async function GET
 
-===== clubs\[clubId]\membership-plans\[planId]\document-requirements\route.ts =====
-L7: export async function POST(
-L141: export async function GET(
+src/app/api/entities/[entityId]/facilities/route.ts
+  L51: export async function POST
+  L165: export async function GET
 
-===== clubs\[clubId]\membership-plans\[planId]\route.ts =====
-L8: export async function GET(
-L88: export async function PATCH(
-L334: export async function DELETE(
+src/app/api/entities/[entityId]/members/[memberId]/route.ts
+  L61: export async function DELETE
 
-===== clubs\[clubId]\membership-plans\route.ts =====
-L7: export async function POST(
-L190: export async function GET(
+src/app/api/entities/[entityId]/members/route.ts
+  L53: export async function GET
 
-===== clubs\[clubId]\my-reservations\route.ts =====
-L14: export async function GET(
+src/app/api/entities/[entityId]/membership-applications/[applicationId]/documents/[documentId]/route.ts
+  L61: export async function PATCH
+  L279: export async function DELETE
 
-===== clubs\[clubId]\payments\route.ts =====
-L7: export async function GET(
+src/app/api/entities/[entityId]/membership-applications/[applicationId]/documents/route.ts
+  L52: export async function GET
+  L172: export async function POST
 
-===== clubs\[clubId]\payments\summary\route.ts =====
-L7: export async function GET(
+src/app/api/entities/[entityId]/membership-applications/[applicationId]/review/route.ts
+  L97: export async function PATCH
 
-===== clubs\[clubId]\posts\[postId]\route.ts =====
-L14: export async function PATCH(
-L273: export async function DELETE(
+src/app/api/entities/[entityId]/membership-applications/[applicationId]/route.ts
+  L53: export async function GET
+  L168: export async function PATCH
 
-===== clubs\[clubId]\posts\route.ts =====
-L6: export async function POST(
-L210: export async function GET(
+src/app/api/entities/[entityId]/membership-applications/[applicationId]/submit/route.ts
+  L48: export async function POST
 
-===== clubs\[clubId]\reactivate\route.ts =====
-L6: export async function POST(
+src/app/api/entities/[entityId]/membership-applications/route.ts
+  L52: export async function POST
+  L221: export async function GET
 
-===== clubs\[clubId]\route.ts =====
-L7: export async function GET(
-L68: export async function PATCH(
+src/app/api/entities/[entityId]/membership-plans/[planId]/document-requirements/[requirementId]/route.ts
+  L52: export async function PATCH
+  L248: export async function DELETE
 
-===== clubs\[clubId]\subscriptions\[subscriptionId]\cancel\route.ts =====
-L7: export async function POST(
+src/app/api/entities/[entityId]/membership-plans/[planId]/document-requirements/route.ts
+  L52: export async function POST
+  L192: export async function GET
 
-===== clubs\[clubId]\subscriptions\[subscriptionId]\checkout\route.ts =====
-L6: export async function POST(
+src/app/api/entities/[entityId]/membership-plans/[planId]/route.ts
+  L53: export async function GET
+  L134: export async function PATCH
+  L383: export async function DELETE
 
-===== clubs\[clubId]\suspend\route.ts =====
-L8: export async function POST(
+src/app/api/entities/[entityId]/membership-plans/route.ts
+  L52: export async function POST
+  L269: export async function GET
 
-===== clubs\route.ts =====
-L6: export async function GET(request: Request) {
-L67: export async function POST(request: Request) {
+src/app/api/entities/[entityId]/my-reservations/route.ts
+  L59: export async function GET
 
-===== cron\expired-plans\route.ts =====
-L5: export async function POST(request: Request) {
+src/app/api/entities/[entityId]/payments/route.ts
+  L53: export async function GET
 
-===== cron\settlements\route.ts =====
-L4: export async function POST(request: Request) {
+src/app/api/entities/[entityId]/payments/summary/route.ts
+  L52: export async function GET
 
-===== feed\route.ts =====
-L6: export async function GET(request: Request) {
+src/app/api/entities/[entityId]/posts/[postId]/route.ts
+  L59: export async function PATCH
+  L320: export async function DELETE
 
-===== me\memberships\route.ts =====
-L6: export async function GET(request: Request) {
+src/app/api/entities/[entityId]/posts/route.ts
+  L51: export async function POST
+  L256: export async function GET
 
-===== me\payments\route.ts =====
-L7: export async function GET(request: Request) {
+src/app/api/entities/[entityId]/reactivate/route.ts
+  L51: export async function POST
 
-===== me\subscriptions\route.ts =====
-L6: export async function GET(request: Request) {
+src/app/api/entities/[entityId]/route.ts
+  L52: export async function GET
+  L114: export async function PATCH
 
-===== payments\[paymentId]\route.ts =====
-L5: export async function GET(
+src/app/api/entities/[entityId]/subscriptions/[subscriptionId]/cancel/route.ts
+  L52: export async function POST
 
-===== search\clubs\route.ts =====
-L5: export async function GET(request: Request) {
+src/app/api/entities/[entityId]/subscriptions/[subscriptionId]/checkout/route.ts
+  L53: export async function POST
 
-===== uploadthing\route.ts =====
-L6: export const runtime = "nodejs";
-L8: export const { GET, POST } = createRouteHandler({
+src/app/api/entities/[entityId]/suspend/route.ts
+  L53: export async function POST
 
-===== webhooks\stripe\route.ts =====
-L136: export async function POST(request: Request) {
+src/app/api/entities/route.ts
+  L54: export async function GET
+  L117: export async function POST
 
+src/app/api/feed/route.ts
+  L52: export async function GET
+
+src/app/api/me/applications/route.ts
+  L49: export async function GET
+
+src/app/api/me/memberships/route.ts
+  L51: export async function GET
+
+src/app/api/me/notifications/route.ts
+  L51: export async function GET
+  L74: export async function PATCH
+
+src/app/api/me/payments/route.ts
+  L53: export async function GET
+
+src/app/api/me/subscriptions/route.ts
+  L51: export async function GET
+
+src/app/api/payments/[paymentId]/receipt/route.ts
+  L55: export async function GET
+
+src/app/api/payments/[paymentId]/route.ts
+  L50: export async function GET
+
+src/app/api/search/entities/route.ts
+  L51: export async function GET
+
+src/app/api/uploadthing/route.ts
+  L53: export const { GET, POST }
+
+src/app/api/webhooks/stripe/route.ts
+  L164: export async function POST

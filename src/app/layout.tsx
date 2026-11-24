@@ -42,6 +42,8 @@
  * ==============================================================================
  */
 
+// Refactorización Parte 11: metadatos inclusivos para entidades; se conserva la identidad Klan.
+
 import { Footer } from "@/components/ui";
 import MemberHeader from "@/components/member-header";
 import "@uploadthing/react/styles.css";
@@ -51,11 +53,11 @@ import "./globals.css";
 export const metadata: Metadata = {
     title: { default: "Klan", template: "%s | Klan" },
     icons: { icon: "/brand/klan-icon.png", apple: "/brand/klan-icon.png" },
-    description: "Klan: clubes, membresías, reservas y pagos en un solo lugar",
+    description: "Klan: entidades, membresías, reservas y pagos en un solo lugar",
     openGraph: {
         title: "Klan",
         siteName: "Klan",
-        description: "Klan: clubes, membresías, reservas y pagos en un solo lugar",
+        description: "Klan: entidades, membresías, reservas y pagos en un solo lugar",
         locale: "es_EC",
         type: "website",
     },

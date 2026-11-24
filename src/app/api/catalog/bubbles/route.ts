@@ -42,11 +42,13 @@
  * ==============================================================================
  */
 
+// Refactorización Parte 11: el catálogo consulta la tabla Entity y devuelve la colección entities.
+
 import { prisma } from "@/lib/prisma";
 export const dynamic = "force-dynamic";
-/** Elige hasta siete clubes activos de forma aleatoria para las burbujas de la portada. */
+/** Elige hasta siete entidades activas de forma aleatoria para las burbujas de la portada. */
 export async function GET() {
-  const clubs = await prisma.$queryRaw<{id:string;name:string;logoUrl:string|null}[]>
-    `SELECT id, name, "logoUrl" FROM "Club" WHERE status = 'ACTIVE' ORDER BY random() LIMIT 7`;
-  return Response.json({clubs},{headers:{"Cache-Control":"no-store"}});
+  const entities = await prisma.$queryRaw<{id:string;name:string;logoUrl:string|null}[]>
+    `SELECT id, name, "logoUrl" FROM "Entity" WHERE status = 'ACTIVE' ORDER BY random() LIMIT 7`;
+  return Response.json({entities},{headers:{"Cache-Control":"no-store"}});
 }

@@ -1,0 +1,17 @@
+{
+  "result": "PASS",
+  "httpRequests": 29,
+  "checks": [
+    "rutas públicas y marca",
+    "contratos Entity",
+    "aislamiento entre entidades",
+    "HTTP 400/401/403",
+    "diagnóstico 404",
+    "creación y rol ENTITY_ADMIN",
+    "notificaciones sin colisión",
+    "redirección privada",
+    "webhook firmado con metadatos previos",
+    "idempotencia",
+    "pase de un día sin gracia"
+  ]
+}

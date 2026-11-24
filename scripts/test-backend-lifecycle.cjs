@@ -79,11 +79,11 @@ test("confirmed one-time checkout uses the contracted day count",async()=>{
     $queryRaw:async()=>[],
     stripeWebhookEvent:{findUnique:async()=>null,upsert:async()=>{processed=true;}},
     payment:{findUnique:async()=>({id:"p",amount:10,subscriptionId:"s",stripeCheckoutSessionId:"cs",obligationId:"o",subscription:{
-      billingMode:"ONE_TIME",durationValueSnapshot:3,plan:{durationValue:99},clubMembershipId:"m",clubMembership:{status:"SUSPENDED",role:"MEMBER"}
+      billingMode:"ONE_TIME",durationValueSnapshot:3,plan:{durationValue:99},entityMembershipId:"m",entityMembership:{status:"SUSPENDED",role:"MEMBER"}
     }}),updateMany:async()=>({count:1})},
     paymentObligation:{update:async()=>{settled=true;}},
     subscription:{updateMany:async q=>{activation=q.data;return {count:1};}},
-    membershipEvent:{create:async()=>{}},clubMembership:{update:async()=>{}}
+    membershipEvent:{create:async()=>{}},entityMembership:{update:async()=>{}}
   };
   const session={id:"cs",currency:"usd",amount_total:1000,mode:"payment",payment_status:"paid",metadata:{paymentId:"p",subscriptionId:"s"}};
   const response=await webhook({id:"evt",created:paidAt,type:"checkout.session.completed",data:{object:session}},tx);
@@ -97,9 +97,9 @@ test("expired pass is FINISHED and another valid access protects the membership"
   const exports={};
   let passStatus,memberWhere,events=0;
   const tx={subscription:{updateMany:async q=>{passStatus=q.data.status;return {count:1};}},
-    clubMembership:{updateMany:async q=>{memberWhere=q.where;return {count:0};}},
+    entityMembership:{updateMany:async q=>{memberWhere=q.where;return {count:0};}},
     membershipEvent:{create:async()=>{events++;}}};
-  const prisma={$transaction:fn=>fn(tx),subscription:{findMany:async q=>q.where.billingMode==="ONE_TIME"?[{id:"pass",clubMembershipId:"member",expiresAt:new Date(0)}]:[]}};
+  const prisma={$transaction:fn=>fn(tx),subscription:{findMany:async q=>q.where.billingMode==="ONE_TIME"?[{id:"pass",entityMembershipId:"member",expiresAt:new Date(0)}]:[]}};
   const code=ts.transpileModule(fs.readFileSync("src/app/api/cron/expired-plans/route.ts","utf8"),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020}}).outputText;
   vm.runInNewContext(code,{exports,console,process:{env:{CRON_SECRET:"fixture"}},require:k=>({"@/lib/document-cleanup":{retryDocumentCleanup:async()=>({removed:0,pending:0})},"@/lib/prisma":{prisma},"@/lib/stripe":{stripe:{}},"next/server":{NextResponse:Response}})[k]});
   const r=await exports.POST(new Request("http://localhost/cron",{method:"POST",headers:{authorization:"Bearer fixture"}}));
@@ -118,8 +118,8 @@ test("recupera una factura en gracia sin duplicar deuda ni retroceder el períod
   const end = start + 31 * 86400;
   const subscription = {
     id: "sub_local", status: "ACTIVE", startedAt: new Date(time * 1000),
-    expiresAt: new Date(start * 1000), clubMembershipId: "member",
-    clubMembership: { userId: "user", clubId: "club", status: "ACTIVE" },
+    expiresAt: new Date(start * 1000), entityMembershipId: "member",
+    entityMembership: { userId: "user", entityId: "entity", status: "ACTIVE" },
     gracePeriodEndsAt: null,
   };
   const remote = { id: "sub_stripe", status: "active", start_date: time,
@@ -144,8 +144,8 @@ test("recupera una factura en gracia sin duplicar deuda ni retroceder el períod
         return { count: 1 };
       },
     },
-    club: { findUnique: async () => ({ status: "ACTIVE" }) },
-    clubMembership: { update: async () => ({}) },
+    entity: { findUnique: async () => ({ status: "ACTIVE" }) },
+    entityMembership: { update: async () => ({}) },
     payment: {
       findFirst: async () => payment,
       create: async ({ data }) => { assert.equal(payment, undefined); payment = { ...data, id: "p" }; },

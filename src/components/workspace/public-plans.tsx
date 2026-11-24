@@ -49,16 +49,16 @@ import {PlanCard} from "./plan-card";
 import {Action,Empty,href,type Row} from "./common";
 
 /** Muestra dos planes por página y ofrece el catálogo completo en un diálogo cuando hay más de dos. */
-export function PublicPlans({club,plans}:{club:string;plans:Row[]}){
+export function PublicPlans({entity,plans}:{entity:string;plans:Row[]}){
   const [page,setPage]=useState(0);
   const all=useRef<HTMLDialogElement>(null);
   const router=useRouter();
   const last=Math.max(0,Math.ceil(plans.length/2)-1);
-  // Reajusta la página visible si el catálogo cambia mientras se consulta el club.
+  // Reajusta la página visible si el catálogo cambia mientras se consulta la entidad.
   const current=Math.min(page,last);
   function card(plan:Row){
     return <PlanCard key={plan.id} plan={plan} showRequirements>
-      <Action url={`/api/clubs/${club}/membership-applications`} body={{planId:plan.id}} onDone={()=>{
+      <Action url={`/api/entities/${entity}/membership-applications`} body={{planId:plan.id}} onDone={()=>{
         all.current?.close();
         router.push(href("applications"));
       }}>Solicitar ingreso</Action>

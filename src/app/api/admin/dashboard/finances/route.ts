@@ -191,7 +191,7 @@ export async function GET(request: Request) {
     const [
       paidPayments,
       historicalPayments,
-      clubs,
+      entities,
       settlements,
     ] = await prisma.$transaction([
       // Pagos confirmados en el período
@@ -206,7 +206,7 @@ export async function GET(request: Request) {
         },
         select: {
           id: true,
-          clubId: true,
+          entityId: true,
           amount: true,
           paidAt: true,
         },
@@ -224,14 +224,14 @@ export async function GET(request: Request) {
         },
         select: {
           id: true,
-          clubId: true,
+          entityId: true,
           amount: true,
           paidAt: true,
         },
       }),
 
-      // Todos los clubes
-      prisma.club.findMany({
+      // Todas las entidades
+      prisma.entity.findMany({
         select: {
           id: true,
           name: true,
@@ -244,14 +244,14 @@ export async function GET(request: Request) {
       }),
 
       // Liquidaciones del período seleccionado
-      prisma.clubSettlement.findMany({
+      prisma.entitySettlement.findMany({
         where: {
           year,
           month,
         },
         select: {
           id: true,
-          clubId: true,
+          entityId: true,
           grossAmount: true,
           stripeFee: true,
           transferFee: true,
@@ -261,7 +261,7 @@ export async function GET(request: Request) {
           status: true,
           paidAt: true,
           paymentReference: true,
-          club: {
+          entity: {
             select: {
               id: true,
               name: true,
@@ -277,7 +277,7 @@ export async function GET(request: Request) {
     let transferFees = ZERO;
     let platformFees = ZERO;
     let totalFees = ZERO;
-    let estimatedClubNet = ZERO;
+    let estimatedEntityNet = ZERO;
 
     for (const payment of paidPayments) {
       const fees = calculateFees(payment.amount);
@@ -302,55 +302,55 @@ export async function GET(request: Request) {
         fees.totalFees
       );
 
-      estimatedClubNet = estimatedClubNet.plus(
+      estimatedEntityNet = estimatedEntityNet.plus(
         fees.netAmount
       );
     }
 
-    // 6. Estadísticas por club
-    const financesByClub = clubs.map((club) => {
-      const clubPayments = paidPayments.filter(
-        (payment) => payment.clubId === club.id
+    // 6. Estadísticas por entidad
+    const financesByEntity = entities.map((entity) => {
+      const entityPayments = paidPayments.filter(
+        (payment) => payment.entityId === entity.id
       );
 
-      const clubGross = sumMoney(
-        clubPayments.map(
+      const entityGross = sumMoney(
+        entityPayments.map(
           (payment) => payment.amount
         )
       );
 
-      const clubFeeResults = clubPayments.map(
+      const entityFeeResults = entityPayments.map(
         (payment) => calculateFees(payment.amount)
       );
 
-      const clubPlatformFees = sumMoney(
-        clubFeeResults.map(
+      const entityPlatformFees = sumMoney(
+        entityFeeResults.map(
           (fees) => fees.platformFee
         )
       );
 
-      const clubTotalFees = sumMoney(
-        clubFeeResults.map(
+      const entityTotalFees = sumMoney(
+        entityFeeResults.map(
           (fees) => fees.totalFees
         )
       );
 
-      const clubNet = sumMoney(
-        clubFeeResults.map(
+      const entityNet = sumMoney(
+        entityFeeResults.map(
           (fees) => fees.netAmount
         )
       );
 
       return {
-        clubId: club.id,
-        clubName: club.name,
-        clubSlug: club.slug,
-        clubStatus: club.status,
-        paidPayments: clubPayments.length,
-        grossRevenue: money(clubGross),
-        platformFees: money(clubPlatformFees),
-        totalFees: money(clubTotalFees),
-        estimatedClubNet: money(clubNet),
+        entityId: entity.id,
+        entityName: entity.name,
+        entitySlug: entity.slug,
+        entityStatus: entity.status,
+        paidPayments: entityPayments.length,
+        grossRevenue: money(entityGross),
+        platformFees: money(entityPlatformFees),
+        totalFees: money(entityTotalFees),
+        estimatedEntityNet: money(entityNet),
       };
     }).sort(
       (a, b) =>
@@ -420,7 +420,7 @@ export async function GET(request: Request) {
         grossRevenue: money(monthGross),
         platformFees: money(monthPlatformFees),
         totalFees: money(monthTotalFees),
-        estimatedClubNet: money(monthNet),
+        estimatedEntityNet: money(monthNet),
       });
     }
 
@@ -480,8 +480,8 @@ export async function GET(request: Request) {
     const settlementRecords = settlements.map(
       (settlement) => ({
         id: settlement.id,
-        clubId: settlement.clubId,
-        clubName: settlement.club.name,
+        entityId: settlement.entityId,
+        entityName: settlement.entity.name,
         status: settlement.status,
         grossAmount: money(settlement.grossAmount),
         stripeFee: money(settlement.stripeFee),
@@ -529,10 +529,10 @@ export async function GET(request: Request) {
           total: money(totalFees),
         },
 
-        estimatedClubNet: money(estimatedClubNet),
+        estimatedEntityNet: money(estimatedEntityNet),
       },
 
-      financesByClub,
+      financesByEntity,
       monthlyRevenue,
 
       settlements: {

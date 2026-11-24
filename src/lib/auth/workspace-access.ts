@@ -42,22 +42,24 @@
  * ==============================================================================
  */
 
+// Refactorización Parte 11: navegación privada por entidad y alternativa pública en /entity/[entityId].
+
 import { prisma } from "@/lib/prisma";
 
 type Query = Record<string,string|string[]|undefined>;
 type Actor = {id:string;globalRole:string} | null;
 function first(value:Query[string]) { return Array.isArray(value) ? value[0] : value; }
 
-/** Decide el destino antes de montar Workspace. Solo las vistas del club pueden usar su ficha pública como alternativa. */
+/** Decide el destino antes de montar Workspace. Solo las vistas de la entidad pueden usar su ficha pública como alternativa. */
 export async function workspaceRedirect(query:Query, user:Actor):Promise<string|null> {
   const view=first(query.view);
-  const club=first(query.club);
-  const privateClub=view==="club" || view==="facility";
-  const publicPath=club ? "/explore/"+encodeURIComponent(club) : null;
-  if (!user) return (privateClub || view==="publicClub") && publicPath ? publicPath : "/login";
-  if (!privateClub || !club || user.globalRole==="SUPER_ADMIN") return null;
-  const membership=await prisma.clubMembership.findFirst({
-    where:{clubId:club,userId:user.id,status:"ACTIVE",club:{status:"ACTIVE"}},
+  const entity=first(query.entity);
+  const privateEntity=view==="entity" || view==="facility";
+  const publicPath=entity ? "/entity/"+encodeURIComponent(entity) : null;
+  if (!user) return (privateEntity || view==="publicEntity") && publicPath ? publicPath : "/login";
+  if (!privateEntity || !entity || user.globalRole==="SUPER_ADMIN") return null;
+  const membership=await prisma.entityMembership.findFirst({
+    where:{entityId:entity,userId:user.id,status:"ACTIVE",entity:{status:"ACTIVE"}},
     select:{id:true}
   });
   return membership ? null : publicPath;

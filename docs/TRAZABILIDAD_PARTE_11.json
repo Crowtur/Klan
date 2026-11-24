@@ -1,0 +1,1659 @@
+{
+  "base": {
+    "archivo": "Klan_Parte_10.4.zip",
+    "bytes": 982633,
+    "sha256": "6f88a19ce8a2e163e99fcf7d016d5ed60482ab50b87c833bb2edffc5a001337c"
+  },
+  "fecha": "2026-11-24",
+  "resumen": {
+    "archivos_originales": 187,
+    "archivos_renombrados": 51,
+    "archivos_con_cambios": 110,
+    "encabezados_identicos": 146,
+    "migraciones_historicas_y_lock_identicos": 26
+  },
+  "archivos": [
+    {
+      "original": "README.md",
+      "final": "README.md",
+      "sha256_original": "fd62b878f168dff824c4da0d70c8b6caea0ca098a6feac54e50b9b1bab32c00b",
+      "sha256_final": "5be9147ea86076c6fe9a36871a05e75280378b8d242678f167bb1118f06a37f4",
+      "renombrado": false,
+      "contenido_modificado": true
+    },
+    {
+      "original": "eslint.config.mjs",
+      "final": "eslint.config.mjs",
+      "sha256_original": "e75150df84a9b7d4d65a71f6132826ce76879a85896e3d07dcdd47a9edcf72a0",
+      "sha256_final": "e75150df84a9b7d4d65a71f6132826ce76879a85896e3d07dcdd47a9edcf72a0",
+      "renombrado": false,
+      "contenido_modificado": false,
+      "encabezado_institucional_identico": true
+    },
+    {
+      "original": "estructura-api.txt",
+      "final": "estructura-api.txt",
+      "sha256_original": "bb04b80317261569835be8b6a92f53f74bf7b5d69330a39494c48e4c15ec3341",
+      "sha256_final": "fa02ceac3fb015ecdada92c4593bf712d7ff0bd1f6b4584c1949ca0faa74a9bd",
+      "renombrado": false,
+      "contenido_modificado": true
+    },
+    {
+      "original": "exportaciones-api.txt",
+      "final": "exportaciones-api.txt",
+      "sha256_original": "f5a6439b1fabbf71f7b8726e55e862359f783e6abfe8bba91cf6131480b33396",
+      "sha256_final": "44eaf279c83cf286bf93876f0b3b6111b303b65c52fcd2404adcf153acd57beb",
+      "renombrado": false,
+      "contenido_modificado": true
+    },
+    {
+      "original": "next-env.d.ts",
+      "final": "next-env.d.ts",
+      "sha256_original": "1862ac4bbbc5192d4bf562161df66ea547ed3e67173100656ab606ae9797db2b",
+      "sha256_final": "1862ac4bbbc5192d4bf562161df66ea547ed3e67173100656ab606ae9797db2b",
+      "renombrado": false,
+      "contenido_modificado": false
+    },
+    {
+      "original": "next.config.ts",
+      "final": "next.config.ts",
+      "sha256_original": "3ba47c0ca5bb4f2deab1eceea15716f3d6f9de43c0b5d7d711de52744d3d43b4",
+      "sha256_final": "3ba47c0ca5bb4f2deab1eceea15716f3d6f9de43c0b5d7d711de52744d3d43b4",
+      "renombrado": false,
+      "contenido_modificado": false,
+      "encabezado_institucional_identico": true
+    },
+    {
+      "original": "package-lock.json",
+      "final": "package-lock.json",
+      "sha256_original": "84ee74fe84169f99d8a66195a344ab308144d4d0f79878efe70397cb6e4df6f3",
+      "sha256_final": "1cdc5171fc9966242d75227fee3e020391659bd6f8210b2d5000a00326e073a7",
+      "renombrado": false,
+      "contenido_modificado": true
+    },
+    {
+      "original": "package.json",
+      "final": "package.json",
+      "sha256_original": "63d3ae12a45156695583387f5a19d87c96fb4b3c1dc36929adeaf481275348f0",
+      "sha256_final": "353dd538f88beb2cbf8cccb92b3e24f251a9679057816024524b49ad1e19808e",
+      "renombrado": false,
+      "contenido_modificado": true
+    },
+    {
+      "original": "postcss.config.mjs",
+      "final": "postcss.config.mjs",
+      "sha256_original": "eac5ea09fe9f0b90d38559c1677bd583ec10c41d82e09450902a2d50427ad22d",
+      "sha256_final": "eac5ea09fe9f0b90d38559c1677bd583ec10c41d82e09450902a2d50427ad22d",
+      "renombrado": false,
+      "contenido_modificado": false,
+      "encabezado_institucional_identico": true
+    },
+    {
+      "original": "prisma/migrations/20260926012535_init/migration.sql",
+      "final": "prisma/migrations/20260926012535_init/migration.sql",
+      "sha256_original": "2267c70a1a0574e60cfbae09cd516922843405376198f4d6661c8b3bdf8a9d6c",
+      "sha256_final": "2267c70a1a0574e60cfbae09cd516922843405376198f4d6661c8b3bdf8a9d6c",
+      "renombrado": false,
+      "contenido_modificado": false
+    },
+    {
+      "original": "prisma/migrations/20260926164643_add_clubs_and_memberships/migration.sql",
+      "final": "prisma/migrations/20260926164643_add_clubs_and_memberships/migration.sql",
+      "sha256_original": "d87acdadd0052667b08e7d21c9692c70902b94833ad2473ee620ada46fd1dbed",
+      "sha256_final": "d87acdadd0052667b08e7d21c9692c70902b94833ad2473ee620ada46fd1dbed",
+      "renombrado": false,
+      "contenido_modificado": false
+    },
+    {
+      "original": "prisma/migrations/20260927152007_add_membership_plans/migration.sql",
+      "final": "prisma/migrations/20260927152007_add_membership_plans/migration.sql",
+      "sha256_original": "0a6f8514cad4f9c2b71d02741a1102d454a6b181096615c89170cd7020808864",
+      "sha256_final": "0a6f8514cad4f9c2b71d02741a1102d454a6b181096615c89170cd7020808864",
+      "renombrado": false,
+      "contenido_modificado": false
+    },
+    {
+      "original": "prisma/migrations/20260927204818_simplify_membership_plan_benefits/migration.sql",
+      "final": "prisma/migrations/20260927204818_simplify_membership_plan_benefits/migration.sql",
+      "sha256_original": "63886c7189df32df63031cb90dd3476ffe10c53ac70e7faac3817955ffd9b761",
+      "sha256_final": "63886c7189df32df63031cb90dd3476ffe10c53ac70e7faac3817955ffd9b761",
+      "renombrado": false,
+      "contenido_modificado": false
+    },
+    {
+      "original": "prisma/migrations/20260928183658_add_stripe_connect_account/migration.sql",
+      "final": "prisma/migrations/20260928183658_add_stripe_connect_account/migration.sql",
+      "sha256_original": "936f8e8059c11e8adbd9f039512f342484771b16f11aabff94a08287a918b2aa",
+      "sha256_final": "936f8e8059c11e8adbd9f039512f342484771b16f11aabff94a08287a918b2aa",
+      "renombrado": false,
+      "contenido_modificado": false
+    },
+    {
+      "original": "prisma/migrations/20260930031645_remove_stripe_connect/migration.sql",
+      "final": "prisma/migrations/20260930031645_remove_stripe_connect/migration.sql",
+      "sha256_original": "30bcbfa6ed93099597b66c3a72774411ba685880449d1a51e2b5f5bdffa8db18",
+      "sha256_final": "30bcbfa6ed93099597b66c3a72774411ba685880449d1a51e2b5f5bdffa8db18",
+      "renombrado": false,
+      "contenido_modificado": false
+    },
+    {
+      "original": "prisma/migrations/20260930035450_add_unified_stripe_payments_and_settlements/migration.sql",
+      "final": "prisma/migrations/20260930035450_add_unified_stripe_payments_and_settlements/migration.sql",
+      "sha256_original": "b8343cb6bcfb3d265abd494d1f3c2efb7531b2e029e443a5044531bb51a9964a",
+      "sha256_final": "b8343cb6bcfb3d265abd494d1f3c2efb7531b2e029e443a5044531bb51a9964a",
+      "renombrado": false,
+      "contenido_modificado": false
+    },
+    {
+      "original": "prisma/migrations/20260930185008_add_stripe_subscription_id/migration.sql",
+      "final": "prisma/migrations/20260930185008_add_stripe_subscription_id/migration.sql",
+      "sha256_original": "e72ce3ba3a019d76c82dfdcd645308ad791a893e796df875b43c904cb9c2439e",
+      "sha256_final": "e72ce3ba3a019d76c82dfdcd645308ad791a893e796df875b43c904cb9c2439e",
+      "renombrado": false,
+      "contenido_modificado": false
+    },
+    {
+      "original": "prisma/migrations/20261001002810_add_stripe_invoice_id/migration.sql",
+      "final": "prisma/migrations/20261001002810_add_stripe_invoice_id/migration.sql",
+      "sha256_original": "936cba3ca0f4a12b3fe9c74c0565bb0b935d22b0182a1b890992645754e840df",
+      "sha256_final": "936cba3ca0f4a12b3fe9c74c0565bb0b935d22b0182a1b890992645754e840df",
+      "renombrado": false,
+      "contenido_modificado": false
+    },
+    {
+      "original": "prisma/migrations/20261007212504_add_facilities/migration.sql",
+      "final": "prisma/migrations/20261007212504_add_facilities/migration.sql",
+      "sha256_original": "71e251cd9e7754e597a152a1d8a7225d516b93e28e6958d6ff50a15e8b8f4faa",
+      "sha256_final": "71e251cd9e7754e597a152a1d8a7225d516b93e28e6958d6ff50a15e8b8f4faa",
+      "renombrado": false,
+      "contenido_modificado": false
+    },
+    {
+      "original": "prisma/migrations/20261008023438_add_facility_schedules/migration.sql",
+      "final": "prisma/migrations/20261008023438_add_facility_schedules/migration.sql",
+      "sha256_original": "c9c984bacb464401c5385898464a0baef98ab0342b3f1a6700acfca974fd90f2",
+      "sha256_final": "c9c984bacb464401c5385898464a0baef98ab0342b3f1a6700acfca974fd90f2",
+      "renombrado": false,
+      "contenido_modificado": false
+    },
+    {
+      "original": "prisma/migrations/20261008130026_update_facility_schedules_multiple_intervals/migration.sql",
+      "final": "prisma/migrations/20261008130026_update_facility_schedules_multiple_intervals/migration.sql",
+      "sha256_original": "c606db7cb5c953f2c5dd88ad58d1fe1286fd9e8cc2c82791ee2c3ecad78e7f65",
+      "sha256_final": "c606db7cb5c953f2c5dd88ad58d1fe1286fd9e8cc2c82791ee2c3ecad78e7f65",
+      "renombrado": false,
+      "contenido_modificado": false
+    },
+    {
+      "original": "prisma/migrations/20261008131434_add_facility_plan_access/migration.sql",
+      "final": "prisma/migrations/20261008131434_add_facility_plan_access/migration.sql",
+      "sha256_original": "25d3501dd1c1b1131e9677ebbeaa81047b201214017f8f5c3599b69e7d7f3a79",
+      "sha256_final": "25d3501dd1c1b1131e9677ebbeaa81047b201214017f8f5c3599b69e7d7f3a79",
+      "renombrado": false,
+      "contenido_modificado": false
+    },
+    {
+      "original": "prisma/migrations/20261010161800_add_subscription_grace_period/migration.sql",
+      "final": "prisma/migrations/20261010161800_add_subscription_grace_period/migration.sql",
+      "sha256_original": "4fe477373076bc0a773fbb2e2b089c723690484e39fb33c38d30deb329b96d33",
+      "sha256_final": "4fe477373076bc0a773fbb2e2b089c723690484e39fb33c38d30deb329b96d33",
+      "renombrado": false,
+      "contenido_modificado": false
+    },
+    {
+      "original": "prisma/migrations/20261014165822_add_membership_removal/migration.sql",
+      "final": "prisma/migrations/20261014165822_add_membership_removal/migration.sql",
+      "sha256_original": "07b1b589923c9935a3297c0e11273d9b985217e2401c5b3ec920504340a1b996",
+      "sha256_final": "07b1b589923c9935a3297c0e11273d9b985217e2401c5b3ec920504340a1b996",
+      "renombrado": false,
+      "contenido_modificado": false
+    },
+    {
+      "original": "prisma/migrations/20261014174550_add_reservations/migration.sql",
+      "final": "prisma/migrations/20261014174550_add_reservations/migration.sql",
+      "sha256_original": "ad8d4b8b783e83b59caa234c63e6d65b761fd4939d499d368506d008c839784a",
+      "sha256_final": "ad8d4b8b783e83b59caa234c63e6d65b761fd4939d499d368506d008c839784a",
+      "renombrado": false,
+      "contenido_modificado": false
+    },
+    {
+      "original": "prisma/migrations/20261018214658_prevent_reservation_overlap/migration.sql",
+      "final": "prisma/migrations/20261018214658_prevent_reservation_overlap/migration.sql",
+      "sha256_original": "e0b1a6f057892110257277082a4858ae409c0a0ef175aebc02c47753ec1f99ae",
+      "sha256_final": "e0b1a6f057892110257277082a4858ae409c0a0ef175aebc02c47753ec1f99ae",
+      "renombrado": false,
+      "contenido_modificado": false
+    },
+    {
+      "original": "prisma/migrations/20261024211437_add_uploadthing_file_metadata/migration.sql",
+      "final": "prisma/migrations/20261024211437_add_uploadthing_file_metadata/migration.sql",
+      "sha256_original": "ed7e5472cbaaaec11014c4db2609660a7b531f5be66861c855df75e44354b08f",
+      "sha256_final": "ed7e5472cbaaaec11014c4db2609660a7b531f5be66861c855df75e44354b08f",
+      "renombrado": false,
+      "contenido_modificado": false
+    },
+    {
+      "original": "prisma/migrations/20261025192022_add_posts/migration.sql",
+      "final": "prisma/migrations/20261025192022_add_posts/migration.sql",
+      "sha256_original": "7af527d931e8184ce40fba682ed007f9cbee9e5babfcbcbcb27437d5219ce1fd",
+      "sha256_final": "7af527d931e8184ce40fba682ed007f9cbee9e5babfcbcbcb27437d5219ce1fd",
+      "renombrado": false,
+      "contenido_modificado": false
+    },
+    {
+      "original": "prisma/migrations/20261028165427_remove_unused_benefit_models/migration.sql",
+      "final": "prisma/migrations/20261028165427_remove_unused_benefit_models/migration.sql",
+      "sha256_original": "95ad382ae7b3b7220bc918868cc3c861de43c756839dd675eb4db58bf27d804c",
+      "sha256_final": "95ad382ae7b3b7220bc918868cc3c861de43c756839dd675eb4db58bf27d804c",
+      "renombrado": false,
+      "contenido_modificado": false
+    },
+    {
+      "original": "prisma/migrations/20261103025355_add_membership_events_payment_obligations_and_notifications/migration.sql",
+      "final": "prisma/migrations/20261103025355_add_membership_events_payment_obligations_and_notifications/migration.sql",
+      "sha256_original": "f80755d5c8f1f57df22c5e8d0c5ada8475fe077a8d6ddd38380657686063f47d",
+      "sha256_final": "f80755d5c8f1f57df22c5e8d0c5ada8475fe077a8d6ddd38380657686063f47d",
+      "renombrado": false,
+      "contenido_modificado": false
+    },
+    {
+      "original": "prisma/migrations/20261104000100_add_settlement_receipts/migration.sql",
+      "final": "prisma/migrations/20261104000100_add_settlement_receipts/migration.sql",
+      "sha256_original": "a04a06160bf171c2201728011605a9ea333378cf27fb1c7dfb9af98058563df7",
+      "sha256_final": "a04a06160bf171c2201728011605a9ea333378cf27fb1c7dfb9af98058563df7",
+      "renombrado": false,
+      "contenido_modificado": false
+    },
+    {
+      "original": "prisma/migrations/20261105000100_queue_document_withdrawals/migration.sql",
+      "final": "prisma/migrations/20261105000100_queue_document_withdrawals/migration.sql",
+      "sha256_original": "b48a232048c52a3ebab34788f4d656327e0ffcc3b3a6f361a7e60b086f83ae35",
+      "sha256_final": "b48a232048c52a3ebab34788f4d656327e0ffcc3b3a6f361a7e60b086f83ae35",
+      "renombrado": false,
+      "contenido_modificado": false
+    },
+    {
+      "original": "prisma/migrations/20261107000100_club_profiles/migration.sql",
+      "final": "prisma/migrations/20261107000100_club_profiles/migration.sql",
+      "sha256_original": "e2db661bd57d86183a67b8cb6c9ec1625eb26e88c67c61e2b9012c63b26fb060",
+      "sha256_final": "e2db661bd57d86183a67b8cb6c9ec1625eb26e88c67c61e2b9012c63b26fb060",
+      "renombrado": false,
+      "contenido_modificado": false
+    },
+    {
+      "original": "prisma/migrations/20261108000100_subscription_suspension_date/migration.sql",
+      "final": "prisma/migrations/20261108000100_subscription_suspension_date/migration.sql",
+      "sha256_original": "d2a534c403b62ae874572fe98d05d4d6f0254a280a4d0e6add8df54562d527f4",
+      "sha256_final": "d2a534c403b62ae874572fe98d05d4d6f0254a280a4d0e6add8df54562d527f4",
+      "renombrado": false,
+      "contenido_modificado": false
+    },
+    {
+      "original": "prisma/migrations/migration_lock.toml",
+      "final": "prisma/migrations/migration_lock.toml",
+      "sha256_original": "693566b52c49db47a2b0901d12400aa3d710d13a49f4a2a154b80c0505ed737c",
+      "sha256_final": "693566b52c49db47a2b0901d12400aa3d710d13a49f4a2a154b80c0505ed737c",
+      "renombrado": false,
+      "contenido_modificado": false
+    },
+    {
+      "original": "prisma/schema.prisma",
+      "final": "prisma/schema.prisma",
+      "sha256_original": "0866fc78a56a1c423f58b1deecb1bcc0164aa663525af51b760cc348b95ba2b8",
+      "sha256_final": "9bd8c30b5550fddc4bdbc944e074a38665fe886fa0218f2ee1632aadaa211b3c",
+      "renombrado": false,
+      "contenido_modificado": true,
+      "encabezado_institucional_identico": true
+    },
+    {
+      "original": "prisma/seed.ts",
+      "final": "prisma/seed.ts",
+      "sha256_original": "7f980590914bfd4c9143a2bb9720bf311a48a7d18940e503d33ff60c0f5eea51",
+      "sha256_final": "7909bdca585aa4abd26fca1172e2b35e91490bf61673f5ec299273ac1af4da65",
+      "renombrado": false,
+      "contenido_modificado": true,
+      "encabezado_institucional_identico": true
+    },
+    {
+      "original": "public/brand/klan-icon.png",
+      "final": "public/brand/klan-icon.png",
+      "sha256_original": "17197dce72343a6909dda3f97e215fed9d7f033623d265480841a33fe1b78ea3",
+      "sha256_final": "17197dce72343a6909dda3f97e215fed9d7f033623d265480841a33fe1b78ea3",
+      "renombrado": false,
+      "contenido_modificado": false
+    },
+    {
+      "original": "public/file.svg",
+      "final": "public/file.svg",
+      "sha256_original": "2b67812c325c199a02536cdbeea0c593a72f707d323b72ee3e08dbab06753bd4",
+      "sha256_final": "2b67812c325c199a02536cdbeea0c593a72f707d323b72ee3e08dbab06753bd4",
+      "renombrado": false,
+      "contenido_modificado": false
+    },
+    {
+      "original": "public/globe.svg",
+      "final": "public/globe.svg",
+      "sha256_original": "b614b9bf183925957661ac851498fe1d8029fd43a62fbfed86f9e2624a57e7cf",
+      "sha256_final": "b614b9bf183925957661ac851498fe1d8029fd43a62fbfed86f9e2624a57e7cf",
+      "renombrado": false,
+      "contenido_modificado": false
+    },
+    {
+      "original": "public/next.svg",
+      "final": "public/next.svg",
+      "sha256_original": "55995dfad6ecb4945a1e856ddca03c5e16aa5bf13fd21b4df6a74ae79357bcfc",
+      "sha256_final": "55995dfad6ecb4945a1e856ddca03c5e16aa5bf13fd21b4df6a74ae79357bcfc",
+      "renombrado": false,
+      "contenido_modificado": false
+    },
+    {
+      "original": "public/vercel.svg",
+      "final": "public/vercel.svg",
+      "sha256_original": "f081337b2fee635b455b63275406a3e7f39d6a014e25ad90dab5a67e62a12ac4",
+      "sha256_final": "f081337b2fee635b455b63275406a3e7f39d6a014e25ad90dab5a67e62a12ac4",
+      "renombrado": false,
+      "contenido_modificado": false
+    },
+    {
+      "original": "public/window.svg",
+      "final": "public/window.svg",
+      "sha256_original": "644768c4aaeb4767bce293344eeb0c125fb804a94d801440424072202d85e3a1",
+      "sha256_final": "644768c4aaeb4767bce293344eeb0c125fb804a94d801440424072202d85e3a1",
+      "renombrado": false,
+      "contenido_modificado": false
+    },
+    {
+      "original": "scripts/test-backend-lifecycle.cjs",
+      "final": "scripts/test-backend-lifecycle.cjs",
+      "sha256_original": "851a0d4eccdaed9f9bc15918395826e9ab4752d45c5298124361faa0944d337f",
+      "sha256_final": "87caa3f132155b6059db700a250965c6e216706563a640a4f6eb8847e92c913b",
+      "renombrado": false,
+      "contenido_modificado": true,
+      "encabezado_institucional_identico": true
+    },
+    {
+      "original": "scripts/test-feedback-part2.cjs",
+      "final": "scripts/test-feedback-part2.cjs",
+      "sha256_original": "0ba858476b0c9a19037345492ae3eecfd29b319ffc99b8b8af9a4880f85cd821",
+      "sha256_final": "a296878d6d97ed31292233d92f687baa221a07bbb7adfd82bf38d67a7ac90cb0",
+      "renombrado": false,
+      "contenido_modificado": true,
+      "encabezado_institucional_identico": true
+    },
+    {
+      "original": "scripts/test-part-four.tsx",
+      "final": "scripts/test-part-four.tsx",
+      "sha256_original": "bc5a0cbaa72d7e59057d9085659847bfdb34b4abdb0fc592f72161f51b151c47",
+      "sha256_final": "59125194fb83ebb24d00a756997a9ce8302468ba5865781ae6275191a5527f6f",
+      "renombrado": false,
+      "contenido_modificado": true,
+      "encabezado_institucional_identico": true
+    },
+    {
+      "original": "scripts/test-plan-charts.tsx",
+      "final": "scripts/test-plan-charts.tsx",
+      "sha256_original": "ff39d3882e9fa3a5db7274015de071628406418897e2ff8fbd79a8f17663a161",
+      "sha256_final": "a1a968d0c837e8fce2282d8d0f62d6f24b7575aa153884606de6f95de5b58165",
+      "renombrado": false,
+      "contenido_modificado": true,
+      "encabezado_institucional_identico": true
+    },
+    {
+      "original": "scripts/test-reservation-concurrency.mjs",
+      "final": "scripts/test-reservation-concurrency.mjs",
+      "sha256_original": "bfe8a3d52dfad050ac3e3e7489b5bb8c02fde4169592aa157d4510e9ded3e49d",
+      "sha256_final": "76ee5e362e5f2a73472c75654f228d03d6a0b54ab36e5aa9613d8d003c9781e4",
+      "renombrado": false,
+      "contenido_modificado": true,
+      "encabezado_institucional_identico": true
+    },
+    {
+      "original": "scripts/test-reservation-v2.mjs",
+      "final": "scripts/test-reservation-v2.mjs",
+      "sha256_original": "76fa0c1650d243424474c57b7576138ed7c3e2a45ddfe355fb7701142c555311",
+      "sha256_final": "ef24739e8547aafd1635a40b78fe04fe55c50eb60a9d9cd69f74ff2aae85d9f3",
+      "renombrado": false,
+      "contenido_modificado": true,
+      "encabezado_institucional_identico": true
+    },
+    {
+      "original": "scripts/test-ui-contracts.cjs",
+      "final": "scripts/test-ui-contracts.cjs",
+      "sha256_original": "b7325e044bc9c81fcf50109b9f53da7b7b36de2a811ccdbd18330255d6cce0fc",
+      "sha256_final": "7b80dc88a805af7926102ec30a1510f83207edf42eb21055b594176c9af4c5df",
+      "renombrado": false,
+      "contenido_modificado": true,
+      "encabezado_institucional_identico": true
+    },
+    {
+      "original": "src/app/api/admin/dashboard/clubs/route.ts",
+      "final": "src/app/api/admin/dashboard/entities/route.ts",
+      "sha256_original": "454bea4dc870f6aecfa1efea39fc016d84ab0c0e49c913c685fc9fa6908d33e7",
+      "sha256_final": "f4d91d813166e8bbf4759f5a6401011d5c018ccfe54778a2b357525d2a72acf8",
+      "renombrado": true,
+      "contenido_modificado": true,
+      "encabezado_institucional_identico": true
+    },
+    {
+      "original": "src/app/api/admin/dashboard/finances/route.ts",
+      "final": "src/app/api/admin/dashboard/finances/route.ts",
+      "sha256_original": "00d9533b7902364d2fe89a8f3b8efb2e7c1784a2b2918a92d388c28fdb6d4790",
+      "sha256_final": "3d5d9ea4ef37df0ea0b0f4ba4e5971c322a6abc73684f572952962cfef2e499b",
+      "renombrado": false,
+      "contenido_modificado": true,
+      "encabezado_institucional_identico": true
+    },
+    {
+      "original": "src/app/api/admin/dashboard/overview/route.ts",
+      "final": "src/app/api/admin/dashboard/overview/route.ts",
+      "sha256_original": "a1cd64528de9986a2985a22d859c0350ca3928ae20dbe8437dc572b006c2979c",
+      "sha256_final": "886275734bd487bba0fd7619cf6f9fb7a841cb993d05d21829765c8df50ab84f",
+      "renombrado": false,
+      "contenido_modificado": true,
+      "encabezado_institucional_identico": true
+    },
+    {
+      "original": "src/app/api/admin/settlements/[settlementId]/route.ts",
+      "final": "src/app/api/admin/settlements/[settlementId]/route.ts",
+      "sha256_original": "921b3d1028e425f030c6755e30d7593c9e8027f21f95ca75c730bb9a4c2524f5",
+      "sha256_final": "ff725a799bc2b635c592913b863c4f2e9f4fd7352c60c465cc64ed9ee74e8c36",
+      "renombrado": false,
+      "contenido_modificado": true,
+      "encabezado_institucional_identico": true
+    },
+    {
+      "original": "src/app/api/admin/settlements/route.ts",
+      "final": "src/app/api/admin/settlements/route.ts",
+      "sha256_original": "7b41c428b465d4e24c4dfb7ab33f9082c7479789e3c9820f2c9b2ee1a6116559",
+      "sha256_final": "0cec82775c952f65237ea5b6c60ce706f7a5be88fbfe1c59216c0f9a15b9d5f1",
+      "renombrado": false,
+      "contenido_modificado": true,
+      "encabezado_institucional_identico": true
+    },
+    {
+      "original": "src/app/api/auth/login/route.ts",
+      "final": "src/app/api/auth/login/route.ts",
+      "sha256_original": "392ea3cd4263331e6fc083f6fb1ed56c55404bd58db87784dac092bc22ae6928",
+      "sha256_final": "392ea3cd4263331e6fc083f6fb1ed56c55404bd58db87784dac092bc22ae6928",
+      "renombrado": false,
+      "contenido_modificado": false,
+      "encabezado_institucional_identico": true
+    },
+    {
+      "original": "src/app/api/auth/logout/route.ts",
+      "final": "src/app/api/auth/logout/route.ts",
+      "sha256_original": "39587c8765e2f752fc8decc70b717ae3a611315cad9be2a2ceda66577286ce71",
+      "sha256_final": "39587c8765e2f752fc8decc70b717ae3a611315cad9be2a2ceda66577286ce71",
+      "renombrado": false,
+      "contenido_modificado": false,
+      "encabezado_institucional_identico": true
+    },
+    {
+      "original": "src/app/api/auth/me/route.ts",
+      "final": "src/app/api/auth/me/route.ts",
+      "sha256_original": "70c1aa6d42af51786e8843822e6dfff9512c5faec6bd3b7290af745090ba1632",
+      "sha256_final": "70c1aa6d42af51786e8843822e6dfff9512c5faec6bd3b7290af745090ba1632",
+      "renombrado": false,
+      "contenido_modificado": false,
+      "encabezado_institucional_identico": true
+    },
+    {
+      "original": "src/app/api/auth/register/route.ts",
+      "final": "src/app/api/auth/register/route.ts",
+      "sha256_original": "b93db1cf21de5df2f20bf5476779b02c13d71a81141519ace38a50f6bf746869",
+      "sha256_final": "b93db1cf21de5df2f20bf5476779b02c13d71a81141519ace38a50f6bf746869",
+      "renombrado": false,
+      "contenido_modificado": false,
+      "encabezado_institucional_identico": true
+    },
+    {
+      "original": "src/app/api/auth/session/route.ts",
+      "final": "src/app/api/auth/session/route.ts",
+      "sha256_original": "011b0de9751abb57879cb148afb3ba1808bb713cec66d6c9813e6ba521220eb9",
+      "sha256_final": "011b0de9751abb57879cb148afb3ba1808bb713cec66d6c9813e6ba521220eb9",
+      "renombrado": false,
+      "contenido_modificado": false,
+      "encabezado_institucional_identico": true
+    },
+    {
+      "original": "src/app/api/avatars/[key]/route.ts",
+      "final": "src/app/api/avatars/[key]/route.ts",
+      "sha256_original": "6c8e87d0420a1caf80439549d6d68c0cd5ee5e9f6aedb01c9736bfeb9c6e5d28",
+      "sha256_final": "6c8e87d0420a1caf80439549d6d68c0cd5ee5e9f6aedb01c9736bfeb9c6e5d28",
+      "renombrado": false,
+      "contenido_modificado": false,
+      "encabezado_institucional_identico": true
+    },
+    {
+      "original": "src/app/api/catalog/bubbles/route.ts",
+      "final": "src/app/api/catalog/bubbles/route.ts",
+      "sha256_original": "de43cc9a23c72833409174aa9437fd24ce494f2f2274994fa04afd1c50544e73",
+      "sha256_final": "6ec2c15a57525e210a3931877d74f309b7a27ab1aedbb8ce770a64d1a865cc43",
+      "renombrado": false,
+      "contenido_modificado": true,
+      "encabezado_institucional_identico": true
+    },
+    {
+      "original": "src/app/api/catalog/clubs/[clubId]/route.ts",
+      "final": "src/app/api/catalog/entities/[entityId]/route.ts",
+      "sha256_original": "1b74eb94527cdaf4987b66ba8efea1a571d1b142250cc043e4e334d1cdf551c2",
+      "sha256_final": "34b01bf3aacaa152bcb3f9cce4ae5b368d69d2ab9af286b5cde345e272e393e0",
+      "renombrado": true,
+      "contenido_modificado": true,
+      "encabezado_institucional_identico": true
+    },
+    {
+      "original": "src/app/api/clubs/[clubId]/bank/route.ts",
+      "final": "src/app/api/entities/[entityId]/bank/route.ts",
+      "sha256_original": "62f61dfe416a23bcf24b559eab716e7352b162ab77008d08243799c8d011bc72",
+      "sha256_final": "6efc2aa399f1da8b96f265941e8defabe573fcae8a247574fb20378d5004f8ea",
+      "renombrado": true,
+      "contenido_modificado": true,
+      "encabezado_institucional_identico": true
+    },
+    {
+      "original": "src/app/api/clubs/[clubId]/dashboard/activity/route.ts",
+      "final": "src/app/api/entities/[entityId]/dashboard/activity/route.ts",
+      "sha256_original": "166d4683bc58fbdbd2be6561abe6321bb240c728b7b20e19525b193a379fb50f",
+      "sha256_final": "381b82f2c50fa9bf6d62ee534d308931057e292b500be4e8c0c47473f3a28fe7",
+      "renombrado": true,
+      "contenido_modificado": true,
+      "encabezado_institucional_identico": true
+    },
+    {
+      "original": "src/app/api/clubs/[clubId]/dashboard/alerts/route.ts",
+      "final": "src/app/api/entities/[entityId]/dashboard/alerts/route.ts",
+      "sha256_original": "1af9d24e8203e93e9f1855f657a8a2dd6d55cada83ec0c8b684d438817d128c2",
+      "sha256_final": "d23b04d94cd88607f34bce1c025c7bcb5d2b5ceb31c783954ce9218c11ecf878",
+      "renombrado": true,
+      "contenido_modificado": true,
+      "encabezado_institucional_identico": true
+    },
+    {
+      "original": "src/app/api/clubs/[clubId]/dashboard/finances/route.ts",
+      "final": "src/app/api/entities/[entityId]/dashboard/finances/route.ts",
+      "sha256_original": "201957ba34ade55137cadc3ac4bc610c64015ed76c8b237017d55b0e6c10e06e",
+      "sha256_final": "ba905290542b87a867a21b2d706dc4553d4c00af58baa116b46439a2351abc31",
+      "renombrado": true,
+      "contenido_modificado": true,
+      "encabezado_institucional_identico": true
+    },
+    {
+      "original": "src/app/api/clubs/[clubId]/dashboard/members/route.ts",
+      "final": "src/app/api/entities/[entityId]/dashboard/members/route.ts",
+      "sha256_original": "e5bb6f635e363acfd933701744946140d0e6897b3f493d4b0a81613f313db3e0",
+      "sha256_final": "ebd0222d782b4cd90275f3833956f9ca5be25104dacc2ecb2a92ff33db36e752",
+      "renombrado": true,
+      "contenido_modificado": true,
+      "encabezado_institucional_identico": true
+    },
+    {
+      "original": "src/app/api/clubs/[clubId]/dashboard/overview/route.ts",
+      "final": "src/app/api/entities/[entityId]/dashboard/overview/route.ts",
+      "sha256_original": "57fb43bea74f45293e9904dee4a53583a3e3ab67c5e36faeacf5f0bb68aad010",
+      "sha256_final": "557a2f698024e7f3e98a3b16b20b86da78a21f8c0b80c5ceee2e3f8c1b43cba3",
+      "renombrado": true,
+      "contenido_modificado": true,
+      "encabezado_institucional_identico": true
+    },
+    {
+      "original": "src/app/api/clubs/[clubId]/dashboard/reservations/route.ts",
+      "final": "src/app/api/entities/[entityId]/dashboard/reservations/route.ts",
+      "sha256_original": "26c20aac16d71fee5eaeb1d1594929cd2c2514e7b1d2cc63db407b40f38e51f2",
+      "sha256_final": "4765d2464e2bd5ff011aff44527b4761497fa502c692ee2e4e2f1ffe26945e19",
+      "renombrado": true,
+      "contenido_modificado": true,
+      "encabezado_institucional_identico": true
+    },
+    {
+      "original": "src/app/api/clubs/[clubId]/dashboard/subscriptions/route.ts",
+      "final": "src/app/api/entities/[entityId]/dashboard/subscriptions/route.ts",
+      "sha256_original": "1dd7033229814e8c08d9695ac7fa36f1e0ace00e278232587dc753831f80635f",
+      "sha256_final": "14604c39037f51514bad6e44ef325c2c84ac80d66cd0e166a12918130aeab41b",
+      "renombrado": true,
+      "contenido_modificado": true,
+      "encabezado_institucional_identico": true
+    },
+    {
+      "original": "src/app/api/clubs/[clubId]/facilities/[facilityId]/availability/route.ts",
+      "final": "src/app/api/entities/[entityId]/facilities/[facilityId]/availability/route.ts",
+      "sha256_original": "fa41c7d8f706bfff6290a13aaf64550318639db6539f1a64c0fa357d8c60d1a6",
+      "sha256_final": "6a1030cdee00980d9f782fb50ff90362fab26ecf86d9d8e3df9abb8be35cbe75",
+      "renombrado": true,
+      "contenido_modificado": true,
+      "encabezado_institucional_identico": true
+    },
+    {
+      "original": "src/app/api/clubs/[clubId]/facilities/[facilityId]/plan-access/route.ts",
+      "final": "src/app/api/entities/[entityId]/facilities/[facilityId]/plan-access/route.ts",
+      "sha256_original": "e7d0ba1728d556410334a9f5331900ef9fab7b8a469f4682e2f960437c203dae",
+      "sha256_final": "2945a54f89f992c8a9b69a3b2d71d208265481389965a537d9a90808f3e3c4d2",
+      "renombrado": true,
+      "contenido_modificado": true,
+      "encabezado_institucional_identico": true
+    },
+    {
+      "original": "src/app/api/clubs/[clubId]/facilities/[facilityId]/reservations/[reservationId]/route.ts",
+      "final": "src/app/api/entities/[entityId]/facilities/[facilityId]/reservations/[reservationId]/route.ts",
+      "sha256_original": "f9ea99c6e6941d656ea8f8c4178f58bf7c37113322e661c873ba96e5f2e5f030",
+      "sha256_final": "e69e76659ef18b4e0bd240ad8bfe76ac1a54119cde77be0a80a43815c7c68336",
+      "renombrado": true,
+      "contenido_modificado": true,
+      "encabezado_institucional_identico": true
+    },
+    {
+      "original": "src/app/api/clubs/[clubId]/facilities/[facilityId]/reservations/route.ts",
+      "final": "src/app/api/entities/[entityId]/facilities/[facilityId]/reservations/route.ts",
+      "sha256_original": "904f58f8b2e45052612ce01aacab1a6919dd5baa0567ee7f1f9ec8a3d1be2941",
+      "sha256_final": "6e390a6bf44940084708b6f5e093e52846a92f1512b4a75ac7ba38ed93e654b1",
+      "renombrado": true,
+      "contenido_modificado": true,
+      "encabezado_institucional_identico": true
+    },
+    {
+      "original": "src/app/api/clubs/[clubId]/facilities/[facilityId]/route.ts",
+      "final": "src/app/api/entities/[entityId]/facilities/[facilityId]/route.ts",
+      "sha256_original": "ab30f26061c7a3c1124a29b1ef3373f85a50f5d63a19bdc9c625469cd666c864",
+      "sha256_final": "4096328cce510ce0606ea51259d89b4df7276f180a69cf270b6595c0396fdbc2",
+      "renombrado": true,
+      "contenido_modificado": true,
+      "encabezado_institucional_identico": true
+    },
+    {
+      "original": "src/app/api/clubs/[clubId]/facilities/[facilityId]/schedule/route.ts",
+      "final": "src/app/api/entities/[entityId]/facilities/[facilityId]/schedule/route.ts",
+      "sha256_original": "2574d09875270222f7f127b697908bc4ad1421969ab3e9e10ff00a5071d5981b",
+      "sha256_final": "979da3fdb6b941a12ea1d4c4e0e9e71aef3c5f6362e0e0c196a71b88f5a464aa",
+      "renombrado": true,
+      "contenido_modificado": true,
+      "encabezado_institucional_identico": true
+    },
+    {
+      "original": "src/app/api/clubs/[clubId]/facilities/route.ts",
+      "final": "src/app/api/entities/[entityId]/facilities/route.ts",
+      "sha256_original": "8abd8e0ac75f06259f42698bf4397add8d272e9b0ac4b8e0d9aa520d543a8959",
+      "sha256_final": "9f028e8e90d010b66550634d51036a75b8bcd29e4eb3d43f8f92b5e8a3669be2",
+      "renombrado": true,
+      "contenido_modificado": true,
+      "encabezado_institucional_identico": true
+    },
+    {
+      "original": "src/app/api/clubs/[clubId]/members/[memberId]/route.ts",
+      "final": "src/app/api/entities/[entityId]/members/[memberId]/route.ts",
+      "sha256_original": "3c6c1b19baed971b4ee2f3558eea7a7fdfc6fa0db8743baf6e86c3249d4cf59f",
+      "sha256_final": "23037abbed287cb49007312be4106eb0408dca86b0656b4ce950f6143c915c86",
+      "renombrado": true,
+      "contenido_modificado": true,
+      "encabezado_institucional_identico": true
+    },
+    {
+      "original": "src/app/api/clubs/[clubId]/members/route.ts",
+      "final": "src/app/api/entities/[entityId]/members/route.ts",
+      "sha256_original": "84096639a74572f90749c49358a26bdf1da4e57bab986d28f03a455a69d66dfd",
+      "sha256_final": "df161b18a287a4ff42a3f24239f009761936d93a3561d90b9c8a66356bd82155",
+      "renombrado": true,
+      "contenido_modificado": true,
+      "encabezado_institucional_identico": true
+    },
+    {
+      "original": "src/app/api/clubs/[clubId]/membership-applications/[applicationId]/documents/[documentId]/route.ts",
+      "final": "src/app/api/entities/[entityId]/membership-applications/[applicationId]/documents/[documentId]/route.ts",
+      "sha256_original": "3bc29cbd6cd987f5030fefaad62ee95b840d767c29d5a8820b6b7802ff8a90fc",
+      "sha256_final": "ba0c91e6ddc1d3f5b9d7909de580d53aadc9947c4c68977f3b32cebfad6f292b",
+      "renombrado": true,
+      "contenido_modificado": true,
+      "encabezado_institucional_identico": true
+    },
+    {
+      "original": "src/app/api/clubs/[clubId]/membership-applications/[applicationId]/documents/route.ts",
+      "final": "src/app/api/entities/[entityId]/membership-applications/[applicationId]/documents/route.ts",
+      "sha256_original": "dcd4908e846ed81040e00af0549311cff7dac1bf1b4d87353ee5a2c36e7c0798",
+      "sha256_final": "e8bb51a7352446de5225151e811672edfcb70c20b6b636eabd75f5e99980ff10",
+      "renombrado": true,
+      "contenido_modificado": true,
+      "encabezado_institucional_identico": true
+    },
+    {
+      "original": "src/app/api/clubs/[clubId]/membership-applications/[applicationId]/review/route.ts",
+      "final": "src/app/api/entities/[entityId]/membership-applications/[applicationId]/review/route.ts",
+      "sha256_original": "cf8f5eb1b8e3369386286d87a8e955dbeaa6893b4e0fdc10b191a49d18a845f4",
+      "sha256_final": "131798ca0632aef333b037afe5caf9e5ab7723de8298002e8261f9024ceea897",
+      "renombrado": true,
+      "contenido_modificado": true,
+      "encabezado_institucional_identico": true
+    },
+    {
+      "original": "src/app/api/clubs/[clubId]/membership-applications/[applicationId]/route.ts",
+      "final": "src/app/api/entities/[entityId]/membership-applications/[applicationId]/route.ts",
+      "sha256_original": "2ad7caf06702fb144a1b14909aefcdf9465151d6322b5be7dfc4dba6ae8899d3",
+      "sha256_final": "619711a168bdfa710aa474ee900fe8f7e2532101e149228d48916cc6aa99883f",
+      "renombrado": true,
+      "contenido_modificado": true,
+      "encabezado_institucional_identico": true
+    },
+    {
+      "original": "src/app/api/clubs/[clubId]/membership-applications/[applicationId]/submit/route.ts",
+      "final": "src/app/api/entities/[entityId]/membership-applications/[applicationId]/submit/route.ts",
+      "sha256_original": "66df6d3f5aa564cd92528dcdc5036dfb2f8cbea836ab7b3c87ff70e42b1d3a47",
+      "sha256_final": "74a375bd02da6552b96055661f4e4b24276b67fdef75734fbf8aac3d13a7f3a6",
+      "renombrado": true,
+      "contenido_modificado": true,
+      "encabezado_institucional_identico": true
+    },
+    {
+      "original": "src/app/api/clubs/[clubId]/membership-applications/route.ts",
+      "final": "src/app/api/entities/[entityId]/membership-applications/route.ts",
+      "sha256_original": "b9235188a12a98115af939451d01810ae1dd6613b797127b651bf344dcdb85bf",
+      "sha256_final": "0f6bc3b79dd1ba8c14c0da7c4ab7960ea289ceb210efe80e8f8ba22f1e810787",
+      "renombrado": true,
+      "contenido_modificado": true,
+      "encabezado_institucional_identico": true
+    },
+    {
+      "original": "src/app/api/clubs/[clubId]/membership-plans/[planId]/document-requirements/[requirementId]/route.ts",
+      "final": "src/app/api/entities/[entityId]/membership-plans/[planId]/document-requirements/[requirementId]/route.ts",
+      "sha256_original": "bb5cf73d38ec65c26cb0f676db9ed520a74ef7476c0c74c0b6a20605bdfc602c",
+      "sha256_final": "47016a3ee81437219ab08e70aac6522b47a53f97612d620839c096937dc55d53",
+      "renombrado": true,
+      "contenido_modificado": true,
+      "encabezado_institucional_identico": true
+    },
+    {
+      "original": "src/app/api/clubs/[clubId]/membership-plans/[planId]/document-requirements/route.ts",
+      "final": "src/app/api/entities/[entityId]/membership-plans/[planId]/document-requirements/route.ts",
+      "sha256_original": "75e003d5adb5b81434b01554d43821646d2552634427295ba0c3b264fac1255d",
+      "sha256_final": "27c5483c37de969d55f654fbf2a592c460a996896dc5b4bfcb4ebf8b01e0e8a3",
+      "renombrado": true,
+      "contenido_modificado": true,
+      "encabezado_institucional_identico": true
+    },
+    {
+      "original": "src/app/api/clubs/[clubId]/membership-plans/[planId]/route.ts",
+      "final": "src/app/api/entities/[entityId]/membership-plans/[planId]/route.ts",
+      "sha256_original": "45d36915871d400664f693740b3eeecb29d1c1437c33538c46c0b68fba17a575",
+      "sha256_final": "f890b99013800dca7248f22d229db49d08b16b4e1d95aa9ff813be540222f98f",
+      "renombrado": true,
+      "contenido_modificado": true,
+      "encabezado_institucional_identico": true
+    },
+    {
+      "original": "src/app/api/clubs/[clubId]/membership-plans/route.ts",
+      "final": "src/app/api/entities/[entityId]/membership-plans/route.ts",
+      "sha256_original": "bf240be902ee3d73750133a2f1c88589176c9e826531181d9ec103787c5e5c47",
+      "sha256_final": "a7903ad13f447b5b6516c61af559b2c91307a8697f1ee44c3b88eb6327a68f9c",
+      "renombrado": true,
+      "contenido_modificado": true,
+      "encabezado_institucional_identico": true
+    },
+    {
+      "original": "src/app/api/clubs/[clubId]/my-reservations/route.ts",
+      "final": "src/app/api/entities/[entityId]/my-reservations/route.ts",
+      "sha256_original": "016a70e28ce291337415cf2eccdb83594b18d124c7327c81482dd518cc49c463",
+      "sha256_final": "3b2f4bc0bcba79b400c0557ca8af601546f1ef1f64b33e9dff9032861e0e2f00",
+      "renombrado": true,
+      "contenido_modificado": true,
+      "encabezado_institucional_identico": true
+    },
+    {
+      "original": "src/app/api/clubs/[clubId]/payments/route.ts",
+      "final": "src/app/api/entities/[entityId]/payments/route.ts",
+      "sha256_original": "e8b87b60ba44855f9b515b24a9a71e3b26d15c5a77968b785c4655a825136857",
+      "sha256_final": "4a080e60b5400090fa0e3bad1cc24cc92646bf70d2c529e06123c8407c09c565",
+      "renombrado": true,
+      "contenido_modificado": true,
+      "encabezado_institucional_identico": true
+    },
+    {
+      "original": "src/app/api/clubs/[clubId]/payments/summary/route.ts",
+      "final": "src/app/api/entities/[entityId]/payments/summary/route.ts",
+      "sha256_original": "88fbebac91a80ff73a3ac9ae99d58d93b29a7ac32d24c015e2efa7ad513a0f42",
+      "sha256_final": "da4eaeddf1df4bfcce677ce2cd5fe90d7724d308ca69a82e7c2034f97e99122d",
+      "renombrado": true,
+      "contenido_modificado": true,
+      "encabezado_institucional_identico": true
+    },
+    {
+      "original": "src/app/api/clubs/[clubId]/posts/[postId]/route.ts",
+      "final": "src/app/api/entities/[entityId]/posts/[postId]/route.ts",
+      "sha256_original": "a11fd60c4b8fcb8d488dc25f5307ad2da1e2faca3ba749a6cf46d7f3fe8bf8a2",
+      "sha256_final": "7212ded58fbfbabba5fd27fe13dcf12071b391b7d0cfa3b525925af17468ff2a",
+      "renombrado": true,
+      "contenido_modificado": true,
+      "encabezado_institucional_identico": true
+    },
+    {
+      "original": "src/app/api/clubs/[clubId]/posts/route.ts",
+      "final": "src/app/api/entities/[entityId]/posts/route.ts",
+      "sha256_original": "3a0c094e40d1ee2c12a023eb0c2f6480369bc195529b50dc94073ab57c6f08c4",
+      "sha256_final": "d8f48852bc9ddd0aa7e860be5157ac12831b25750b8ccaac996f0c81f299e184",
+      "renombrado": true,
+      "contenido_modificado": true,
+      "encabezado_institucional_identico": true
+    },
+    {
+      "original": "src/app/api/clubs/[clubId]/reactivate/route.ts",
+      "final": "src/app/api/entities/[entityId]/reactivate/route.ts",
+      "sha256_original": "d4b68d7d4ec43b94fed518caad73a0586eb9e6d518aeff19fd22827e6db9f9a8",
+      "sha256_final": "72153d7a751440b577a4f2dddea2811339cbdf67d225efc35b35d5b7b6b2ca34",
+      "renombrado": true,
+      "contenido_modificado": true,
+      "encabezado_institucional_identico": true
+    },
+    {
+      "original": "src/app/api/clubs/[clubId]/route.ts",
+      "final": "src/app/api/entities/[entityId]/route.ts",
+      "sha256_original": "1847f186452005bf593530979b4170d91f356237ccf6e75082ca7138c50e0e57",
+      "sha256_final": "ffff8d490bc667eb526ed5123c6e1e477ddd601d12a6f6381ef38231c30161d9",
+      "renombrado": true,
+      "contenido_modificado": true,
+      "encabezado_institucional_identico": true
+    },
+    {
+      "original": "src/app/api/clubs/[clubId]/subscriptions/[subscriptionId]/cancel/route.ts",
+      "final": "src/app/api/entities/[entityId]/subscriptions/[subscriptionId]/cancel/route.ts",
+      "sha256_original": "3e2c9f706f44a98f5ea86ac8e49e50150c04553d2da333380e5628264bc5cdf9",
+      "sha256_final": "9fbe9f33c28854dea8e50daa34ea1a8d0ff9c096324f2d2cc5611d05337ab2bd",
+      "renombrado": true,
+      "contenido_modificado": true,
+      "encabezado_institucional_identico": true
+    },
+    {
+      "original": "src/app/api/clubs/[clubId]/subscriptions/[subscriptionId]/checkout/route.ts",
+      "final": "src/app/api/entities/[entityId]/subscriptions/[subscriptionId]/checkout/route.ts",
+      "sha256_original": "e024e4497908b8e349ad62c5aa8d4d9d8c3fe9c2f388b755d80ef67e0160759e",
+      "sha256_final": "93aafdc19ccb510d581f699886f7010466d1fd4df5b2ab41c96a0591534cc70d",
+      "renombrado": true,
+      "contenido_modificado": true,
+      "encabezado_institucional_identico": true
+    },
+    {
+      "original": "src/app/api/clubs/[clubId]/suspend/route.ts",
+      "final": "src/app/api/entities/[entityId]/suspend/route.ts",
+      "sha256_original": "fea766b1ced111372b8b618df78adca6c9dc8b306b12997349f2b3f6b4438c54",
+      "sha256_final": "559c0f584f4e68673fff5c4875b1312a37d48d1d5664fb2d8dda47ba44ad942e",
+      "renombrado": true,
+      "contenido_modificado": true,
+      "encabezado_institucional_identico": true
+    },
+    {
+      "original": "src/app/api/clubs/route.ts",
+      "final": "src/app/api/entities/route.ts",
+      "sha256_original": "307f5d4dba1c539265a92d8506a186b1004ad74cd16fdf72cef4dc241c4ed38c",
+      "sha256_final": "df1e5eb6cac1d850a847ae4268aeb9160ffb930b79f41f42a4200de4d93dfa70",
+      "renombrado": true,
+      "contenido_modificado": true,
+      "encabezado_institucional_identico": true
+    },
+    {
+      "original": "src/app/api/cron/expired-plans/route.ts",
+      "final": "src/app/api/cron/expired-plans/route.ts",
+      "sha256_original": "f55abb7488d74a26608a77b5802aac8e2d18efdf9f742e660c96a4b26a338c68",
+      "sha256_final": "f523bb91d71ef7203349045f0b2b2bad2aa8074f5579582044f9e92720bb1e1d",
+      "renombrado": false,
+      "contenido_modificado": true,
+      "encabezado_institucional_identico": true
+    },
+    {
+      "original": "src/app/api/cron/read-notifications/route.ts",
+      "final": "src/app/api/cron/read-notifications/route.ts",
+      "sha256_original": "fa337be89af30aecd514ad40865601ccf6ecb4e619b9f7c8571e618c72d292a3",
+      "sha256_final": "fa337be89af30aecd514ad40865601ccf6ecb4e619b9f7c8571e618c72d292a3",
+      "renombrado": false,
+      "contenido_modificado": false,
+      "encabezado_institucional_identico": true
+    },
+    {
+      "original": "src/app/api/cron/settlements/route.ts",
+      "final": "src/app/api/cron/settlements/route.ts",
+      "sha256_original": "d25c6814eb5fb9d901a1e1c78e97d4e980c321bbb49a5e9c8f37c0150dfe5782",
+      "sha256_final": "d28dbadb7f97e9e8aec6e678cbae85ed8d571e34f5e27c6e4bd6ee69d61b8ad9",
+      "renombrado": false,
+      "contenido_modificado": true,
+      "encabezado_institucional_identico": true
+    },
+    {
+      "original": "src/app/api/feed/route.ts",
+      "final": "src/app/api/feed/route.ts",
+      "sha256_original": "f6bf14b04bd73fe645e31a20d390acbb9928d9920ec6142b9ceb9a596d090e55",
+      "sha256_final": "7183b0edfe166bb1a25c5617b699ea368c735d184ee837989afd2a5094a23579",
+      "renombrado": false,
+      "contenido_modificado": true,
+      "encabezado_institucional_identico": true
+    },
+    {
+      "original": "src/app/api/me/applications/route.ts",
+      "final": "src/app/api/me/applications/route.ts",
+      "sha256_original": "b63fa7e8e45beec243ad281b13a39bd17d1854673201526fa37eddea86e2d1f8",
+      "sha256_final": "14ad4aab6aa83ebcfa7d4deb96ff24b6289611f513c702a0aa5c1e64e8bd1047",
+      "renombrado": false,
+      "contenido_modificado": true,
+      "encabezado_institucional_identico": true
+    },
+    {
+      "original": "src/app/api/me/memberships/route.ts",
+      "final": "src/app/api/me/memberships/route.ts",
+      "sha256_original": "440bd03f5f537b36c3227f65be65c40719df8b4ec7e420545bef59d19b1061f6",
+      "sha256_final": "88f2327b3a309aa9c94172c2c421994596a60c4ca718fc13f61ff1d2e8bae17a",
+      "renombrado": false,
+      "contenido_modificado": true,
+      "encabezado_institucional_identico": true
+    },
+    {
+      "original": "src/app/api/me/notifications/route.ts",
+      "final": "src/app/api/me/notifications/route.ts",
+      "sha256_original": "c7644f99a30d1c85797f26804d87b794e5dcb92099dc90c3dc2f56794dffa477",
+      "sha256_final": "f806ea4ff468b6b8ef2e8847cc95df6fb0bdee28a6bf9012fda017c9b7de9766",
+      "renombrado": false,
+      "contenido_modificado": true,
+      "encabezado_institucional_identico": true
+    },
+    {
+      "original": "src/app/api/me/payments/route.ts",
+      "final": "src/app/api/me/payments/route.ts",
+      "sha256_original": "9d70579da34d4c1ffa3a7129bf19e50bc13ed1765a9cd557701e2f75f13f2f5e",
+      "sha256_final": "4b1f8179e0926b6a6993e10afa20a369a25025dc68f268c75a9e75895fac0173",
+      "renombrado": false,
+      "contenido_modificado": true,
+      "encabezado_institucional_identico": true
+    },
+    {
+      "original": "src/app/api/me/subscriptions/route.ts",
+      "final": "src/app/api/me/subscriptions/route.ts",
+      "sha256_original": "712858629dffba244d20f53a9058427896f61a779048bc7e8d3ca62faaa444bb",
+      "sha256_final": "c2383b81f40167001ec1bd772dc0bd0d3d5ff267122690d3f0746d755c75f2af",
+      "renombrado": false,
+      "contenido_modificado": true,
+      "encabezado_institucional_identico": true
+    },
+    {
+      "original": "src/app/api/payments/[paymentId]/receipt/route.ts",
+      "final": "src/app/api/payments/[paymentId]/receipt/route.ts",
+      "sha256_original": "ded8da6a2cb58b358a0de48f14af03ca199ac770b98c922873fe6fbec4bf6d5d",
+      "sha256_final": "ded8da6a2cb58b358a0de48f14af03ca199ac770b98c922873fe6fbec4bf6d5d",
+      "renombrado": false,
+      "contenido_modificado": false,
+      "encabezado_institucional_identico": true
+    },
+    {
+      "original": "src/app/api/payments/[paymentId]/route.ts",
+      "final": "src/app/api/payments/[paymentId]/route.ts",
+      "sha256_original": "10c0ddbf602d0fa8233dc57bc3fa59695679f1f2ecb962e7a0d0bc6ea2574ef3",
+      "sha256_final": "f11adb24b00fb15d3ae554728ea316ae04d00468e968abc22a159a0954c47bbe",
+      "renombrado": false,
+      "contenido_modificado": true,
+      "encabezado_institucional_identico": true
+    },
+    {
+      "original": "src/app/api/search/clubs/route.ts",
+      "final": "src/app/api/search/entities/route.ts",
+      "sha256_original": "3377c55aadf476b41cf6cdc14f7dfb8ced6d898fee19721c9b3947c85e10c86b",
+      "sha256_final": "df6c23cabe7c524579a269415e707a912a2a372012bd2a2cd7655cae2a890429",
+      "renombrado": true,
+      "contenido_modificado": true,
+      "encabezado_institucional_identico": true
+    },
+    {
+      "original": "src/app/api/uploadthing/core.ts",
+      "final": "src/app/api/uploadthing/core.ts",
+      "sha256_original": "1e3ce13289310ebdc4f6e2bdfbd17d4a94f8ab8123892f8cd832a24f0e2696d4",
+      "sha256_final": "d580d59e018617496168fb52316af52336f164ac5fa7597ca53c18bbc9630101",
+      "renombrado": false,
+      "contenido_modificado": true,
+      "encabezado_institucional_identico": true
+    },
+    {
+      "original": "src/app/api/uploadthing/route.ts",
+      "final": "src/app/api/uploadthing/route.ts",
+      "sha256_original": "7daf5924d9fcbfb3fc1bfd4b59046ba7d1c9616027f9914c1f161d4d6ebd5b0c",
+      "sha256_final": "7daf5924d9fcbfb3fc1bfd4b59046ba7d1c9616027f9914c1f161d4d6ebd5b0c",
+      "renombrado": false,
+      "contenido_modificado": false,
+      "encabezado_institucional_identico": true
+    },
+    {
+      "original": "src/app/api/webhooks/stripe/route.ts",
+      "final": "src/app/api/webhooks/stripe/route.ts",
+      "sha256_original": "3ec14dcd579f612c37237d9ae383f27e55cde734d4c0e68629f5fded49cd0a44",
+      "sha256_final": "a609018e1864a31fd3dbcfe845aac00909e5906cbf3db8a1b81471da34108e13",
+      "renombrado": false,
+      "contenido_modificado": true,
+      "encabezado_institucional_identico": true
+    },
+    {
+      "original": "src/app/app/layout.tsx",
+      "final": "src/app/app/layout.tsx",
+      "sha256_original": "cad61dcbcc538c965026d5e72a83fec919db94dfccae01918cbd2c29366fd20a",
+      "sha256_final": "cad61dcbcc538c965026d5e72a83fec919db94dfccae01918cbd2c29366fd20a",
+      "renombrado": false,
+      "contenido_modificado": false,
+      "encabezado_institucional_identico": true
+    },
+    {
+      "original": "src/app/app/page.tsx",
+      "final": "src/app/app/page.tsx",
+      "sha256_original": "c6f0f61322c49d4b95ed2d19cd7c869ca45dd2a7421142d0130da433d57e08d5",
+      "sha256_final": "c6f0f61322c49d4b95ed2d19cd7c869ca45dd2a7421142d0130da433d57e08d5",
+      "renombrado": false,
+      "contenido_modificado": false,
+      "encabezado_institucional_identico": true
+    },
+    {
+      "original": "src/app/explore/[clubId]/page.tsx",
+      "final": "src/app/entity/[entityId]/page.tsx",
+      "sha256_original": "b67f7e3b2c33f7c4c269afdd148be2e04d47314c167256ceb2a5091f804811c7",
+      "sha256_final": "78e796c0bab4358856b9374a467e55fd4dce250619d6f35451403448e305303a",
+      "renombrado": true,
+      "contenido_modificado": true,
+      "encabezado_institucional_identico": true
+    },
+    {
+      "original": "src/app/explore/page.tsx",
+      "final": "src/app/entities/page.tsx",
+      "sha256_original": "571bb9378c4dd356dc3673300212c191744c688ca0f5e96e79079661e85416df",
+      "sha256_final": "a39ff2b304c8aa0881e54a744f8104c21e19fa480a59b8b14390530af0f4efe6",
+      "renombrado": true,
+      "contenido_modificado": true,
+      "encabezado_institucional_identico": true
+    },
+    {
+      "original": "src/app/favicon.ico",
+      "final": "src/app/favicon.ico",
+      "sha256_original": "e2472f5c83ab7a964fba176a3a3c8d2ac1c0ad29263efe5dfcb92a7ea65a347f",
+      "sha256_final": "e2472f5c83ab7a964fba176a3a3c8d2ac1c0ad29263efe5dfcb92a7ea65a347f",
+      "renombrado": false,
+      "contenido_modificado": false
+    },
+    {
+      "original": "src/app/globals.css",
+      "final": "src/app/globals.css",
+      "sha256_original": "3bcf03975728b18b0c824dd56c4ed467d2c20727abb30486dd4f37728f65cd7d",
+      "sha256_final": "c4e1b39883ec8edbdd2d5a70726b464350597f8d4febc82ed2018b0c54286b3b",
+      "renombrado": false,
+      "contenido_modificado": true,
+      "encabezado_institucional_identico": true
+    },
+    {
+      "original": "src/app/layout.tsx",
+      "final": "src/app/layout.tsx",
+      "sha256_original": "871af6ca42cc180f428643a1526c8dbface5206067bed5cd172bb9656960ef23",
+      "sha256_final": "135d18c7ad440a19b16a38f224a4ca5745164b45ffd958abc2e940e0b74555aa",
+      "renombrado": false,
+      "contenido_modificado": true,
+      "encabezado_institucional_identico": true
+    },
+    {
+      "original": "src/app/login/page.tsx",
+      "final": "src/app/login/page.tsx",
+      "sha256_original": "ba7e20189bb30378aa6cd8426b798ae36512b6e75bd6a3f9f6d53682f9ed480c",
+      "sha256_final": "ba7e20189bb30378aa6cd8426b798ae36512b6e75bd6a3f9f6d53682f9ed480c",
+      "renombrado": false,
+      "contenido_modificado": false,
+      "encabezado_institucional_identico": true
+    },
+    {
+      "original": "src/app/page.tsx",
+      "final": "src/app/page.tsx",
+      "sha256_original": "c921ffcaf573f2f2e5e44021a430fbadfa9f9b0afd4dda04254d90e17c70feba",
+      "sha256_final": "bfc495a9d5ff59de22379ea792625d761a348ed34b4cb75ad190f9148f1eecc5",
+      "renombrado": false,
+      "contenido_modificado": true,
+      "encabezado_institucional_identico": true
+    },
+    {
+      "original": "src/app/payment/cancelled/page.tsx",
+      "final": "src/app/payment/cancelled/page.tsx",
+      "sha256_original": "3c935aa64cc9b779014ace8170565f838605d43ef955c5710831ebb423b12147",
+      "sha256_final": "3c935aa64cc9b779014ace8170565f838605d43ef955c5710831ebb423b12147",
+      "renombrado": false,
+      "contenido_modificado": false,
+      "encabezado_institucional_identico": true
+    },
+    {
+      "original": "src/app/payment/success/page.tsx",
+      "final": "src/app/payment/success/page.tsx",
+      "sha256_original": "9c45090e1971286a7d092029f610166656ab4ccc1cb89318b9eb7c5a1097251a",
+      "sha256_final": "9c45090e1971286a7d092029f610166656ab4ccc1cb89318b9eb7c5a1097251a",
+      "renombrado": false,
+      "contenido_modificado": false,
+      "encabezado_institucional_identico": true
+    },
+    {
+      "original": "src/app/register/page.tsx",
+      "final": "src/app/register/page.tsx",
+      "sha256_original": "1dfc6d3acbd797f45630d3e93a0c6bcb05871e264b0b3b5f393ce21686b93201",
+      "sha256_final": "1dfc6d3acbd797f45630d3e93a0c6bcb05871e264b0b3b5f393ce21686b93201",
+      "renombrado": false,
+      "contenido_modificado": false,
+      "encabezado_institucional_identico": true
+    },
+    {
+      "original": "src/components/auth-form.tsx",
+      "final": "src/components/auth-form.tsx",
+      "sha256_original": "ec66a77bcbaaaccd9dfbd78c9f17d84d4c6be6d90b0cc2de77b6a0e5c26d3f2a",
+      "sha256_final": "7c0461b8fd56eede3b78ba7f0063547a28c2cc72cfde753944335a3d084424bb",
+      "renombrado": false,
+      "contenido_modificado": true,
+      "encabezado_institucional_identico": true
+    },
+    {
+      "original": "src/components/avatar-image.tsx",
+      "final": "src/components/avatar-image.tsx",
+      "sha256_original": "11cd55bffb5f9a9b1e8cb985d37fb31e6f106742f6965afa50f8fba4e38225f1",
+      "sha256_final": "11cd55bffb5f9a9b1e8cb985d37fb31e6f106742f6965afa50f8fba4e38225f1",
+      "renombrado": false,
+      "contenido_modificado": false,
+      "encabezado_institucional_identico": true
+    },
+    {
+      "original": "src/components/avatar-upload.tsx",
+      "final": "src/components/avatar-upload.tsx",
+      "sha256_original": "d4f8a23efddb59ec4e92e362ab13407b439f7a698ae942f8a38acf73b0d9da25",
+      "sha256_final": "d4f8a23efddb59ec4e92e362ab13407b439f7a698ae942f8a38acf73b0d9da25",
+      "renombrado": false,
+      "contenido_modificado": false,
+      "encabezado_institucional_identico": true
+    },
+    {
+      "original": "src/components/basic.module.css",
+      "final": "src/components/basic.module.css",
+      "sha256_original": "eb01b37dac2ea2423343697342d7d2ce61e98d30955334457a509c11a5e1535c",
+      "sha256_final": "eb01b37dac2ea2423343697342d7d2ce61e98d30955334457a509c11a5e1535c",
+      "renombrado": false,
+      "contenido_modificado": false,
+      "encabezado_institucional_identico": true
+    },
+    {
+      "original": "src/components/club-bubbles.tsx",
+      "final": "src/components/entity-bubbles.tsx",
+      "sha256_original": "c07059a69159c2540ca46f1f199182a0d9eba11712ab2738d4ad155aae353afb",
+      "sha256_final": "0dbb32804eb5ad6a54d41fe9fbc9fda8381ebeb8d943d3e8d90025ff61a21ec1",
+      "renombrado": true,
+      "contenido_modificado": true,
+      "encabezado_institucional_identico": true
+    },
+    {
+      "original": "src/components/member-header.tsx",
+      "final": "src/components/member-header.tsx",
+      "sha256_original": "c1029502bc76866bb9bf2f7d6126d2bde7e9d084e25321832e39e34630ddf944",
+      "sha256_final": "d661699b8dcaad118dec1700437b6122a914290f96a93ffa5ef5f78ce2ed6f5c",
+      "renombrado": false,
+      "contenido_modificado": true,
+      "encabezado_institucional_identico": true
+    },
+    {
+      "original": "src/components/theme-toggle.tsx",
+      "final": "src/components/theme-toggle.tsx",
+      "sha256_original": "808922819f0477dacf72d75949c73f62d1482dabc83baaa0290fc3bd3854c82e",
+      "sha256_final": "808922819f0477dacf72d75949c73f62d1482dabc83baaa0290fc3bd3854c82e",
+      "renombrado": false,
+      "contenido_modificado": false,
+      "encabezado_institucional_identico": true
+    },
+    {
+      "original": "src/components/ui.tsx",
+      "final": "src/components/ui.tsx",
+      "sha256_original": "070fcec17676e7718fae170048681b4688d3df33d2fed76502986c601a250917",
+      "sha256_final": "070fcec17676e7718fae170048681b4688d3df33d2fed76502986c601a250917",
+      "renombrado": false,
+      "contenido_modificado": false,
+      "encabezado_institucional_identico": true
+    },
+    {
+      "original": "src/components/use-mobile.ts",
+      "final": "src/components/use-mobile.ts",
+      "sha256_original": "321faf3c407d7ac9a13097ec468972f5a4fd6b123f3aff0708b17851d29b9af2",
+      "sha256_final": "321faf3c407d7ac9a13097ec468972f5a4fd6b123f3aff0708b17851d29b9af2",
+      "renombrado": false,
+      "contenido_modificado": false,
+      "encabezado_institucional_identico": true
+    },
+    {
+      "original": "src/components/workspace/action-dropdown.tsx",
+      "final": "src/components/workspace/action-dropdown.tsx",
+      "sha256_original": "e0dd2da1e94bbe785f299748ccf568debd999b94f29e8560aa7d7608251dfce1",
+      "sha256_final": "5919a534108c3b3ea77a192379c85c978d92b93e09e9a21a728c070e0b79d44c",
+      "renombrado": false,
+      "contenido_modificado": true,
+      "encabezado_institucional_identico": true
+    },
+    {
+      "original": "src/components/workspace/activity.tsx",
+      "final": "src/components/workspace/activity.tsx",
+      "sha256_original": "0ca2bf917cd89bf4a0b69ce92766d2e1637462bddcc17375ca0f1ae976323b64",
+      "sha256_final": "8963a0a8b38bcd88f6334e6b0694bf544cbfe7bb30a42480615f4efb9a2c78e9",
+      "renombrado": false,
+      "contenido_modificado": true,
+      "encabezado_institucional_identico": true
+    },
+    {
+      "original": "src/components/workspace/club-hero.tsx",
+      "final": "src/components/workspace/entity-hero.tsx",
+      "sha256_original": "afd9d3078931429f323217cd47da5f0c015e63a6b7a141dd2acc204d49b6c73c",
+      "sha256_final": "33c61407c1d32feda3c16c060ab5f0a62b7484edf58d6bb4d0e511347317ed62",
+      "renombrado": true,
+      "contenido_modificado": true,
+      "encabezado_institucional_identico": true
+    },
+    {
+      "original": "src/components/workspace/club-sidebar.tsx",
+      "final": "src/components/workspace/entity-sidebar.tsx",
+      "sha256_original": "61ab1b5a308e357e7defc52e98cdb3e9ce4d488bbe6f437dab642addc0e91775",
+      "sha256_final": "e05fecdfd8fa348f2d071bdf7376dcfe257a903a6000b6c56f52d77e6e13e22f",
+      "renombrado": true,
+      "contenido_modificado": true,
+      "encabezado_institucional_identico": true
+    },
+    {
+      "original": "src/components/workspace/club.tsx",
+      "final": "src/components/workspace/entity.tsx",
+      "sha256_original": "91d4705870f050d3a75efab6cc8d029236acd1c6df4a2f23b8d64e91d461a34d",
+      "sha256_final": "783f2564480cb8f4ff97945831c60a71067d49a5f701e0357116836e574eaf67",
+      "renombrado": true,
+      "contenido_modificado": true,
+      "encabezado_institucional_identico": true
+    },
+    {
+      "original": "src/components/workspace/common.tsx",
+      "final": "src/components/workspace/common.tsx",
+      "sha256_original": "c9ad95ceb12b868585b861f30bb2704e4a929670d622b99e0d2ab0ef438512b4",
+      "sha256_final": "402aa4838a616b100af98f07590cfe468316fe643f954baf85f32f2b0ccc6f85",
+      "renombrado": false,
+      "contenido_modificado": true,
+      "encabezado_institucional_identico": true
+    },
+    {
+      "original": "src/components/workspace/create-club.tsx",
+      "final": "src/components/workspace/create-entity.tsx",
+      "sha256_original": "9dcd0d25786090f88903c57c9f9f8c2eda1db3fcf8ee07b6104eab70abd56416",
+      "sha256_final": "3ad0d6054283bc22437f6a36b91796673bee1bc9c204c9a8b7d6adf4173933a7",
+      "renombrado": true,
+      "contenido_modificado": true,
+      "encabezado_institucional_identico": true
+    },
+    {
+      "original": "src/components/workspace/dashboard.tsx",
+      "final": "src/components/workspace/dashboard.tsx",
+      "sha256_original": "4f56ac97135824cccd0f953fe4cd2cfcd5a0a1d4f871c8fdbd8d09b77a2dd39d",
+      "sha256_final": "bba91c91ac290665df90177c4a9ff9ffcd73883a5aeff71cb4d41524c22d6f5e",
+      "renombrado": false,
+      "contenido_modificado": true,
+      "encabezado_institucional_identico": true
+    },
+    {
+      "original": "src/components/workspace/explore.tsx",
+      "final": "src/components/workspace/explore.tsx",
+      "sha256_original": "f2476d31f5e50b59dfed5361575320bba46525198aa5aec748296300078ebe80",
+      "sha256_final": "df42f324bcdbe579aab0366e90d723fea069c9eef9e59f137a046d57837d5e21",
+      "renombrado": false,
+      "contenido_modificado": true,
+      "encabezado_institucional_identico": true
+    },
+    {
+      "original": "src/components/workspace/facilities.tsx",
+      "final": "src/components/workspace/facilities.tsx",
+      "sha256_original": "d8ee05d2a0f0f19071c8eae98829b82114584aecdca1c0ff28b8e9ec6a80a52b",
+      "sha256_final": "1eb43c2c434084f6a4e1ece898c35107b892414bc12e8fc75df62511fc2c1fe8",
+      "renombrado": false,
+      "contenido_modificado": true,
+      "encabezado_institucional_identico": true
+    },
+    {
+      "original": "src/components/workspace/facility-icon.tsx",
+      "final": "src/components/workspace/facility-icon.tsx",
+      "sha256_original": "26410dc46e123026e8c1bd4d83ef345c08dc1ac64ce50332bcc115259d9ee6b0",
+      "sha256_final": "26410dc46e123026e8c1bd4d83ef345c08dc1ac64ce50332bcc115259d9ee6b0",
+      "renombrado": false,
+      "contenido_modificado": false,
+      "encabezado_institucional_identico": true
+    },
+    {
+      "original": "src/components/workspace/feed.tsx",
+      "final": "src/components/workspace/feed.tsx",
+      "sha256_original": "611405213d403932150184b6841766a33cf104452c702dfd51c891b48e04ba9a",
+      "sha256_final": "f2bdbd6fb5038a5e787686e03b8df38c73d61ab2daaf82b53d833135e5ede91e",
+      "renombrado": false,
+      "contenido_modificado": true,
+      "encabezado_institucional_identico": true
+    },
+    {
+      "original": "src/components/workspace/finance-controls.tsx",
+      "final": "src/components/workspace/finance-controls.tsx",
+      "sha256_original": "29553c0a1099e18986501ccc536eed811dda712cc249f8a537af0f75ffcce50c",
+      "sha256_final": "294c9c427482176b2fbac36678a943cfc16316526b772911358f0650550f016f",
+      "renombrado": false,
+      "contenido_modificado": true,
+      "encabezado_institucional_identico": true
+    },
+    {
+      "original": "src/components/workspace/global-dashboard.tsx",
+      "final": "src/components/workspace/global-dashboard.tsx",
+      "sha256_original": "28d231a334ccaeb92e4d14794185befab4ad3a4510f7982ca851f432a282aac5",
+      "sha256_final": "28d231a334ccaeb92e4d14794185befab4ad3a4510f7982ca851f432a282aac5",
+      "renombrado": false,
+      "contenido_modificado": false,
+      "encabezado_institucional_identico": true
+    },
+    {
+      "original": "src/components/workspace/global-finances.tsx",
+      "final": "src/components/workspace/global-finances.tsx",
+      "sha256_original": "3f2f3ee1cba44b0ba7a18ef97739ee3a4c679a06badf9365ba42805a8b72acbe",
+      "sha256_final": "ee1315d5789424c3015e23fad1fb9b9090267c310a3dea1f22db4af50830de94",
+      "renombrado": false,
+      "contenido_modificado": true,
+      "encabezado_institucional_identico": true
+    },
+    {
+      "original": "src/components/workspace/index.tsx",
+      "final": "src/components/workspace/index.tsx",
+      "sha256_original": "7416015b13d92a00aaf61377871ed78c36b09993b273d4f1520c8dba894f1b71",
+      "sha256_final": "3d1ae72e182f3b1f427a7dca67666b86cbd1c912fa848f33b825b9cec5c4dc1d",
+      "renombrado": false,
+      "contenido_modificado": true,
+      "encabezado_institucional_identico": true
+    },
+    {
+      "original": "src/components/workspace/location.tsx",
+      "final": "src/components/workspace/location.tsx",
+      "sha256_original": "124f24abd1ba39a5b523ebd8e83fe89411a86f66d321f841f64affcc00baaaed",
+      "sha256_final": "c58a125179812a87dc21336b51712c889a7752d7227af6c715d4408cf9563b42",
+      "renombrado": false,
+      "contenido_modificado": true,
+      "encabezado_institucional_identico": true
+    },
+    {
+      "original": "src/components/workspace/modal.tsx",
+      "final": "src/components/workspace/modal.tsx",
+      "sha256_original": "2b7e79c35f6e07b8efb44836031f1b1eaaeeebe92497619ba4c56edce376792c",
+      "sha256_final": "2b7e79c35f6e07b8efb44836031f1b1eaaeeebe92497619ba4c56edce376792c",
+      "renombrado": false,
+      "contenido_modificado": false,
+      "encabezado_institucional_identico": true
+    },
+    {
+      "original": "src/components/workspace/notice-count.tsx",
+      "final": "src/components/workspace/notice-count.tsx",
+      "sha256_original": "994a4e6d8eea99e57fe9903e3ebeaf260c085723767819c1480f6ad308647d48",
+      "sha256_final": "3ebe7cffc7a0ea9e3970ba3a23d524a826c59c802bc7ceb26b78764d1567fb03",
+      "renombrado": false,
+      "contenido_modificado": true,
+      "encabezado_institucional_identico": true
+    },
+    {
+      "original": "src/components/workspace/notifications.tsx",
+      "final": "src/components/workspace/notifications.tsx",
+      "sha256_original": "24b73894abb65eb2b567bf719e8d7eddef68ba6fe47421d7228b6db9b5c0c163",
+      "sha256_final": "24b73894abb65eb2b567bf719e8d7eddef68ba6fe47421d7228b6db9b5c0c163",
+      "renombrado": false,
+      "contenido_modificado": false,
+      "encabezado_institucional_identico": true
+    },
+    {
+      "original": "src/components/workspace/payment-history.tsx",
+      "final": "src/components/workspace/payment-history.tsx",
+      "sha256_original": "873893ba6d7314722a1eb380b3d6b9fa01d45cda2c4bf47dd381d893dcc0f9b4",
+      "sha256_final": "b268168b236394771538a82e4c29d762362d6b4ae12b99dfc53141e20dce4de1",
+      "renombrado": false,
+      "contenido_modificado": true,
+      "encabezado_institucional_identico": true
+    },
+    {
+      "original": "src/components/workspace/payment-return.tsx",
+      "final": "src/components/workspace/payment-return.tsx",
+      "sha256_original": "05748ee1583ca1e30f4d1d91ec4b0e5c7b146c2843d8051f513c6c025b7a489c",
+      "sha256_final": "05748ee1583ca1e30f4d1d91ec4b0e5c7b146c2843d8051f513c6c025b7a489c",
+      "renombrado": false,
+      "contenido_modificado": false,
+      "encabezado_institucional_identico": true
+    },
+    {
+      "original": "src/components/workspace/personal.tsx",
+      "final": "src/components/workspace/personal.tsx",
+      "sha256_original": "6c2ceca1307ad81da43b2015c69556a1c2315eec270556ed3a40a41e5f269fe8",
+      "sha256_final": "a0814cd7a34fc0b0bc326859baffbdef78908cb796fe0b8eed7c4601e0850c46",
+      "renombrado": false,
+      "contenido_modificado": true,
+      "encabezado_institucional_identico": true
+    },
+    {
+      "original": "src/components/workspace/plan-card.tsx",
+      "final": "src/components/workspace/plan-card.tsx",
+      "sha256_original": "57191a0c93e85133be6c38d9f44970eb5b7f452fec4580ce73baf777716b45bc",
+      "sha256_final": "57191a0c93e85133be6c38d9f44970eb5b7f452fec4580ce73baf777716b45bc",
+      "renombrado": false,
+      "contenido_modificado": false,
+      "encabezado_institucional_identico": true
+    },
+    {
+      "original": "src/components/workspace/post-card.tsx",
+      "final": "src/components/workspace/post-card.tsx",
+      "sha256_original": "943ddc0f123f1ed2e63df5c64b6676a5b1de7a378c5ee2aa8966042bfe15e7b4",
+      "sha256_final": "49aa1dbe0815c6f62a4007b922e7ba3ec99e6afe0893defe4e0afd574c7f7938",
+      "renombrado": false,
+      "contenido_modificado": true,
+      "encabezado_institucional_identico": true
+    },
+    {
+      "original": "src/components/workspace/post-composer.tsx",
+      "final": "src/components/workspace/post-composer.tsx",
+      "sha256_original": "305f58a947354dab2dabfc352dc49b0721178d7ef56591f60ee6500e848b80b4",
+      "sha256_final": "a430b916cdbfc8472eaca85eda314777507de8bb02a99ded9e9068fe0443a3f6",
+      "renombrado": false,
+      "contenido_modificado": true,
+      "encabezado_institucional_identico": true
+    },
+    {
+      "original": "src/components/workspace/public-plans.tsx",
+      "final": "src/components/workspace/public-plans.tsx",
+      "sha256_original": "705df9bf5fe95ce78338422fda2763b91786e473c1678eadb7e9ff35e7ff21bb",
+      "sha256_final": "714401f91836ab0b317084340a5203a7a5c5627fd97991b89f816eda77f1af84",
+      "renombrado": false,
+      "contenido_modificado": true,
+      "encabezado_institucional_identico": true
+    },
+    {
+      "original": "src/components/workspace/requirements.tsx",
+      "final": "src/components/workspace/requirements.tsx",
+      "sha256_original": "d0285b3387029ab52f7f1f16d4661009e89cb6254a022d8c225692cffc2a2a3b",
+      "sha256_final": "291c90648aca1e79473470a558b1ab70d8ed55aeea3893be3b25dc39b37f4940",
+      "renombrado": false,
+      "contenido_modificado": true,
+      "encabezado_institucional_identico": true
+    },
+    {
+      "original": "src/components/workspace/workspace.css",
+      "final": "src/components/workspace/workspace.css",
+      "sha256_original": "af9d6b895024779f12e40c023dbbef5e50cae75aa212fbff8bdef943d1a79d43",
+      "sha256_final": "0b6f726711d12a34cceb22a622749df03ee6c44713e7a49a2da7ffa68a3cb66c",
+      "renombrado": false,
+      "contenido_modificado": true,
+      "encabezado_institucional_identico": true
+    },
+    {
+      "original": "src/lib/auth/auth.ts",
+      "final": "src/lib/auth/auth.ts",
+      "sha256_original": "cb37ed2508a6e09fdd10df4319bc053e5ea37224900b7e0be8a561e20ddbaebb",
+      "sha256_final": "cb37ed2508a6e09fdd10df4319bc053e5ea37224900b7e0be8a561e20ddbaebb",
+      "renombrado": false,
+      "contenido_modificado": false,
+      "encabezado_institucional_identico": true
+    },
+    {
+      "original": "src/lib/auth/authorization.ts",
+      "final": "src/lib/auth/authorization.ts",
+      "sha256_original": "594131a693b7609ed39a203825d314418aaa1d7c07b1001fb93d4e34c2fa01a8",
+      "sha256_final": "e0606281049a5dd5215cce9ad325e5835d8bb595660014a49de8702c8ce77cac",
+      "renombrado": false,
+      "contenido_modificado": true,
+      "encabezado_institucional_identico": true
+    },
+    {
+      "original": "src/lib/auth/guest.ts",
+      "final": "src/lib/auth/guest.ts",
+      "sha256_original": "fb8f375435a332ac02139a2aeaef6a2709427d8de1d9289c7248209e8dd7b5c1",
+      "sha256_final": "fb8f375435a332ac02139a2aeaef6a2709427d8de1d9289c7248209e8dd7b5c1",
+      "renombrado": false,
+      "contenido_modificado": false,
+      "encabezado_institucional_identico": true
+    },
+    {
+      "original": "src/lib/auth/jwt.ts",
+      "final": "src/lib/auth/jwt.ts",
+      "sha256_original": "1aed2726ae8e183520ff31880c08e07c8c165c89a9af66ea7aa4821c77025687",
+      "sha256_final": "1aed2726ae8e183520ff31880c08e07c8c165c89a9af66ea7aa4821c77025687",
+      "renombrado": false,
+      "contenido_modificado": false,
+      "encabezado_institucional_identico": true
+    },
+    {
+      "original": "src/lib/auth/password.ts",
+      "final": "src/lib/auth/password.ts",
+      "sha256_original": "fe8ef17b1ff0281f4701a19f284f8fb47c4b52ce2f06b111a5b0efda08278285",
+      "sha256_final": "fe8ef17b1ff0281f4701a19f284f8fb47c4b52ce2f06b111a5b0efda08278285",
+      "renombrado": false,
+      "contenido_modificado": false,
+      "encabezado_institucional_identico": true
+    },
+    {
+      "original": "src/lib/auth/workspace-access.ts",
+      "final": "src/lib/auth/workspace-access.ts",
+      "sha256_original": "bc0851185d08c65d3ab026675df124a3aaf8b8e6d7d68ee09da61a740780bc6f",
+      "sha256_final": "6e48b86bb0a04be4b80fa797ece59e690b0f19362ee183f6ad9606ec54738b72",
+      "renombrado": false,
+      "contenido_modificado": true,
+      "encabezado_institucional_identico": true
+    },
+    {
+      "original": "src/lib/clubs/active.ts",
+      "final": "src/lib/entities/active.ts",
+      "sha256_original": "08ba06ac3f99a148d5d25b2eb8113fedca17bce18ceee89050404ab3a49e1564",
+      "sha256_final": "1cfa564187c3edb3f3f26a32de0616f0d5c493d43b226150c045a073bc179bdc",
+      "renombrado": true,
+      "contenido_modificado": true,
+      "encabezado_institucional_identico": true
+    },
+    {
+      "original": "src/lib/clubs/cancel-club-subscriptions.ts",
+      "final": "src/lib/entities/cancel-entity-subscriptions.ts",
+      "sha256_original": "da0dfb669fd88538ded0736092930390b6972909045449a32107f4153c6411e6",
+      "sha256_final": "b5830ddf5944bb9728b1f125d97347f65adc7d09039ced32b34c7d675065aa8f",
+      "renombrado": true,
+      "contenido_modificado": true,
+      "encabezado_institucional_identico": true
+    },
+    {
+      "original": "src/lib/clubs/payment-csv.ts",
+      "final": "src/lib/entities/payment-csv.ts",
+      "sha256_original": "6e3f75aae372e721d45465e4491f57d2ebac65a8208b6966fea9b258acdc5078",
+      "sha256_final": "b4019d3ba2d16ae72855527add9b94689831f937527a96b12fe48caf370a4b64",
+      "renombrado": true,
+      "contenido_modificado": true,
+      "encabezado_institucional_identico": true
+    },
+    {
+      "original": "src/lib/document-cleanup.ts",
+      "final": "src/lib/document-cleanup.ts",
+      "sha256_original": "e185ed8673f1c608b8fcb0d8f7738df49ce096281ca5bd0740369e1997e0b0dd",
+      "sha256_final": "e185ed8673f1c608b8fcb0d8f7738df49ce096281ca5bd0740369e1997e0b0dd",
+      "renombrado": false,
+      "contenido_modificado": false,
+      "encabezado_institucional_identico": true
+    },
+    {
+      "original": "src/lib/facility-icons.ts",
+      "final": "src/lib/facility-icons.ts",
+      "sha256_original": "a6f12df89f7375bef0ca9dbae1008ceba742770a968272277e97ab13de528131",
+      "sha256_final": "a6f12df89f7375bef0ca9dbae1008ceba742770a968272277e97ab13de528131",
+      "renombrado": false,
+      "contenido_modificado": false,
+      "encabezado_institucional_identico": true
+    },
+    {
+      "original": "src/lib/membership-history.ts",
+      "final": "src/lib/membership-history.ts",
+      "sha256_original": "abd884b4d6f8a26ce2e73fcd04bba89c901a9e40c892586bd623800299e32a4b",
+      "sha256_final": "ef2f76a8ce66b7a55b3660bf6c675fa94eb8c2137207d58571a49eef16765e44",
+      "renombrado": false,
+      "contenido_modificado": true,
+      "encabezado_institucional_identico": true
+    },
+    {
+      "original": "src/lib/notification-routing.ts",
+      "final": "src/lib/notification-routing.ts",
+      "sha256_original": "be4b6cab0d7501741005a7d78328a53b4ec77a9918c33ac6fe6861fa7c0e4d61",
+      "sha256_final": "f8808e6247bac890862d779d55bd0b982777185e17e663a1d34df50ca498975a",
+      "renombrado": false,
+      "contenido_modificado": true,
+      "encabezado_institucional_identico": true
+    },
+    {
+      "original": "src/lib/prisma.ts",
+      "final": "src/lib/prisma.ts",
+      "sha256_original": "b3762b726387d67b91946daa5f0030fe99305f779fed1b17d1f02d49a5ebe255",
+      "sha256_final": "b3762b726387d67b91946daa5f0030fe99305f779fed1b17d1f02d49a5ebe255",
+      "renombrado": false,
+      "contenido_modificado": false,
+      "encabezado_institucional_identico": true
+    },
+    {
+      "original": "src/lib/reservations/authorize-facility-reservation.ts",
+      "final": "src/lib/reservations/authorize-facility-reservation.ts",
+      "sha256_original": "c8b4bebf24d4730445d142abd4d4d1555ece687d69cb2d9815fe9dafb6cad521",
+      "sha256_final": "c45009e488f07985da6f3c564c9d67404b0e72bb5747f9197db4f9fafffc3827",
+      "renombrado": false,
+      "contenido_modificado": true,
+      "encabezado_institucional_identico": true
+    },
+    {
+      "original": "src/lib/stripe.ts",
+      "final": "src/lib/stripe.ts",
+      "sha256_original": "0e2df5da29f3fb5208f4e627af1a3214196cd90903475ed3b3f8fbd2a269ba10",
+      "sha256_final": "0e2df5da29f3fb5208f4e627af1a3214196cd90903475ed3b3f8fbd2a269ba10",
+      "renombrado": false,
+      "contenido_modificado": false,
+      "encabezado_institucional_identico": true
+    },
+    {
+      "original": "src/lib/thumbnails.ts",
+      "final": "src/lib/thumbnails.ts",
+      "sha256_original": "f639dd7944e03fcbf3e2408187b836efd9099cdea288fcef0e61bb0a70ea30b6",
+      "sha256_final": "f639dd7944e03fcbf3e2408187b836efd9099cdea288fcef0e61bb0a70ea30b6",
+      "renombrado": false,
+      "contenido_modificado": false,
+      "encabezado_institucional_identico": true
+    },
+    {
+      "original": "src/lib/uploadthing-server.ts",
+      "final": "src/lib/uploadthing-server.ts",
+      "sha256_original": "748db0bd0df3abed616d63267779f3cb3b493a1142db3958232f06bc559de2b6",
+      "sha256_final": "748db0bd0df3abed616d63267779f3cb3b493a1142db3958232f06bc559de2b6",
+      "renombrado": false,
+      "contenido_modificado": false,
+      "encabezado_institucional_identico": true
+    },
+    {
+      "original": "src/lib/uploadthing.ts",
+      "final": "src/lib/uploadthing.ts",
+      "sha256_original": "2a1107e261d143436b3c6c33f4c9c31f0c33787ea2e922e75152f1befd892392",
+      "sha256_final": "2a1107e261d143436b3c6c33f4c9c31f0c33787ea2e922e75152f1befd892392",
+      "renombrado": false,
+      "contenido_modificado": false,
+      "encabezado_institucional_identico": true
+    },
+    {
+      "original": "tsconfig.json",
+      "final": "tsconfig.json",
+      "sha256_original": "5c51df4c59f4510d8c7dadf07a5c32132228826a3b331da5e286207b4df7ef9c",
+      "sha256_final": "5c51df4c59f4510d8c7dadf07a5c32132228826a3b331da5e286207b4df7ef9c",
+      "renombrado": false,
+      "contenido_modificado": false
+    },
+    {
+      "original": "vercel.json",
+      "final": "vercel.json",
+      "sha256_original": "ca3d163bab055381827226140568f3bef7eaac187cebd76878e0b63e9e442356",
+      "sha256_final": "ca3d163bab055381827226140568f3bef7eaac187cebd76878e0b63e9e442356",
+      "renombrado": false,
+      "contenido_modificado": false
+    }
+  ]
+}

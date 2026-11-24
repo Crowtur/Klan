@@ -47,14 +47,14 @@ import { prisma } from "@/lib/prisma";
 import { requireAuth } from "@/lib/auth/auth";
 import { NextResponse } from "next/server";
 
-/** Devuelve las membresías del usuario y el contexto de acceso de sus clubes. */
+/** Devuelve las membresías del usuario y el contexto de acceso de sus entidades. */
 export async function GET(request: Request) {
   try {
     // 1. Obtener el usuario autenticado.
     const user = await requireAuth(request);
 
     // 2. Consultar únicamente sus membresías.
-    const memberships = await prisma.clubMembership.findMany({
+    const memberships = await prisma.entityMembership.findMany({
       where: {
         userId: user.id,
       },
@@ -70,7 +70,7 @@ export async function GET(request: Request) {
         removedAt: true, finishedAt: true,
         removalReason: true,
 
-        club: {
+        entity: {
           select: {
             id: true,
             name: true,

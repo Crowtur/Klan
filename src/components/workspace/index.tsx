@@ -42,76 +42,78 @@
  * ==============================================================================
  */
 
+// Refactorización Parte 11: vistas, parámetros y componentes del dominio Entity; textos visibles en español con concordancia femenina.
+
 "use client";
-import { ClubHero } from "./club-hero";
+import { EntityHero } from "./entity-hero";
 import { NoticeCount } from "./notice-count";
 import { PaymentHistory } from "./payment-history";
 import { Icon } from "@/components/ui";
-import { BrowseClubs } from "./explore";
+import { BrowseEntities } from "./explore";
 import { Feed } from "./feed";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useData, Status, href, type Row } from "./common";
-import { Personal, PublicClub, Payment } from "./personal";
-import { Club, Posts } from "./club";
+import { Personal, PublicEntity, Payment } from "./personal";
+import { Entity, Posts } from "./entity";
 import { Facility } from "./facilities";
 import {GlobalDashboard} from "./global-dashboard";
-import { GlobalClubs, Settlement } from "./dashboard";
+import { GlobalEntities, Settlement } from "./dashboard";
 import "./workspace.css";
-/** Lee la vista, el club y la pestaña desde la URL. Resuelve la sesión y la membresía antes de montar las herramientas del rol. */
+/** Lee la vista, la entidad y la pestaña desde la URL. Resuelve la sesión y la membresía antes de montar las herramientas del rol. */
 export default function Workspace({user}: {user: {id: string; firstName: string; globalRole: string}}) {
-    const q = useSearchParams(), view = q.get("view") || "feed", club = q.get("club") || "", id = q.get("id") || "", tab = q.get("tab") || "posts";
-    const memberships = useData(`/api/me/memberships?context=${encodeURIComponent(club)}`);
-    const member = memberships.data?.memberships.find((m: Row) => m.club.id === club && m.status === "ACTIVE" && m.club.status === "ACTIVE");
-    const admin = member?.role === "CLUB_ADMIN" || user.globalRole === "SUPER_ADMIN";
+    const q = useSearchParams(), view = q.get("view") || "feed", entity = q.get("entity") || "", id = q.get("id") || "", tab = q.get("tab") || "posts";
+    const memberships = useData(`/api/me/memberships?context=${encodeURIComponent(entity)}`);
+    const member = memberships.data?.memberships.find((m: Row) => m.entity.id === entity && m.status === "ACTIVE" && m.entity.status === "ACTIVE");
+    const admin = member?.role === "ENTITY_ADMIN" || user.globalRole === "SUPER_ADMIN";
     const global = user.globalRole === "SUPER_ADMIN";
-    const context = ["club", "facility"].includes(view), globalView = ["admin", "globalClubs", "settlement", "globalPosts"].includes(view);
+    const context = ["entity", "facility"].includes(view), globalView = ["admin", "globalEntities", "settlement", "globalPosts"].includes(view);
     return (<div className="workspace-shell">
       <nav className="workspace-nav" aria-label="Secciones"><div>
-        {[["feed", "Inicio", "home"], ["search", "Explorar clubes", "compass"], ["clubs", "Mis clubes", "users"], ["applications", "Mis solicitudes", "document"], ...(global ? [["admin", "Administración global", "grid"], ["globalClubs", "Gestionar clubes", "settings"]] : [])].map(([v, t, i]) => <Link key={v} href={href(v)} aria-current={view === v ? "page" : undefined}><Icon name={i} size={18}/>{t}{(v === "clubs" || v === "applications") && <NoticeCount kind={v}/>}</Link>)}
+        {[["feed", "Inicio", "home"], ["search", "Explorar entidades", "compass"], ["entities", "Mis entidades", "users"], ["applications", "Mis solicitudes", "document"], ...(global ? [["admin", "Administración global", "grid"], ["globalEntities", "Gestionar entidades", "settings"]] : [])].map(([v, t, i]) => <Link key={v} href={href(v)} aria-current={view === v ? "page" : undefined}><Icon name={i} size={18}/>{t}{(v === "entities" || v === "applications") && <NoticeCount kind={v}/>}</Link>)}
       </div></nav>
       <main id="main-content" className="workspace">
-        {memberships.loading && (view==="club" || view==="publicClub") ? <ClubHero/> : <Status state={memberships}>
+        {memberships.loading && (view==="entity" || view==="publicEntity") ? <EntityHero/> : <Status state={memberships}>
           {context && !member && !global ? (<p className="notice">
-              No tienes una membresía habilitada en este club.{" "}
-              <Link href={href("publicClub", { club })}>
+              No tienes una membresía habilitada en esta entidad.{" "}
+              <Link href={href("publicEntity", { entity })}>
                 Consultar información pública
               </Link>
               .
             </p>) : globalView && !global ? (<p className="error">
               No tienes acceso a la administración global.
-            </p>) : (<div className="workspace-view" key={view + club + id}>
+            </p>) : (<div className="workspace-view" key={view + entity + id}>
               {[
-                "clubs",
+                "entities",
                 "memberships",
                 "subscriptions",
                 "applications",
             ].includes(view) && <Personal view={view} q={q.get("q") || ""}/>}
               {view === "payments" && <PaymentHistory />}
               {view === "feed" && <Feed user={user} memberships={memberships.data?.memberships || []}/>}
-              {view === "search" && <BrowseClubs authenticated initialQuery={q.get("q") || ""}/>}
-              {view === "publicClub" && <PublicClub key={club+q.get("post")} club={club} target={q.get("post")||""}/>}
-              {view === "club" && <Club club={club} tab={tab} admin={admin}/>}
-              {view === "facility" && (<Facility club={club} id={id} admin={admin}/>)}
+              {view === "search" && <BrowseEntities authenticated initialQuery={q.get("q") || ""}/>}
+              {view === "publicEntity" && <PublicEntity key={entity+q.get("post")} entity={entity} target={q.get("post")||""}/>}
+              {view === "entity" && <Entity entity={entity} tab={tab} admin={admin}/>}
+              {view === "facility" && (<Facility entity={entity} id={id} admin={admin}/>)}
               {view === "payment" && <Payment id={id}/>}
               {view === "admin" && <GlobalDashboard />}
-              {view === "globalClubs" && <GlobalClubs />}
+              {view === "globalEntities" && <GlobalEntities />}
               {view === "settlement" && <Settlement id={id}/>}
-              {view === "globalPosts" && (<Posts club={club} admin canUpload={admin}/>)}
+              {view === "globalPosts" && (<Posts entity={entity} admin canUpload={admin}/>)}
               {![
                 "feed",
                 "search",
-                "clubs",
+                "entities",
                 "memberships",
                 "subscriptions",
                 "payments",
                 "applications",
-                "publicClub",
-                "club",
+                "publicEntity",
+                "entity",
                 "facility",
                 "payment",
                 "admin",
-                "globalClubs",
+                "globalEntities",
                 "settlement",
                 "globalPosts",
             ].includes(view) && (<p>

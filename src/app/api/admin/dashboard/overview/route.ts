@@ -75,11 +75,11 @@ function getGroupCount(group: {
   return count._all;
 }
 
-const clubStatusGroupArgs = {
+const entityStatusGroupArgs = {
   by: ["status"],
   orderBy: { status: "asc" },
   _count: { _all: true },
-} satisfies Prisma.ClubGroupByArgs;
+} satisfies Prisma.EntityGroupByArgs;
 
 const userStatusGroupArgs = {
   by: ["status"],
@@ -181,7 +181,7 @@ export async function GET(request: Request) {
 
     // 4. Consultas globales
     const [
-      clubStatusGroups,
+      entityStatusGroups,
       userStatusGroups,
       totalMemberships,
       activeMemberships,
@@ -190,22 +190,22 @@ export async function GET(request: Request) {
       reservationStatusGroups,
       paidPaymentsAggregate,
       paidPaymentsCount,
-      newClubsInPeriod,
+      newEntitiesInPeriod,
       newUsersInPeriod,
-      historicalClubs,
+      historicalEntities,
       historicalUsers,
     ] = await prisma.$transaction([
-      // Clubes por estado
-      prisma.club.groupBy(clubStatusGroupArgs),
+      // Entidades por estado
+      prisma.entity.groupBy(entityStatusGroupArgs),
 
       // Usuarios por estado
       prisma.user.groupBy(userStatusGroupArgs),
 
       // Membresías totales
-      prisma.clubMembership.count(),
+      prisma.entityMembership.count(),
 
       // Membresías activas
-      prisma.clubMembership.count({
+      prisma.entityMembership.count({
         where: {
           status: "ACTIVE",
         },
@@ -220,9 +220,9 @@ export async function GET(request: Request) {
           status: "ACTIVE",
           startedAt: { lte: now },
           expiresAt: { gt: now },
-          clubMembership: {
+          entityMembership: {
             status: "ACTIVE",
-            club: {
+            entity: {
               status: "ACTIVE",
             },
           },
@@ -276,8 +276,8 @@ export async function GET(request: Request) {
         },
       }),
 
-      // Clubes creados durante el mes
-      prisma.club.count({
+      // Entidades creadas durante el mes
+      prisma.entity.count({
         where: {
           createdAt: {
             gte: periodStart,
@@ -296,8 +296,8 @@ export async function GET(request: Request) {
         },
       }),
 
-      // Clubes creados en los últimos 12 meses
-      prisma.club.findMany({
+      // Entidades creadas en los últimos 12 meses
+      prisma.entity.findMany({
         where: {
           createdAt: {
             gte: historyStart,
@@ -323,21 +323,21 @@ export async function GET(request: Request) {
       }),
     ]);
 
-    // 5. Distribución de clubes
-    const clubsByStatus = {
+    // 5. Distribución de entidades
+    const entitiesByStatus = {
       ACTIVE: 0,
       INACTIVE: 0,
       SUSPENDED: 0,
     };
 
-    for (const group of clubStatusGroups) {
-      clubsByStatus[group.status] = getGroupCount(group);
+    for (const group of entityStatusGroups) {
+      entitiesByStatus[group.status] = getGroupCount(group);
     }
 
-    const totalClubs =
-      clubsByStatus.ACTIVE +
-      clubsByStatus.INACTIVE +
-      clubsByStatus.SUSPENDED;
+    const totalEntities =
+      entitiesByStatus.ACTIVE +
+      entitiesByStatus.INACTIVE +
+      entitiesByStatus.SUSPENDED;
 
     // 6. Distribución de usuarios
     const usersByStatus = {
@@ -389,7 +389,7 @@ export async function GET(request: Request) {
       reservationsByStatus.CONFIRMED +
       reservationsByStatus.CANCELLED;
 
-    // 9. Crecimiento mensual de clubes y usuarios
+    // 9. Crecimiento mensual de entidades y usuarios
     const monthlyGrowth = [];
 
     for (let i = 11; i >= 0; i--) {
@@ -400,10 +400,10 @@ export async function GET(request: Request) {
       const itemYear = date.getUTCFullYear();
       const itemMonth = date.getUTCMonth() + 1;
 
-      const newClubs = historicalClubs.filter(
-        (club) => {
+      const newEntities = historicalEntities.filter(
+        (entity) => {
           const local = getLocalYearMonth(
-            club.createdAt
+            entity.createdAt
           );
 
           return (
@@ -430,7 +430,7 @@ export async function GET(request: Request) {
         year: itemYear,
         month: itemMonth,
         label: monthLabel(itemYear, itemMonth),
-        newClubs,
+        newEntities,
         newUsers,
       });
     }
@@ -449,12 +449,12 @@ export async function GET(request: Request) {
 
       generatedAt: now.toISOString(),
 
-      clubs: {
-        total: totalClubs,
-        active: clubsByStatus.ACTIVE,
-        inactive: clubsByStatus.INACTIVE,
-        suspended: clubsByStatus.SUSPENDED,
-        newInPeriod: newClubsInPeriod,
+      entities: {
+        total: totalEntities,
+        active: entitiesByStatus.ACTIVE,
+        inactive: entitiesByStatus.INACTIVE,
+        suspended: entitiesByStatus.SUSPENDED,
+        newInPeriod: newEntitiesInPeriod,
       },
 
       users: {

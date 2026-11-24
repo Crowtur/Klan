@@ -1,0 +1,18 @@
+{
+  "mode": "upgrade",
+  "result": "PASS",
+  "migrations": 26,
+  "tables": 23,
+  "preservedRows": 28,
+  "checks": [
+    "schema sin diferencias",
+    "historial aplicado",
+    "repetición sin cambios",
+    "filas completas preservadas",
+    "roles y eventos",
+    "pagos y fechas",
+    "notificaciones y destinos",
+    "claves únicas y foráneas",
+    "exclusión de reservas"
+  ]
+}

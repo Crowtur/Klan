@@ -114,7 +114,7 @@ const names: Record<string, string> = {
     stripe: "Procesamiento",
     transfer: "Transferencia",
     platform: "Plataforma",
-    estimatedClubNet: "Neto estimado del club",
+    estimatedEntityNet: "Neto estimado de la entidad",
     revenueByPlan: "Ingresos por plan",
     monthlyRevenue: "Ingresos mensuales",
     paymentStatuses: "Estados de pago",
@@ -146,7 +146,7 @@ const names: Record<string, string> = {
     firstName: "Nombre",
     lastName: "Apellido",
     email: "Correo",
-    club: "Club",
+    entity: "Entidad",
     plan: "Plan",
     facility: "Instalación",
     createdAt: "Fecha de creación",
@@ -155,11 +155,11 @@ const names: Record<string, string> = {
     endAt: "Fin",
     amount: "Importe",
     currency: "Moneda",
-    clubs: "Clubes",
+    entities: "Entidades",
     users: "Usuarios",
     memberships: "Membresías",
     newInPeriod: "Nuevos del período",
-    financesByClub: "Finanzas por club",
+    financesByEntity: "Finanzas por entidad",
     recordedGross: "Bruto registrado",
     recordedPlatformFees: "Comisiones registradas",
     recordedNet: "Neto registrado",
@@ -172,15 +172,15 @@ const names: Record<string, string> = {
     estimatedPlatformFees: "Comisiones estimadas",
     platformFeeDifference: "Diferencia de comisiones",
     hour: "Hora",
-    totalClubs: "Total de clubes",
-    clubsWithActivity: "Clubes con actividad",
-    clubsWithoutActivity: "Clubes sin actividad",
+    totalEntities: "Total de entidades",
+    entitiesWithActivity: "Entidades con actividad",
+    entitiesWithoutActivity: "Entidades sin actividad",
     totals: "Totales",
     statistics: "Estadísticas",
     newMembers: "Nuevos miembros",
     newSubscriptions: "Nuevas suscripciones",
     newUsers: "Nuevos usuarios",
-    newClubs: "Nuevos clubes",
+    newEntities: "Nuevas entidades",
     totalPayments: "Total de pagos",
     totalAmount: "Importe total",
     totalMinutes: "Minutos totales",
@@ -224,11 +224,11 @@ function Facts({ value, depth = 0 }: {
     return <><div className="facts-grid">{simple.map(([k, v]) => <dl className="fact" key={k}><dt>{names[k] || label(k).replace(/([a-z])([A-Z])/g, "$1 $2")}</dt><dd className={typeof v==="number" || typeof v==="string" && monetary.test(k) ? "numeric":undefined}>{k === "status" ? <Badge value={v}/> : scalar(v, k)}</dd></dl>)}</div>{nested.map(([k, v]) => <section className="facts-section" key={k}><h3>{names[k] || label(k)}</h3><Facts value={v} depth={depth + 1}/></section>)}</>;
 }
 type DashboardFilters = {section:string;period:string};
-/** Usa el club para seleccionar la API y las secciones disponibles. El tablero global recibe sus filtros desde la URL. */
-export function Dashboard({ club, filters, onFilters }: {
+/** Usa la entidad para seleccionar la API y las secciones disponibles. El tablero global recibe sus filtros desde la URL. */
+export function Dashboard({ entity, filters, onFilters }: {
     filters?:DashboardFilters;
     onFilters?:(filters:DashboardFilters)=>void;
-    club?: string;
+    entity?: string;
 }) {
     const [localSection, setLocalSection] = useState("overview"), [localPeriod, setLocalPeriod] = useState(new Date()
         .toLocaleDateString("en-CA", { timeZone: "America/Guayaquil" })
@@ -238,9 +238,9 @@ export function Dashboard({ club, filters, onFilters }: {
     const setSection = (value:string) => onFilters ? onFilters({section:value,period}) : setLocalSection(value);
     const setPeriod = (value:string) => onFilters ? onFilters({section,period:value}) : setLocalPeriod(value);
     const [year, month] = period.split("-");
-    const prefix = club ? `/api/clubs/${club}/dashboard` : "/api/admin/dashboard";
+    const prefix = entity ? `/api/entities/${entity}/dashboard` : "/api/admin/dashboard";
     const state = useData(`${prefix}/${section}?year=${year}&month=${Number(month)}`, v);
-    const options = club
+    const options = entity
         ? [
             ["overview", "Resumen"],
             ["members", "Miembros"],
@@ -253,7 +253,7 @@ export function Dashboard({ club, filters, onFilters }: {
             ["overview", "Resumen"],
             ["finances", "Finanzas y liquidaciones"],
         ];
-    const allowed = club
+    const allowed = entity
         ? [
             "members",
             "subscriptions",
@@ -279,7 +279,7 @@ export function Dashboard({ club, filters, onFilters }: {
             "recentActivity",
         ]
         : [
-            "clubs",
+            "entities",
             "users",
             "memberships",
             "subscriptions",
@@ -287,12 +287,12 @@ export function Dashboard({ club, filters, onFilters }: {
             "finances",
             "monthlyGrowth",
             "summary",
-            "financesByClub",
+            "financesByEntity",
             "monthlyRevenue",
             "reconciliation",
         ];
     return (<>
-      <PageHeading level={club ? 2 : 1} eyebrow={club ? "Tu club, de un vistazo" : "Administración global"} title={club ? "Resumen y actividad" : "El pulso de Klan"} description="Consulta las métricas y el movimiento de tu comunidad."/>
+      <PageHeading level={entity ? 2 : 1} eyebrow={entity ? "Tu entidad, de un vistazo" : "Administración global"} title={entity ? "Resumen y actividad" : "El pulso de Klan"} description="Consulta las métricas y el movimiento de tu comunidad."/>
       <div className="dashboard-controls">
         <label>
           Sección
@@ -311,22 +311,22 @@ export function Dashboard({ club, filters, onFilters }: {
         </label>
 
       </div>
-      {!club && section === "finances" && <GlobalFinances year={year} month={month} version={v} onDone={() => setV(v + 1)}/>}
-      {club && section === "finances" && (<p>
+      {!entity && section === "finances" && <GlobalFinances year={year} month={month} version={v} onDone={() => setV(v + 1)}/>}
+      {entity && section === "finances" && (<p>
           Importes en USD. Las comisiones son estimadas; las liquidaciones
           reflejan los registros del período.
         </p>)}
-      {(club || section !== "finances") && <Status state={state}>
-        {!club && section==="overview" && state.data ? <GlobalOverview data={state.data} year={year} month={month}/> : <div className="dashboard-grid">{state.data &&
+      {(entity || section !== "finances") && <Status state={state}>
+        {!entity && section==="overview" && state.data ? <GlobalOverview data={state.data} year={year} month={month}/> : <div className="dashboard-grid">{state.data &&
                 allowed
                     .filter((k) => state.data?.[k] !== undefined)
                     .map((k) => (<Panel key={k} title={names[k] || k}>
                 <Facts value={state.data?.[k]}/>
               </Panel>))}
-        </div>}{!club && section === "finances" && (<Panel title="Liquidaciones del período">
+        </div>}{!entity && section === "finances" && (<Panel title="Liquidaciones del período">
             {state.data?.settlements?.records?.map((r: Row) => (<p key={r.id}>
                 <Link href={href("settlement", { id: r.id })}>
-                  {r.club?.name || r.clubName || "Liquidación"} ·{" "}
+                  {r.entity?.name || r.entityName || "Liquidación"} ·{" "}
                   {money(r.netAmount)} · {label(r.status)}
                 </Link>
               </p>))}
@@ -334,38 +334,38 @@ export function Dashboard({ club, filters, onFilters }: {
       </Status>}
     </>);
 }
-/** Filtra y pagina clubes. La visita como administrador y como visitante lleva a vistas con permisos distintos. */
-export function GlobalClubs() {
+/** Filtra y pagina entidades. La visita como administrador y como visitante lleva a vistas con permisos distintos. */
+export function GlobalEntities() {
     const [v, setV] = useState(0), [page, setPage] = useState(1), [search, setSearch] = useState(""), [status, setStatus] = useState("");
     const [order,setOrder]=useState("oldest");
-    const state = useData("/api/admin/dashboard/clubs?" +
+    const state = useData("/api/admin/dashboard/entities?" +
         new URLSearchParams({
             page: String(page),
             limit: "10",order,scope:"lifetime",
             search,
             ...(status ? { status } : {}),
         }), v);
-    const platform=useData(search||status?"/api/admin/dashboard/clubs?scope=lifetime&limit=1":null,v);
+    const platform=useData(search||status?"/api/admin/dashboard/entities?scope=lifetime&limit=1":null,v);
     const summary=(search||status?platform.data:state.data)?.summary;
     return (<>
-      <PageHeading eyebrow="Administración global" title="Clubes de la plataforma" description="Supervisa y administra las comunidades de la plataforma."/>
+      <PageHeading eyebrow="Administración global" title="Entidades de la plataforma" description="Supervisa y administra las comunidades de la plataforma."/>
       <div className="metrics-grid">{[
-        ["Clubes registrados",summary?.totalClubs,summary && summary.byStatus.ACTIVE+" activos · "+summary.byStatus.SUSPENDED+" suspendidos"],
+        ["Entidades registradas",summary?.totalEntities,summary && summary.byStatus.ACTIVE+" activas · "+summary.byStatus.SUSPENDED+" suspendidas"],
         ["Miembros totales",summary?.totals.members,summary && summary.totals.activeMembers+" miembros activos"],
         ["Ingresos brutos",summary && money(summary.totals.grossRevenue),"Acumulado de la plataforma"]
       ].map(([k,n,detail])=><dl className="metric-card" key={k}><dt>{k}</dt><dd>{n??"—"}</dd><small>{detail}</small></dl>)}</div>
-      <div className="club-filter"><label><Icon name="search"/><input aria-label="Buscar club" placeholder="Buscar club por nombre..." value={search} onChange={e=>{setSearch(e.target.value);setPage(1)}}/></label>
-      <select aria-label="Estado de los clubes" value={status} onChange={e=>{setStatus(e.target.value);setPage(1)}}><option value="">Todos</option><option value="ACTIVE">Activos</option><option value="SUSPENDED">Suspendidos</option><option value="INACTIVE">Inactivos</option></select></div>
-      <div className="list-heading"><small>{state.data?.pagination.totalItems??"—"} clubes</small><label>Ordenar<select value={order} onChange={e=>{setOrder(e.target.value);setPage(1)}}><option value="oldest">Más antiguos primero</option><option value="newest">Más recientes primero</option></select></label></div>
-      <Status state={state}>{state.data?.clubs.length===0&&<p>No se encontraron clubes.</p>}
-      {state.data?.clubs.map((c:Row)=>{const m=c.statistics;return <article className="panel global-club" key={c.id}><header><span className="avatar">{safeUrl(c.logoUrl)?<AvatarImage src={safeUrl(c.logoUrl)} alt=""/>:c.name.slice(0,2).toUpperCase()}</span><div><h2>{c.name}</h2><small>{c.address&&c.address+" · "}Desde {new Date(c.createdAt).toLocaleDateString("es-EC",{month:"short",year:"numeric"})}</small></div><Badge value={c.status}/></header>
-      <div className="club-kpis">{[
+      <div className="entity-filter"><label><Icon name="search"/><input aria-label="Buscar entidad" placeholder="Buscar entidad por nombre..." value={search} onChange={e=>{setSearch(e.target.value);setPage(1)}}/></label>
+      <select aria-label="Estado de las entidades" value={status} onChange={e=>{setStatus(e.target.value);setPage(1)}}><option value="">Todas</option><option value="ACTIVE">Activas</option><option value="SUSPENDED">Suspendidas</option><option value="INACTIVE">Inactivas</option></select></div>
+      <div className="list-heading"><small>{state.data?.pagination.totalItems??"—"} entidades</small><label>Ordenar<select value={order} onChange={e=>{setOrder(e.target.value);setPage(1)}}><option value="oldest">Más antiguas primero</option><option value="newest">Más recientes primero</option></select></label></div>
+      <Status state={state}>{state.data?.entities.length===0&&<p>No se encontraron entidades.</p>}
+      {state.data?.entities.map((c:Row)=>{const m=c.statistics;return <article className="panel global-entity" key={c.id}><header><span className="avatar">{safeUrl(c.logoUrl)?<AvatarImage src={safeUrl(c.logoUrl)} alt=""/>:c.name.slice(0,2).toUpperCase()}</span><div><h2>{c.name}</h2><small>{c.address&&c.address+" · "}Desde {new Date(c.createdAt).toLocaleDateString("es-EC",{month:"short",year:"numeric"})}</small></div><Badge value={c.status}/></header>
+      <div className="entity-kpis">{[
         ["Miembros",m.totalMembers+" totales",m.activeMembers+" activos"],
         ["Planes y suscripciones",m.activePlans+" planes activos",m.totalPlans+" planes totales · "+m.activeSubscriptions+" suscripciones activas · "+m.totalFacilities+" instalaciones"],
         ["Reservas y pagos",m.confirmedReservations+" confirmadas",m.cancelledReservations+" canceladas · "+m.paidPayments+" pagos realizados"],
         ["Finanzas",money(m.grossRevenue),"Ingresos brutos acumulados"]].map(([k,n,v])=><div key={k}><small>{k}</small><strong>{n}</strong><small>{v}</small></div>)}</div>
-      <footer><small>{c.status==="SUSPENDED"?"Acceso al club suspendido":"Los cambios de estado requieren confirmación"}</small><Action variant={c.status==="ACTIVE" ? "club-suspension" : undefined} url={`/api/clubs/${c.id}/${c.status==="ACTIVE"?"suspend":"reactivate"}`} confirm={c.status==="ACTIVE"?"¿Suspender el club y sus membresías?":"¿Reactivar el club?"} onDone={()=>setV(v=>v+1)}>{c.status==="ACTIVE"?"Suspender":"Reactivar"}</Action>
-      <ActionDropdown label="Visitar club">{close=><><Link onClick={close} href={href("club",{club:c.id})}>Como admin</Link><Link onClick={close} href={href("publicClub",{club:c.id})}>Como visitante</Link></>}</ActionDropdown></footer></article>})}
+      <footer><small>{c.status==="SUSPENDED"?"Acceso a la entidad suspendido":"Los cambios de estado requieren confirmación"}</small><Action variant={c.status==="ACTIVE" ? "entity-suspension" : undefined} url={`/api/entities/${c.id}/${c.status==="ACTIVE"?"suspend":"reactivate"}`} confirm={c.status==="ACTIVE"?"¿Suspender la entidad y sus membresías?":"¿Reactivar la entidad?"} onDone={()=>setV(v=>v+1)}>{c.status==="ACTIVE"?"Suspender":"Reactivar"}</Action>
+      <ActionDropdown label="Visitar entidad">{close=><><Link onClick={close} href={href("entity",{entity:c.id})}>Como admin</Link><Link onClick={close} href={href("publicEntity",{entity:c.id})}>Como visitante</Link></>}</ActionDropdown></footer></article>})}
         <Pager data={state.data} page={page} onPage={setPage}/>
       </Status>
     </>);
@@ -378,13 +378,13 @@ export function Settlement({ id }: {
     const [uploadError,setUploadError]=useState("");
     const state = useData(`/api/admin/settlements/${id}`, v);
     return (<>
-      <PageHeading eyebrow="Administración global" title="Detalle de liquidación" description="Importes y seguimiento de transferencias del club en USD." action={<Link className="btn btn-outline" href={href("admin")}>Volver al panel <Icon name="arrow" size={16}/></Link>}/>
+      <PageHeading eyebrow="Administración global" title="Detalle de liquidación" description="Importes y seguimiento de transferencias de la entidad en USD." action={<Link className="btn btn-outline" href={href("admin")}>Volver al panel <Icon name="arrow" size={16}/></Link>}/>
       <Status state={state}>
         {state.data && (<>
-            <Panel title={state.data.settlement.club?.name}>
+            <Panel title={state.data.settlement.entity?.name}>
               <div className="metrics-grid">{[["Bruto", state.data.settlement.grossAmount], ["Comisiones", state.data.settlement.totalFees], ["Neto a abonar", state.data.settlement.netAmount]].map(([k, v]) => <dl className="metric-card" key={k}><dt>{k}</dt><dd>{money(v)}</dd></dl>)}</div><p><Badge value={state.data.settlement.status}/> · {state.data.settlement.month}/{state.data.settlement.year}</p><p>Referencia: {state.data.settlement.paymentReference || "Pendiente de registrar"}</p><p>{state.data.settlement.notes}</p>
             </Panel>
-            <BankDetails data={state.data.settlement.club.bankDetails}/><Panel title="Comprobante de pago">{safeUrl(state.data.settlement.receiptUrl)&&<a className="btn btn-outline" target="_blank" rel="noreferrer" href={safeUrl(state.data.settlement.receiptUrl)}>Ver comprobante: {state.data.settlement.receiptFileName}</a>}<UploadDropzone endpoint="settlementReceiptUploader" input={{settlementId:id}} config={{mode:"auto"}} content={{label:"Arrastra el comprobante o haz clic para elegir",allowedContent:"Un PDF o imagen · Máximo 8 MB",button:"Subir comprobante"}} onClientUploadComplete={()=>setV(v=>v+1)} onUploadError={e=>setUploadError(e.message)}/>{uploadError&&<p role="alert">{uploadError}</p>}</Panel>
+            <BankDetails data={state.data.settlement.entity.bankDetails}/><Panel title="Comprobante de pago">{safeUrl(state.data.settlement.receiptUrl)&&<a className="btn btn-outline" target="_blank" rel="noreferrer" href={safeUrl(state.data.settlement.receiptUrl)}>Ver comprobante: {state.data.settlement.receiptFileName}</a>}<UploadDropzone endpoint="settlementReceiptUploader" input={{settlementId:id}} config={{mode:"auto"}} content={{label:"Arrastra el comprobante o haz clic para elegir",allowedContent:"Un PDF o imagen · Máximo 8 MB",button:"Subir comprobante"}} onClientUploadComplete={()=>setV(v=>v+1)} onUploadError={e=>setUploadError(e.message)}/>{uploadError&&<p role="alert">{uploadError}</p>}</Panel>
             <p>Registrar el estado no realiza una transferencia bancaria.</p>
             <SettlementForm settlement={state.data.settlement} onDone={()=>setV(v=>v+1)}/>
           </>)}
@@ -396,5 +396,5 @@ export function Settlement({ id }: {
 function GlobalOverview({data:d,year,month}:{data:Row;year:string;month:string}){
  const finance=useData(`/api/admin/dashboard/finances?year=${year}&month=${Number(month)}`);
  const statusValues=(v:Row)=>Object.entries(v).map(([key,value])=>({label:names[key]||label(key),value:Number(value)}));
- return <><div className="charts-grid"><Pie title="Clubes" values={statusValues({active:d.clubs.active,inactive:d.clubs.inactive,suspended:d.clubs.suspended})}/><Pie title="Usuarios" values={statusValues({active:d.users.active,inactive:d.users.inactive,suspended:d.users.suspended})}/><Pie title="Membresías" values={[{label:"Activas",value:d.memberships.active},{label:"No activas",value:Math.max(0,d.memberships.total-d.memberships.active)}]}/><Pie title="Suscripciones" values={statusValues(d.subscriptions.byStatus)}/><Pie title="Reservas" values={statusValues({confirmed:d.reservations.confirmed,cancelled:d.reservations.cancelled})}/><Status state={finance}><FinanceChart clubs={finance.data?.financesByClub||[]}/></Status></div><Bars mobileTimeline byYear grouped title="Evolución mensual" yAxis="Altas" xAxis="Meses" calendar="month" series={["Nuevos clubes","Nuevos usuarios"]} rows={d.monthlyGrowth.map((r:Row)=>({label:r.year+"-"+String(r.month).padStart(2,"0"),values:[r.newClubs,r.newUsers]}))}/></>;
+ return <><div className="charts-grid"><Pie title="Entidades" values={[{label:"Activas",value:d.entities.active},{label:"Inactivas",value:d.entities.inactive},{label:"Suspendidas",value:d.entities.suspended}]}/><Pie title="Usuarios" values={statusValues({active:d.users.active,inactive:d.users.inactive,suspended:d.users.suspended})}/><Pie title="Membresías" values={[{label:"Activas",value:d.memberships.active},{label:"No activas",value:Math.max(0,d.memberships.total-d.memberships.active)}]}/><Pie title="Suscripciones" values={statusValues(d.subscriptions.byStatus)}/><Pie title="Reservas" values={statusValues({confirmed:d.reservations.confirmed,cancelled:d.reservations.cancelled})}/><Status state={finance}><FinanceChart entities={finance.data?.financesByEntity||[]}/></Status></div><Bars mobileTimeline byYear grouped title="Evolución mensual" yAxis="Altas" xAxis="Meses" calendar="month" series={["Nuevas entidades","Nuevos usuarios"]} rows={d.monthlyGrowth.map((r:Row)=>({label:r.year+"-"+String(r.month).padStart(2,"0"),values:[r.newEntities,r.newUsers]}))}/></>;
 }

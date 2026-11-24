@@ -69,16 +69,16 @@ const dayNames = [
     "Sábado",
     "Domingo",
 ];
-/** Lista las instalaciones y habilita su creación para el administrador del club. */
-export function Facilities({ club, admin }: {
-    club: string;
+/** Lista las instalaciones y habilita su creación para el administrador de la entidad. */
+export function Facilities({ entity, admin }: {
+    entity: string;
     admin: boolean;
 }) {
     const [v, setV] = useState(0);
-    const base = `/api/clubs/${club}/facilities`;
+    const base = `/api/entities/${entity}/facilities`;
     const state = useData(base, v);
     return (<>
-      <div className="list-heading"><div><h2>Instalaciones <small>{state.data?.facilities.length}</small></h2><p>Explora los espacios del club y encuentra el lugar para tu próxima actividad.</p></div>
+      <div className="list-heading"><div><h2>Instalaciones <small>{state.data?.facilities.length}</small></h2><p>Explora los espacios de la entidad y encuentra el lugar para tu próxima actividad.</p></div>
       {admin && (<EditorModal title="Crear instalación">
           <Form fields={facilityFields} url={base} onDone={() => setV(v + 1)}/>
         </EditorModal>)}</div>
@@ -86,20 +86,20 @@ export function Facilities({ club, admin }: {
         <Empty rows={state.data?.facilities || []}/>
         <div className="bounded-cards">
         {state.data?.facilities.map((f: Row) => (<article key={f.id} className="panel facility-tile"><header><h3>{f.name}</h3><FacilityIcon value={f.icon}/></header><p>{f.description}</p><Location value={f.location}/><div className="facility-meta"><small>Capacidad: {f.capacity??"—"}</small><Badge value={f.status}/></div>
-    <footer><Link className="btn btn-outline" href={href("facility",{club,id:f.id})}>Consultar y reservar</Link></footer></article>))}
+    <footer><Link className="btn btn-outline" href={href("facility",{entity,id:f.id})}>Consultar y reservar</Link></footer></article>))}
         </div>{!!state.data?.facilities.length && <div className="facility-meta"><small>Mostrando {state.data.facilities.length} de {state.data.facilities.length} instalaciones</small><small>{state.data.facilities.every((f:Row)=>f.status==="ACTIVE")?"Todas las instalaciones están activas":""}</small></div>}
       </Status>
     </>);
 }
-/** Comparte el listado entre el club y la instalación. El estado y el final del intervalo determinan si se puede cancelar. */
-export function Reservations({ club, facility, admin = false, onChanged, }: {
-    club: string;
+/** Comparte el listado entre la entidad y la instalación. El estado y el final del intervalo determinan si se puede cancelar. */
+export function Reservations({ entity, facility, admin = false, onChanged, }: {
+    entity: string;
     facility?: string;
     admin?: boolean;
     onChanged?: () => void;
 }) {
     const [v, setV] = useState(0);
-    const base = `/api/clubs/${club}`;
+    const base = `/api/entities/${entity}`;
     const state = useData(facility
         ? `${base}/facilities/${facility}/reservations`
         : `${base}/my-reservations`, v);
@@ -111,7 +111,7 @@ export function Reservations({ club, facility, admin = false, onChanged, }: {
         {state.data?.reservations.map((r: Row) => (<Panel key={r.id} title={r.facility?.name || "Reserva"}>
             <p>{new Date(r.startAt).toLocaleDateString("es-EC", {dateStyle:"long", timeZone:"America/Guayaquil"})}</p>
             <p className="reservation-time"><Icon name="clock" size={16}/>{new Date(r.startAt).toLocaleTimeString("es-EC", {hour:"2-digit",minute:"2-digit",hour12:false,timeZone:"America/Guayaquil"})} · {Math.round((Date.parse(r.endAt)-Date.parse(r.startAt))/60000)} min</p>
-            <p><Badge value={r.status==="CONFIRMED" && Date.parse(r.endAt)<=Date.now()?"RESERVATION_EXPIRED":r.status}/></p>{r.clubMembership?.user && <p>Reserva de {r.clubMembership.user.firstName} {r.clubMembership.user.lastName}</p>}
+            <p><Badge value={r.status==="CONFIRMED" && Date.parse(r.endAt)<=Date.now()?"RESERVATION_EXPIRED":r.status}/></p>{r.entityMembership?.user && <p>Reserva de {r.entityMembership.user.firstName} {r.entityMembership.user.lastName}</p>}
             {r.status === "CONFIRMED" && Date.parse(r.endAt)>Date.now() && (<Action variant="destructive" method="PATCH" url={`${base}/facilities/${r.facilityId || facility}/reservations/${r.id}`} confirm="¿Cancelar esta reserva?" onDone={() => { setV(v + 1); onChanged?.(); }}>
                 Cancelar reserva
               </Action>)}
@@ -145,25 +145,25 @@ function MobileBooking({ slots, base, onDone }: { slots: Row[]; base: string; on
 }
 
 /** Combina la ficha con disponibilidad por día y duración. Actualiza horarios y reservas después de cada operación. */
-export function Facility({ club, id, admin, }: {
-    club: string;
+export function Facility({ entity, id, admin, }: {
+    entity: string;
     id: string;
     admin: boolean;
 }) {
-    const base = `/api/clubs/${club}/facilities/${id}`;
+    const base = `/api/entities/${entity}/facilities/${id}`;
     const [v, setV] = useState(0), [day, setDay] = useState(new Date().toLocaleDateString("en-CA", { timeZone: "America/Guayaquil" })), [duration, setDuration] = useState(60);
     const state = useData(base, v);
     // El aviso persiste mientras la consulta se actualiza y desmonta la franja recién reservada.
     const [bookingNotice, setBookingNotice] = useState("");
     const available = useData(`${base}/availability?date=${day}&duration=${duration}&step=30`, v);
     const schedule = useData(`${base}/schedule`, v);
-    const identity=useData(`/api/clubs/${club}`);
+    const identity=useData(`/api/entities/${entity}`);
     const f = state.data?.facility;
     return (<>
-      <Link className="btn btn-outline back-button" href={href("club", { club, tab: "facilities" })}>
-        Volver al club
+      <Link className="btn btn-outline back-button" href={href("entity", { entity, tab: "facilities" })}>
+        Volver a la entidad
       </Link>
-      {identity.data?.club&&<div className="club-identity"><span className="avatar">{safeUrl(identity.data.club.logoUrl)&&<AvatarImage src={safeUrl(identity.data.club.logoUrl)} alt=""/>}</span><div><h2>{identity.data.club.name}</h2><p>{identity.data.club.description}</p></div></div>}
+      {identity.data?.entity&&<div className="entity-identity"><span className="avatar">{safeUrl(identity.data.entity.logoUrl)&&<AvatarImage src={safeUrl(identity.data.entity.logoUrl)} alt=""/>}</span><div><h2>{identity.data.entity.name}</h2><p>{identity.data.entity.description}</p></div></div>}
       <h1>{f?.name || "Instalación"}</h1>
       <Status state={state}>
         {f && (<>
@@ -250,11 +250,11 @@ export function Facility({ club, id, admin, }: {
             </Status>
           </EditorModal>
           <EditorModal key={`a${v}`} title="Planes con acceso a esta instalación" lazy>
-            <AccessEditor club={club} base={base} onDone={() => setV(v + 1)}/>
+            <AccessEditor entity={entity} base={base} onDone={() => setV(v + 1)}/>
           </EditorModal>
-          </div><Reservations key={v} club={club} facility={id} admin onChanged={() => setV(v + 1)}/>
+          </div><Reservations key={v} entity={entity} facility={id} admin onChanged={() => setV(v + 1)}/>
         </>)}
-      {!admin && <Reservations key={v} club={club} onChanged={() => setV(v + 1)}/>}
+      {!admin && <Reservations key={v} entity={entity} onChanged={() => setV(v + 1)}/>}
     </>);
 }
 /** Mantiene intervalos editables por día y envía el conjunto de horarios al guardar. */
@@ -326,12 +326,12 @@ function ScheduleForm({ base, initial, onDone, }: {
     </form>);
 }
 /** Consulta los permisos de acceso para los planes de la instalación. */
-function AccessEditor({ club, base, onDone, }: {
-    club: string;
+function AccessEditor({ entity, base, onDone, }: {
+    entity: string;
     base: string;
     onDone: () => void;
 }) {
-    const plans = useData(`/api/clubs/${club}/membership-plans`), access = useData(`${base}/plan-access`);
+    const plans = useData(`/api/entities/${entity}/membership-plans`), access = useData(`${base}/plan-access`);
     return (
       <Status state={plans}>
         <Status state={access}>

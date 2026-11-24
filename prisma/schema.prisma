@@ -42,6 +42,8 @@
 //  * ==============================================================================
 //  */
 
+// Refactorización Parte 11: dominio Entity para entidades, asociaciones, academias y comunidades. Se aplica mediante una migración de renombrado que conserva los datos.
+
 generator client {
   provider = "prisma-client-js"
 }
@@ -63,8 +65,8 @@ enum UserStatus {
   SUSPENDED
 }
 
-enum ClubRole {
-  CLUB_ADMIN
+enum EntityRole {
+  ENTITY_ADMIN
   MEMBER
 }
 
@@ -75,7 +77,7 @@ enum MembershipStatus {
   FINISHED
 }
 
-enum ClubStatus {
+enum EntityStatus {
   ACTIVE
   INACTIVE
   SUSPENDED
@@ -192,7 +194,7 @@ enum WebhookEventStatus {
   FAILED
 }
 
-/// Identidad global. La participación y el rol de cada club se registran en ClubMembership.
+/// Identidad global. La participación y el rol de cada entidad se registran en EntityMembership.
 model User {
   id           String     @id @default(uuid())
   firstName    String
@@ -209,7 +211,7 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  memberships            ClubMembership[]
+  memberships            EntityMembership[]
   membershipApplications MembershipApplication[]
   payments               Payment[]
   posts                  Post[]
@@ -218,13 +220,13 @@ model User {
 }
 
 /// Ámbito que agrupa planes, instalaciones, miembros y movimientos financieros.
-model Club {
-  bankDetails ClubBankDetails?
+model Entity {
+  bankDetails EntityBankDetails?
   id          String     @id @default(uuid())
   name        String
   slug        String     @unique
   description String?
-  status      ClubStatus @default(ACTIVE)
+  status      EntityStatus @default(ACTIVE)
 
   // Zona IANA: las fechas de informes y horarios usan esta zona.
   timeZone      String  @default("America/Guayaquil")
@@ -233,31 +235,31 @@ model Club {
   coverUrl      String?
   coverFileKey  String?
 
-  // Logotipo del club
+  // Logotipo de la entidad
   logoUrl     String?
   logoFileKey String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  memberships        ClubMembership[]
+  memberships        EntityMembership[]
   membershipPlans    MembershipPlan[]
   payments           Payment[]
-  settlements        ClubSettlement[]
+  settlements        EntitySettlement[]
   facilities         Facility[]
   posts              Post[]
   notifications      Notification[]
   paymentObligations PaymentObligation[]
 }
 
-/// Una relación única por usuario y club conserva rol, estado e historial de acceso.
-model ClubMembership {
+/// Una relación única por usuario y entidad conserva rol, estado e historial de acceso.
+model EntityMembership {
   id String @id @default(uuid())
 
   userId String
-  clubId String
+  entityId String
 
-  role   ClubRole         @default(MEMBER)
+  role   EntityRole         @default(MEMBER)
   status MembershipStatus @default(ACTIVE)
 
   joinedAt   DateTime          @default(now())
@@ -270,22 +272,22 @@ model ClubMembership {
   removalReason String?
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  club Club @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  entity Entity @relation(fields: [entityId], references: [id], onDelete: Cascade)
 
   subscriptions Subscription[]
   reservations  Reservation[]
 
-  @@unique([userId, clubId])
+  @@unique([userId, entityId])
   @@index([userId])
-  @@index([clubId])
-  @@index([clubId, status])
+  @@index([entityId])
+  @@index([entityId, status])
 }
 
-/// Oferta del club que reúne precio, duración, modalidad y condiciones documentales.
+/// Oferta de la entidad que reúne precio, duración, modalidad y condiciones documentales.
 model MembershipPlan {
   id String @id @default(uuid())
 
-  clubId      String
+  entityId      String
   name        String
   description String?
 
@@ -306,15 +308,15 @@ model MembershipPlan {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  club Club @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  entity Entity @relation(fields: [entityId], references: [id], onDelete: Cascade)
 
   documentRequirements PlanDocumentRequirement[]
   applications         MembershipApplication[]
   subscriptions        Subscription[]
   facilityAccesses     FacilityPlanAccess[]
 
-  @@index([clubId])
-  @@index([clubId, isActive])
+  @@index([entityId])
+  @@index([entityId, isActive])
 }
 
 /// Requisito configurable de un plan que puede desactivarse conservando el historial.
@@ -407,7 +409,7 @@ model MembershipDocument {
 model Subscription {
   id String @id @default(uuid())
 
-  clubMembershipId     String
+  entityMembershipId     String
   planId               String
   stripeSubscriptionId String? @unique
 
@@ -436,11 +438,11 @@ model Subscription {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  clubMembership ClubMembership @relation(fields: [clubMembershipId], references: [id], onDelete: Restrict)
+  entityMembership EntityMembership @relation(fields: [entityMembershipId], references: [id], onDelete: Restrict)
   plan           MembershipPlan @relation(fields: [planId], references: [id], onDelete: Restrict)
   payments       Payment[]
 
-  @@index([clubMembershipId])
+  @@index([entityMembershipId])
   @@index([planId])
   @@index([status])
   @@index([expiresAt])
@@ -452,7 +454,7 @@ model Subscription {
 model Payment {
   id String @id @default(uuid())
 
-  clubId         String
+  entityId         String
   userId         String
   subscriptionId String
 
@@ -475,25 +477,25 @@ model Payment {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  club         Club         @relation(fields: [clubId], references: [id], onDelete: Restrict)
+  entity         Entity         @relation(fields: [entityId], references: [id], onDelete: Restrict)
   user         User         @relation(fields: [userId], references: [id], onDelete: Restrict)
   subscription Subscription @relation(fields: [subscriptionId], references: [id], onDelete: Restrict)
 
-  @@index([clubId])
+  @@index([entityId])
   @@index([userId])
   @@index([subscriptionId])
   @@index([status])
   @@index([createdAt])
   @@index([obligationId])
-  @@index([clubId, status, paidAt])
+  @@index([entityId, status, paidAt])
   @@index([userId, status, paidAt])
 }
 
-/// Liquidación única del club por mes con el desglose de comisiones y neto.
-model ClubSettlement {
+/// Liquidación única de la entidad por mes con el desglose de comisiones y neto.
+model EntitySettlement {
   id String @id @default(uuid())
 
-  clubId String
+  entityId String
 
   year  Int
   month Int
@@ -519,19 +521,19 @@ model ClubSettlement {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  club Club @relation(fields: [clubId], references: [id], onDelete: Restrict)
+  entity Entity @relation(fields: [entityId], references: [id], onDelete: Restrict)
 
-  @@unique([clubId, year, month])
-  @@index([clubId])
+  @@unique([entityId, year, month])
+  @@index([entityId])
   @@index([status])
   @@index([year, month])
 }
 
-/// Espacio reservable del club y raíz de sus horarios y permisos por plan.
+/// Espacio reservable de la entidad y raíz de sus horarios y permisos por plan.
 model Facility {
   icon String @default("building")
   id          String         @id @default(uuid())
-  clubId      String
+  entityId      String
   name        String
   description String?
   location    String?
@@ -541,12 +543,12 @@ model Facility {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  club         Club                 @relation(fields: [clubId], references: [id], onDelete: Restrict)
+  entity         Entity                 @relation(fields: [entityId], references: [id], onDelete: Restrict)
   schedules    FacilitySchedule[]
   planAccesses FacilityPlanAccess[]
   reservations Reservation[]
 
-  @@index([clubId])
+  @@index([entityId])
   @@index([status])
 }
 
@@ -593,7 +595,7 @@ model Reservation {
   id String @id @default(uuid())
 
   facilityId       String
-  clubMembershipId String
+  entityMembershipId String
 
   startAt DateTime
   endAt   DateTime
@@ -607,18 +609,18 @@ model Reservation {
   updatedAt DateTime @updatedAt
 
   facility       Facility       @relation(fields: [facilityId], references: [id], onDelete: Restrict)
-  clubMembership ClubMembership @relation(fields: [clubMembershipId], references: [id], onDelete: Restrict)
+  entityMembership EntityMembership @relation(fields: [entityMembershipId], references: [id], onDelete: Restrict)
 
   @@index([facilityId, startAt, endAt])
-  @@index([clubMembershipId, startAt])
+  @@index([entityMembershipId, startAt])
   @@index([status])
 }
 
-/// Publicación vinculada al club y a su autor, con imagen opcional.
+/// Publicación vinculada a la entidad y a su autor, con imagen opcional.
 model Post {
   id String @id @default(uuid())
 
-  clubId   String
+  entityId   String
   authorId String
 
   title   String?
@@ -630,10 +632,10 @@ model Post {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  club   Club @relation(fields: [clubId], references: [id], onDelete: Restrict)
+  entity   Entity @relation(fields: [entityId], references: [id], onDelete: Restrict)
   author User @relation(fields: [authorId], references: [id], onDelete: Restrict)
 
-  @@index([clubId, createdAt])
+  @@index([entityId, createdAt])
   @@index([authorId])
 }
 
@@ -641,20 +643,20 @@ model Post {
 /// Transición histórica de la membresía usada para reconstruir estados y roles.
 model MembershipEvent {
   id               String              @id @default(uuid())
-  clubMembershipId String
+  entityMembershipId String
   type             MembershipEventType
   previousStatus   MembershipStatus?
   newStatus        MembershipStatus
-  previousRole     ClubRole?
-  newRole          ClubRole
+  previousRole     EntityRole?
+  newRole          EntityRole
   actorId          String?
   reason           String?
   occurredAt       DateTime            @default(now())
   // Clave por operación; los reintentos reutilizan la misma.
   eventKey         String              @unique
-  clubMembership   ClubMembership      @relation(fields: [clubMembershipId], references: [id], onDelete: Restrict)
+  entityMembership   EntityMembership      @relation(fields: [entityMembershipId], references: [id], onDelete: Restrict)
 
-  @@index([clubMembershipId, occurredAt])
+  @@index([entityMembershipId, occurredAt])
   @@index([type, occurredAt])
 }
 
@@ -685,7 +687,7 @@ model MembershipDocumentVersion {
 /// Importe exigible que puede relacionar varios intentos de pago.
 model PaymentObligation {
   id              String                  @id @default(uuid())
-  clubId          String
+  entityId          String
   userId          String
   subscriptionId  String
   obligationKey   String                  @unique
@@ -699,13 +701,13 @@ model PaymentObligation {
   paidAt          DateTime?
   createdAt       DateTime                @default(now())
   updatedAt       DateTime                @updatedAt
-  club            Club                    @relation(fields: [clubId], references: [id], onDelete: Restrict)
+  entity            Entity                    @relation(fields: [entityId], references: [id], onDelete: Restrict)
   user            User                    @relation(fields: [userId], references: [id], onDelete: Restrict)
   subscription    Subscription            @relation(fields: [subscriptionId], references: [id], onDelete: Restrict)
   payments        Payment[]
 
   @@index([userId, status, dueAt])
-  @@index([clubId, status, dueAt])
+  @@index([entityId, status, dueAt])
   @@index([subscriptionId])
 }
 
@@ -713,25 +715,26 @@ model PaymentObligation {
 model Notification {
   id          String           @id @default(uuid())
   recipientId String
-  clubId      String?
+  entityId      String?
   type        NotificationType
   eventKey    String
   title       String
   message     String?
   // Destino interno, validado en servidor. Nunca una URL externa arbitraria.
   targetPath  String
-  entityType  String
-  entityId    String
+  // Recurso del aviso; distinto de entityId, que identifica la entidad.
+  targetType  String
+  targetId    String
   readAt      DateTime?
   resolvedAt  DateTime?
   createdAt   DateTime         @default(now())
   recipient   User             @relation(fields: [recipientId], references: [id], onDelete: Cascade)
-  club        Club?            @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  entity        Entity?            @relation(fields: [entityId], references: [id], onDelete: Cascade)
 
   @@unique([recipientId, eventKey])
   @@index([recipientId, readAt, createdAt])
-  @@index([recipientId, clubId, resolvedAt])
-  @@index([entityType, entityId])
+  @@index([recipientId, entityId, resolvedAt])
+  @@index([targetType, targetId])
 }
 
 // Recibir un webhook no equivale a procesarlo. Los efectos y PROCESSED
@@ -759,15 +762,15 @@ model PendingFileDeletion {
   @@index([queuedAt])
 }
 
-/// Datos de transferencia del club accesibles mediante las rutas autorizadas.
-model ClubBankDetails {
-  clubId String @id
+/// Datos de transferencia de la entidad accesibles mediante las rutas autorizadas.
+model EntityBankDetails {
+  entityId String @id
   beneficiary String
   identity String
   bankName String
   accountType String
   accountNumber String
-  club Club @relation(fields:[clubId],references:[id],onDelete:Cascade)
+  entity Entity @relation(fields:[entityId],references:[id],onDelete:Cascade)
 }
 
 /// Variantes WebP de las imágenes de perfil, identificadas por clave.

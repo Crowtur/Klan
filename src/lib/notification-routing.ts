@@ -42,13 +42,15 @@
  * ==============================================================================
  */
 
-type Notice={type:string;clubId?:string|null;targetPath?:string|null};
-/** Traduce el tipo de aviso en una vista personal o una pestaña del club correspondiente. */
+// Refactorización Parte 11: entityId identifica la organización; targetType y targetId identifican el recurso del aviso.
+
+type Notice={type:string;entityId?:string|null;targetPath?:string|null};
+/** Traduce el tipo de aviso en una vista personal o una pestaña de la entidad correspondiente. */
 export function notificationDestination(n:Notice){
- if(["APPLICATION_SUBMITTED","DOCUMENTS_SUBMITTED"].includes(n.type))return {scope:"club",tab:"applications",path:`/app?view=club&club=${encodeURIComponent(n.clubId||"")}&tab=applications`};
+ if(["APPLICATION_SUBMITTED","DOCUMENTS_SUBMITTED"].includes(n.type))return {scope:"entity",tab:"applications",path:`/app?view=entity&entity=${encodeURIComponent(n.entityId||"")}&tab=applications`};
  if(/^(APPLICATION|DOCUMENT)_/.test(n.type))return {scope:"personal",tab:"applications",path:"/app?view=applications"};
- if(n.type.startsWith("SETTLEMENT"))return {scope:"club",tab:"overview",path:`/app?view=club&club=${encodeURIComponent(n.clubId||"")}&tab=overview`};
- if(n.type.startsWith("RESERVATION"))return {scope:"club",tab:"reservations",path:`/app?view=club&club=${encodeURIComponent(n.clubId||"")}&tab=reservations`};
+ if(n.type.startsWith("SETTLEMENT"))return {scope:"entity",tab:"overview",path:`/app?view=entity&entity=${encodeURIComponent(n.entityId||"")}&tab=overview`};
+ if(n.type.startsWith("RESERVATION"))return {scope:"entity",tab:"reservations",path:`/app?view=entity&entity=${encodeURIComponent(n.entityId||"")}&tab=reservations`};
  return {scope:"personal",tab:"memberships",path:n.targetPath||"/app?view=memberships"};
 }
 /** Adapta los títulos de las solicitudes recibidas para distinguirlas de los trámites propios. */

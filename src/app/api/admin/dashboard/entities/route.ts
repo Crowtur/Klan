@@ -1,0 +1,752 @@
+/**
+ * ==============================================================================
+ * PONTIFICIA UNIVERSIDAD CATÓLICA DEL ECUADOR
+ * Facultad Internacional de Innovación (PUCE - Icam)
+ * ==============================================================================
+ * 
+ * PROYECTO DE TITULACIÓN - INGENIERÍA INTEGRAL
+ * Autor: Diego Alexis Tipán Zambrano
+ * Director del Proyecto: PhD. Rafael Melgarejo
+ * Promoción: Primera Promoción (Año 2026)
+ * 
+ * ------------------------------------------------------------------------------
+ * DECLARACIÓN SOBRE EL USO DE INTELIGENCIA ARTIFICIAL
+ * ------------------------------------------------------------------------------
+ * Se declara formalmente el uso de herramientas de Inteligencia Artificial como
+ * soporte y asistente técnico para el desarrollo de este proyecto, destacando su
+ * aplicación en:
+ * 
+ * - Generación y optimización de bloques de código repetitivos y extensos.
+ * - Desarrollos de endpoints complejos con variabilidad de permisos y roles.
+ * - Integración de nuevas funciones y sugerencias de arquitectura de software.
+ * - Depuración ágil, corrección de errores y optimización de rendimiento.
+ * - Creación, maquetación e integración de diseños UI/UX de formato visual a código.
+ * - Automatización de documentación técnica y estructuración de comentarios.
+ * 
+ * Herramientas de IA utilizadas:
+ * - GPT-5.6 Luna
+ * - GPT-6 Astra
+ * - Gemini 3.6 Flash
+ * - Figma AI (Visual Engine / Make Real)
+ * 
+ * ------------------------------------------------------------------------------
+ * DERECHOS DE AUTOR Y PROPIEDAD INTELECTUAL
+ * ------------------------------------------------------------------------------
+ * Los derechos del presente proyecto corresponden a la Pontificia Universidad
+ * Católica del Ecuador junto al autor y al director del proyecto, en estricto
+ * cumplimiento del reglamento institucional sobre patentes, tesis y titulación.
+ * 
+ * ALCANCE: Dichos derechos aplican exclusivamente al código fuente desarrollado
+ * en este proyecto, excluyendo la idea de negocio global y futuras versiones 
+ * o derivados sustanciales que puedan desarrollarse sobre el sistema.
+ * ==============================================================================
+ */
+
+import { NextResponse } from "next/server";
+import { Prisma } from "@prisma/client";
+
+import { prisma } from "@/lib/prisma";
+import { requireAuth } from "@/lib/auth/auth";
+
+const TIME_ZONE = "America/Guayaquil";
+const CURRENCY = "usd";
+
+/** Busca el agregado del estado solicitado y devuelve cero si el grupo no existe. */
+function getGroupCount(group: {
+  _count?: true | { _all?: number };
+}): number {
+  const count = group._count;
+
+  if (
+    count === undefined ||
+    count === true ||
+    typeof count._all !== "number"
+  ) {
+    throw new Error(
+      "La consulta groupBy no devolvió _count._all"
+    );
+  }
+
+  return count._all;
+}
+
+/** Recupera la suma del grupo solicitado para componer los indicadores. */
+function getGroupAmount(group: {
+  _sum?: { amount?: Prisma.Decimal | null } | null;
+} | undefined): string {
+  if (!group) {
+    return "0.00";
+  }
+
+  const sum = group._sum;
+
+  if (sum === undefined || sum === null) {
+    throw new Error(
+      "La consulta groupBy no devolvió _sum"
+    );
+  }
+
+  return sum.amount?.toFixed(2) ?? "0.00";
+}
+
+function monthStart(year: number, month: number) {
+  return new Date(
+    Date.UTC(year, month - 1, 1, 5, 0, 0)
+  );
+}
+
+/** Determina el año y el mes usados para agrupar movimientos. */
+function getLocalYearMonth(date: Date) {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: TIME_ZONE,
+    year: "numeric",
+    month: "numeric",
+  }).formatToParts(date);
+
+  const values = Object.fromEntries(
+    parts.map((part) => [part.type, part.value])
+  );
+
+  return {
+    year: Number(values.year),
+    month: Number(values.month),
+  };
+}
+
+function monthLabel(year: number, month: number) {
+  return `${year}-${String(month).padStart(2, "0")}`;
+}
+
+function isValidInteger(
+  value: number,
+  min: number,
+  max: number
+) {
+  return (
+    Number.isInteger(value) &&
+    value >= min &&
+    value <= max
+  );
+}
+
+/** Agrupa entidades y sus pagos para comparar actividad y evolución mensual en la administración global. */
+export async function GET(request: Request) {
+  try {
+    // 1. Autenticación
+    const user = await requireAuth(request);
+
+    // 2. Autorización global
+    if (user.globalRole !== "SUPER_ADMIN") {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Acceso exclusivo para SUPER_ADMIN",
+        },
+        { status: 403 }
+      );
+    }
+
+    // 3. Parámetros
+    const now = new Date();
+    const current = getLocalYearMonth(now);
+
+    const { searchParams } = new URL(request.url);
+
+    const lifetime = searchParams.get("scope")==="lifetime";
+    const yearParam = searchParams.get("year");
+    const monthParam = searchParams.get("month");
+
+    const year =
+      yearParam === null
+        ? current.year
+        : Number(yearParam);
+
+    const month =
+      monthParam === null
+        ? current.month
+        : Number(monthParam);
+
+    const page = Number(
+      searchParams.get("page") ?? "1"
+    );
+
+    const limit = Number(
+      searchParams.get("limit") ?? "10"
+    );
+
+    const statusParam = searchParams.get("status");
+    const search = (
+      searchParams.get("search") ?? ""
+    ).trim();
+
+    const validStatuses = [
+      "ACTIVE",
+      "INACTIVE",
+      "SUSPENDED",
+    ] as const;
+
+    if (
+      !isValidInteger(year, 2000, 2100) ||
+      !isValidInteger(month, 1, 12) ||
+      !isValidInteger(page, 1, 1000000) ||
+      !isValidInteger(limit, 1, 50) ||
+      search.length > 100 ||
+      (
+        statusParam !== null &&
+        !validStatuses.includes(
+          statusParam as typeof validStatuses[number]
+        )
+      )
+    ) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Parámetros de consulta inválidos",
+        },
+        { status: 400 }
+      );
+    }
+
+    const periodStart = monthStart(year, month);
+    const periodEnd = monthStart(year, month + 1);
+    const historyStart = monthStart(year, month - 11);
+
+    // 4. Construir filtros
+    const where: Prisma.EntityWhereInput = {};
+
+    if (statusParam) {
+      where.status =
+        statusParam as Prisma.EnumEntityStatusFilter["equals"];
+    }
+
+    if (search) {
+      where.OR = [
+        {
+          name: {
+            contains: search,
+            mode: "insensitive",
+          },
+        },
+        {
+          slug: {
+            contains: search,
+            mode: "insensitive",
+          },
+        },
+      ];
+    }
+
+    // 5. Consultas principales
+    const [
+      statusGroups,
+      entitiesPage,
+      allMatchingEntityIds,
+      historicalEntities,
+    ] = await prisma.$transaction([
+      prisma.entity.groupBy({
+        by: ["status"],
+        where,
+        orderBy: { status: "asc" },
+        _count: {
+          _all: true,
+        },
+      }),
+
+      prisma.entity.findMany({
+        where,
+        orderBy: [
+          { createdAt: searchParams.get("order")==="oldest"?"asc":"desc" },
+          { id: "asc" },
+        ],
+        skip: (page - 1) * limit,
+        take: limit,
+        select: {
+          id: true,
+          name: true,
+          slug: true, logoUrl:true,address:true,
+          status: true,
+          createdAt: true,
+        },
+      }),
+
+      prisma.entity.findMany({
+        where,
+        select: {
+          id: true,
+        },
+      }),
+
+      prisma.entity.findMany({
+        where: {
+          ...where,
+          createdAt: {
+            gte: historyStart,
+            lt: periodEnd,
+          },
+        },
+        select: {
+          createdAt: true,
+        },
+      }),
+    ]);
+
+    const totalMatchingEntities = allMatchingEntityIds.length;
+    const entityIds = allMatchingEntityIds.map(
+      (entity) => entity.id
+    );
+
+    // 6. Métricas agrupadas por entidad
+    const [
+      membershipGroups,
+      activeMembershipGroups,
+      subscriptionGroups,
+      facilityGroups,
+      activeFacilityGroups,
+      planGroups,
+      reservationGroups,
+      paymentGroups,
+    ] = await prisma.$transaction([
+      prisma.entityMembership.groupBy({
+        by: ["entityId"],
+        where: {
+          entityId: { in: entityIds },
+        },
+        orderBy: { entityId: "asc" },
+        _count: {
+          _all: true,
+        },
+      }),
+
+      prisma.entityMembership.groupBy({
+        by: ["entityId"],
+        where: {
+          entityId: { in: entityIds },
+          status: "ACTIVE",
+        },
+        orderBy: { entityId: "asc" },
+        _count: {
+          _all: true,
+        },
+      }),
+
+      prisma.subscription.groupBy({
+        by: ["planId"],
+        where: {
+          status: "ACTIVE",
+          startedAt: { lte: now },
+          expiresAt: { gt: now },
+          entityMembership: {
+            entityId: { in: entityIds },
+            status: "ACTIVE",
+          },
+          plan: {
+            isActive: true,
+          },
+        },
+        orderBy: { planId: "asc" },
+        _count: {
+          _all: true,
+        },
+      }),
+
+      prisma.facility.groupBy({
+        by: ["entityId"],
+        where: {
+          entityId: { in: entityIds },
+        },
+        orderBy: { entityId: "asc" },
+        _count: {
+          _all: true,
+        },
+      }),
+
+      prisma.facility.groupBy({
+        by: ["entityId"],
+        where: {
+          entityId: { in: entityIds },
+          status: "ACTIVE",
+        },
+        orderBy: { entityId: "asc" },
+        _count: {
+          _all: true,
+        },
+      }),
+
+      prisma.membershipPlan.findMany({
+        where: {
+          entityId: { in: entityIds },
+        },
+        select: {
+          id: true,
+          entityId: true,
+          isActive: true,
+        },
+      }),
+
+      prisma.reservation.groupBy({
+        by: ["facilityId", "status"],
+        where: {
+          facility: {
+            entityId: { in: entityIds },
+          },
+          ...(lifetime?{}:{startAt:{gte:periodStart,lt:periodEnd}}),
+        },
+        orderBy: [
+          { facilityId: "asc" },
+          { status: "asc" },
+        ],
+        _count: {
+          _all: true,
+        },
+      }),
+
+      prisma.payment.groupBy({
+        by: ["entityId"],
+        where: {
+          entityId: { in: entityIds },
+          status: "PAID",
+          currency: CURRENCY,
+          ...(lifetime?{}:{paidAt:{gte:periodStart,lt:periodEnd}}),
+        },
+        orderBy: { entityId: "asc" },
+        _count: { _all: true },
+        _sum: {
+          amount: true,
+        },
+      }),
+    ]);
+
+    // 7. Obtener relaciones necesarias
+    const facilities = await prisma.facility.findMany({
+      where: {
+        entityId: { in: entityIds },
+      },
+      select: {
+        id: true,
+        entityId: true,
+      },
+    });
+
+    const facilityToEntity = new Map(
+      facilities.map(
+        (facility) => [
+          facility.id,
+          facility.entityId,
+        ]
+      )
+    );
+
+    const planToEntity = new Map(
+      planGroups.map(
+        (plan) => [
+          plan.id,
+          plan.entityId,
+        ]
+      )
+    );
+
+    // 8. Funciones auxiliares
+    function countForEntity(
+      groups: {
+        entityId: string;
+        _count?: true | { _all?: number };
+      }[],
+      entityId: string
+    ): number {
+      const group = groups.find(
+        (item) => item.entityId === entityId
+      );
+
+      if (!group) {
+        return 0;
+      }
+
+      return getGroupCount(group);
+    }
+
+    // 9. Construir estadísticas por entidad
+    const entitiesStatistics = allMatchingEntityIds.map(
+      ({ id: entityId }) => {
+        const totalMembers = countForEntity(
+          membershipGroups,
+          entityId
+        );
+
+        const activeMembers = countForEntity(
+          activeMembershipGroups,
+          entityId
+        );
+
+        const totalFacilities = countForEntity(
+          facilityGroups,
+          entityId
+        );
+
+        const activeFacilities = countForEntity(
+          activeFacilityGroups,
+          entityId
+        );
+
+        const plans = planGroups.filter(
+          (plan) => plan.entityId === entityId
+        );
+
+        const activeSubscriptions =
+          subscriptionGroups.reduce(
+            (total, group) => {
+              return planToEntity.get(group.planId) === entityId
+                ? total + getGroupCount(group)
+                : total;
+            },
+            0
+          );
+
+        let confirmedReservations = 0;
+        let cancelledReservations = 0;
+
+        for (const group of reservationGroups) {
+          if (
+            facilityToEntity.get(group.facilityId) !== entityId
+          ) {
+            continue;
+          }
+
+          if (group.status === "CONFIRMED") {
+            confirmedReservations += getGroupCount(group);
+          } else if (group.status === "CANCELLED") {
+            cancelledReservations += getGroupCount(group);
+          }
+        }
+
+        const paidPayments = countForEntity(
+          paymentGroups,
+          entityId
+        );
+
+        const grossRevenue = getGroupAmount(
+          paymentGroups.find(
+            (group) => group.entityId === entityId
+          )
+        );
+
+        return {
+          entityId,
+          totalMembers,
+          activeMembers,
+          totalPlans: plans.length,
+          activePlans: plans.filter(
+            (plan) => plan.isActive
+          ).length,
+          activeSubscriptions,
+          totalFacilities,
+          activeFacilities,
+          confirmedReservations,
+          cancelledReservations,
+          paidPayments,
+          grossRevenue,
+        };
+      }
+    );
+
+    const statisticsByEntity = new Map(
+      entitiesStatistics.map(
+        (statistics) => [
+          statistics.entityId,
+          statistics,
+        ]
+      )
+    );
+
+    // 10. Página de entidades
+    const entities = entitiesPage.map((entity) => ({
+      ...entity,
+      statistics: statisticsByEntity.get(entity.id),
+    }));
+
+    // 11. Ranking por miembros activos
+    const topEntitiesByMembers = [
+      ...entitiesStatistics,
+    ]
+      .sort(
+        (a, b) =>
+          b.activeMembers - a.activeMembers
+      )
+      .slice(0, 10)
+      .map((statistics) => ({
+        ...statistics,
+        entity: entitiesPage.find(
+          (entity) => entity.id === statistics.entityId
+        ) ?? null,
+      }));
+
+    // 12. Entidades con actividad durante el período
+    const activeEntityIds = new Set<string>();
+
+    for (const group of paymentGroups) {
+      if (getGroupCount(group) > 0) {
+        activeEntityIds.add(group.entityId);
+      }
+    }
+
+    for (const group of reservationGroups) {
+      if (getGroupCount(group) === 0) continue;
+
+      const entityId = facilityToEntity.get(
+        group.facilityId
+      );
+
+      if (entityId) {
+        activeEntityIds.add(entityId);
+      }
+    }
+
+    // 13. Estados de entidades
+    const entitiesByStatus = {
+      ACTIVE: 0,
+      INACTIVE: 0,
+      SUSPENDED: 0,
+    };
+
+    for (const group of statusGroups) {
+      entitiesByStatus[group.status] =
+        getGroupCount(group);
+    }
+
+    // 14. Crecimiento mensual
+    const monthlyGrowth = [];
+
+    for (let i = 11; i >= 0; i--) {
+      const date = new Date(
+        Date.UTC(year, month - 1 - i, 1)
+      );
+
+      const itemYear = date.getUTCFullYear();
+      const itemMonth = date.getUTCMonth() + 1;
+
+      const newEntities = historicalEntities.filter(
+        (entity) => {
+          const local = getLocalYearMonth(
+            entity.createdAt
+          );
+
+          return (
+            local.year === itemYear &&
+            local.month === itemMonth
+          );
+        }
+      ).length;
+
+      monthlyGrowth.push({
+        year: itemYear,
+        month: itemMonth,
+        label: monthLabel(itemYear, itemMonth),
+        newEntities,
+      });
+    }
+
+    // 15. Resumen agregado
+    const totals = entitiesStatistics.reduce(
+      (acc, entity) => ({
+        grossRevenue:acc.grossRevenue.plus(entity.grossRevenue),
+        members: acc.members + entity.totalMembers,
+        activeMembers:
+          acc.activeMembers + entity.activeMembers,
+        plans: acc.plans + entity.totalPlans,
+        facilities:
+          acc.facilities + entity.totalFacilities,
+        activeSubscriptions:
+          acc.activeSubscriptions +
+          entity.activeSubscriptions,
+        confirmedReservations:
+          acc.confirmedReservations +
+          entity.confirmedReservations,
+        paidPayments:
+          acc.paidPayments + entity.paidPayments,
+      }),
+      {
+        grossRevenue:new Prisma.Decimal(0), members: 0,
+        activeMembers: 0,
+        plans: 0,
+        facilities: 0,
+        activeSubscriptions: 0,
+        confirmedReservations: 0,
+        paidPayments: 0,
+      }
+    );
+
+    // 16. Respuesta
+    return NextResponse.json({
+      success: true,
+
+      period: {
+        year,
+        month,
+        timeZone: TIME_ZONE,
+        startAt: periodStart.toISOString(),
+        endAtExclusive: periodEnd.toISOString(),
+      },
+
+      filters: {
+        status: statusParam,
+        search: search || null,
+      },
+
+      summary: {
+        totalEntities: totalMatchingEntities,
+        byStatus: entitiesByStatus,
+        entitiesWithActivity: activeEntityIds.size,
+        entitiesWithoutActivity:
+          totalMatchingEntities - activeEntityIds.size,
+        totals,
+      },
+
+      pagination: {
+        page,
+        limit,
+        totalItems: totalMatchingEntities,
+        totalPages: Math.ceil(
+          totalMatchingEntities / limit
+        ),
+      },
+
+      entities,
+      topEntitiesByMembers,
+      monthlyGrowth,
+    });
+  } catch (error) {
+    console.error(
+      "SuperAdmin dashboard entities error:",
+      error
+    );
+
+    if (error instanceof Error) {
+      if (error.message === "UNAUTHORIZED") {
+        return NextResponse.json(
+          {
+            success: false,
+            message: "No autenticado",
+          },
+          { status: 401 }
+        );
+      }
+
+      if (error.message === "FORBIDDEN") {
+        return NextResponse.json(
+          {
+            success: false,
+            message: "Acceso denegado",
+          },
+          { status: 403 }
+        );
+      }
+    }
+
+    return NextResponse.json(
+      {
+        success: false,
+        message: "Error interno del servidor",
+      },
+      { status: 500 }
+    );
+  }
+}

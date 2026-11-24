@@ -80,7 +80,7 @@ export function useData(url: string | null, version = 0) {
 
     const previousUrl=useRef<string|null>(null);
     useEffect(() => {
-        // Cambiar de club o filtro invalida la respuesta anterior, aunque esa petición termine después de la nueva.
+        // Cambiar de entidad o filtro invalida la respuesta anterior, aunque esa petición termine después de la nueva.
         let live = true;
         const sameUrl=previousUrl.current===url;
         previousUrl.current=url;
@@ -135,7 +135,7 @@ export const labels: Record<string, string> = {
     FREE: "Gratuito",
     MONTH: "Mes",
     YEAR: "Año",
-    CLUB_ADMIN: "Administrador",
+    ENTITY_ADMIN: "Administrador",
     MEMBER: "Miembro",
 };
 /** Traduce los estados conocidos y conserva como alternativa el valor enviado por el servidor. */
@@ -219,7 +219,7 @@ export function Action({ children, url, method = "POST", body, confirm, variant,
     method?: string;
     body?: unknown;
     confirm?: string;
-    variant?: "destructive" | "club-suspension";
+    variant?: "destructive" | "entity-suspension";
     onDone?: (d: Row) => void;
 }) {
     const [busy, setBusy] = useState(false), [message, setMessage] = useState(""), [confirming, setConfirming] = useState(false);
@@ -228,7 +228,7 @@ export function Action({ children, url, method = "POST", body, confirm, variant,
     // DELETE es destructivo por contrato. Los cambios de estado mediante PATCH o POST
     // declaran su intención en la vista, incluso si su etiqueta cambia de idioma.
     const destructive = variant !== undefined || method === "DELETE";
-    const buttonClass = variant === "club-suspension" ? "danger" : destructive ? "outline-destructive" : undefined;
+    const buttonClass = variant === "entity-suspension" ? "danger" : destructive ? "outline-destructive" : undefined;
     useEffect(() => {
         if (confirming)
             dialog.current?.showModal();
@@ -331,7 +331,7 @@ export function Form({ fields, url, method = "POST", initial = {}, onDone, submi
                 input.value = input.value.toLowerCase().replace(/[^a-z0-9-]/g, "");
                 setSlug(input.value);
             } }} type={f.type || "text"} name={f.name} defaultValue={Array.isArray(initial[f.name]) ? initial[f.name].join("\n") : initial[f.name] ?? ""} required={f.required} min={f.min} max={f.max} step={f.step} maxLength={f.type !== "number" ? f.max : undefined}/>)}
-            {f.name === "slug" && <small>Slug · {slug || "tu-club"}</small>}
+            {f.name === "slug" && <small>Slug · {slug || "tu-entidad"}</small>}
           </label>))}
       </fieldset>
       <button className={method === "DELETE" || decision === "REJECTED" ? "outline-destructive" : undefined} disabled={busy}>{busy ? "Guardando…" : submit}</button>
@@ -346,15 +346,15 @@ export function NavLink({ view, params, children, }: {
 }) {
     return <Link href={href(view, params)}>{children}</Link>;
 }
-export const clubFields: Field[] = [
+export const entityFields: Field[] = [
     { name: "name", label: "Nombre", required: true, max: 50 },
     {
         name: "slug",
-        label: "Slug del club",
+        label: "Slug de la entidad",
         required: true,
     },
     { name: "description", label: "Descripción", type: "textarea", max: 200 },
-    { name: "address", label: "Dirección del club" }, { name: "googleMapsUrl", label: "Enlace de Google Maps", type: "url" },
+    { name: "address", label: "Dirección de la entidad" }, { name: "googleMapsUrl", label: "Enlace de Google Maps", type: "url" },
 ];
 export const facilityFields: Field[] = [
     {name:"icon",label:"Icono de la instalación",options:facilityIcons},

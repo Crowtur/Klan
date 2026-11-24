@@ -51,7 +51,7 @@ import { Bars } from "../src/components/workspace/activity";
 
 test("plan cards render the contracted duration, USD, multiline benefits and actual counts", () => {
   for (const benefits of ["Acceso\nReserva", ["Acceso", "Reserva"]]) {
-    const html = renderToStaticMarkup(<PlanCard plan={{name:"Club",type:"PAID",durationValue:3,durationUnit:"MONTH",price:35,benefits,activeMembers:2,requiresDocumentation:true,documentRequirements:[{name:"Licencia"}]}}>Editar plan</PlanCard>);
+    const html = renderToStaticMarkup(<PlanCard plan={{name:"Entity",type:"PAID",durationValue:3,durationUnit:"MONTH",price:35,benefits,activeMembers:2,requiresDocumentation:true,documentRequirements:[{name:"Licencia"}]}}>Editar plan</PlanCard>);
     for (const text of ["3 MESES","USD","2 socios","1 requisito documental","Acceso","Reserva","Editar plan"]) assert.ok(html.includes(text), text);
     assert.equal((html.match(/<li>/g)||[]).length,2);
   }

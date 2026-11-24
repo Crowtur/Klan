@@ -45,7 +45,7 @@
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 
-/** Agrupa pagos completados por club y genera las liquidaciones pendientes del período. */
+/** Agrupa pagos completados por entidad y genera las liquidaciones pendientes del período. */
 export async function POST(request: Request) {
   try {
     const cronSecret = process.env.CRON_SECRET;
@@ -97,23 +97,23 @@ export async function POST(request: Request) {
         },
       },
       select: {
-        clubId: true,
+        entityId: true,
         amount: true,
       },
     });
 
-    const paymentsByClub = new Map<
+    const paymentsByEntity = new Map<
       string,
       { grossAmount: number }
     >();
 
     for (const payment of payments) {
-      const current = paymentsByClub.get(payment.clubId);
+      const current = paymentsByEntity.get(payment.entityId);
 
       if (current) {
         current.grossAmount += Number(payment.amount);
       } else {
-        paymentsByClub.set(payment.clubId, {
+        paymentsByEntity.set(payment.entityId, {
           grossAmount: Number(payment.amount),
         });
       }
@@ -122,12 +122,12 @@ export async function POST(request: Request) {
     const createdSettlements = [];
     const skippedSettlements = [];
 
-    for (const [clubId, data] of paymentsByClub) {
+    for (const [entityId, data] of paymentsByEntity) {
       const existingSettlement =
-        await prisma.clubSettlement.findUnique({
+        await prisma.entitySettlement.findUnique({
           where: {
-            clubId_year_month: {
-              clubId,
+            entityId_year_month: {
+              entityId,
               year,
               month,
             },
@@ -150,9 +150,9 @@ export async function POST(request: Request) {
       const netAmount = grossAmount - totalFees;
 
       const settlement =
-        await prisma.clubSettlement.create({
+        await prisma.entitySettlement.create({
           data: {
-            clubId,
+            entityId,
             year,
             month,
             grossAmount: grossAmount.toFixed(2),

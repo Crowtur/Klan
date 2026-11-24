@@ -72,7 +72,7 @@ export function ActionDropdown({label,compact=false,children}:{
   },[open]);
   function close(){setOpen(false);trigger.current?.focus();}
   return <div ref={root} className="action-dropdown">
-    <button ref={trigger} type="button" className={compact?"post-options":"visit-club"} aria-label={label}
+    <button ref={trigger} type="button" className={compact?"post-options":"visit-entity"} aria-label={label}
       aria-expanded={open} aria-controls={open?id:undefined} onClick={()=>setOpen(value=>!value)}>
       {compact?<svg width="15" height="15" viewBox="0 0 18 18" fill="currentColor" aria-hidden="true">{[3,9,15].map(x=><circle key={x} cx={x} cy="9" r="1.5"/>)}</svg>:<>{label} <svg aria-hidden="true" width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="m3 6 5 5 5-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg></>}
     </button>

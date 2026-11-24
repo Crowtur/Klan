@@ -65,7 +65,7 @@ export async function GET(
         id: paymentId,
       },
       include: {
-        club: true,
+        entity: true,
         subscription: {
           include: {
             plan: true,
@@ -98,8 +98,8 @@ export async function GET(
       success: true,
       payment: {
         id: payment.id,
-        clubId: payment.clubId,
-        clubName: payment.club.name,
+        entityId: payment.entityId,
+        entityName: payment.entity.name,
         userId: payment.userId,
         subscriptionId: payment.subscriptionId,
 

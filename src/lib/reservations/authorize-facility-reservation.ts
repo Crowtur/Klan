@@ -47,10 +47,10 @@ import { prisma } from "@/lib/prisma";
 
 type AuthorizationErrorCode =
   | "USER_INACTIVE"
-  | "CLUB_INACTIVE"
+  | "ENTITY_INACTIVE"
   | "FACILITY_NOT_FOUND"
   | "FACILITY_INACTIVE"
-  | "CLUB_MEMBERSHIP_REQUIRED"
+  | "ENTITY_MEMBERSHIP_REQUIRED"
   | "ACTIVE_SUBSCRIPTION_REQUIRED"
   | "FACILITY_PLAN_ACCESS_REQUIRED";
 
@@ -64,29 +64,29 @@ export class ReservationAuthorizationError extends Error {
   }
 }
 
-/** Comprueba usuario, club, instalación, membresía y acceso por plan antes de conceder una reserva. */
+/** Comprueba usuario, entidad, instalación, membresía y acceso por plan antes de conceder una reserva. */
 export async function authorizeFacilityReservation(
   userId: string,
-  clubId: string,
+  entityId: string,
   facilityId: string
 ) {
   const now = new Date();
 
-  const [user, club, facility] = await Promise.all([
+  const [user, entity, facility] = await Promise.all([
     prisma.user.findUnique({
       where: { id: userId },
       select: { status: true },
     }),
 
-    prisma.club.findUnique({
-      where: { id: clubId },
+    prisma.entity.findUnique({
+      where: { id: entityId },
       select: { status: true },
     }),
 
     prisma.facility.findFirst({
       where: {
         id: facilityId,
-        clubId,
+        entityId,
       },
       select: {
         id: true,
@@ -103,17 +103,17 @@ export async function authorizeFacilityReservation(
     );
   }
 
-  if (!club || club.status !== "ACTIVE") {
+  if (!entity || entity.status !== "ACTIVE") {
     throw new ReservationAuthorizationError(
-      "CLUB_INACTIVE",
-      "El club no existe o no está activo."
+      "ENTITY_INACTIVE",
+      "La entidad no existe o no está activa."
     );
   }
 
   if (!facility) {
     throw new ReservationAuthorizationError(
       "FACILITY_NOT_FOUND",
-      "La instalación no existe en este club."
+      "La instalación no existe en esta entidad."
     );
   }
 
@@ -124,11 +124,11 @@ export async function authorizeFacilityReservation(
     );
   }
 
-  const membership = await prisma.clubMembership.findUnique({
+  const membership = await prisma.entityMembership.findUnique({
     where: {
-      userId_clubId: {
+      userId_entityId: {
         userId,
-        clubId,
+        entityId,
       },
     },
     include: {
@@ -156,8 +156,8 @@ export async function authorizeFacilityReservation(
 
   if (!membership || membership.status !== "ACTIVE") {
     throw new ReservationAuthorizationError(
-      "CLUB_MEMBERSHIP_REQUIRED",
-      "Necesitas una membresía activa en este club para reservar."
+      "ENTITY_MEMBERSHIP_REQUIRED",
+      "Necesitas una membresía activa en esta entidad para reservar."
     );
   }
 

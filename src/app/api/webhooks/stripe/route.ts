@@ -42,6 +42,8 @@
  * ==============================================================================
  */
 
+// Refactorización Parte 11: relaciones Entity renombradas sin alterar bloqueos, idempotencia, claves de pago ni cálculo de períodos. Los eventos anteriores se resuelven por paymentId y subscriptionId.
+
 import { prisma } from "@/lib/prisma";
 import { stripe } from "@/lib/stripe";
 import { Prisma } from "@prisma/client";
@@ -147,15 +149,15 @@ async function lockSubscription(tx: Prisma.TransactionClient, id: string) {
   await tx.$queryRaw`SELECT pg_advisory_xact_lock(hashtextextended(${"subscription:" + id},0))::text`;
 }
 
-/** Comprueba si el estado del club impide reactivar su acceso a partir de un evento de Stripe. */
-async function isClubSuspensionBlocked(db:Prisma.TransactionClient,clubId: string): Promise<boolean> {
-  const club = await db.club.findUnique({
-    where: { id: clubId },
+/** Comprueba si el estado de la entidad impide reactivar su acceso a partir de un evento de Stripe. */
+async function isEntitySuspensionBlocked(db:Prisma.TransactionClient,entityId: string): Promise<boolean> {
+  const entity = await db.entity.findUnique({
+    where: { id: entityId },
     select: { status: true },
   });
 
-  // También bloqueamos clubes inexistentes por seguridad.
-  return !club || club.status !== "ACTIVE";
+  // También bloqueamos entidades inexistentes por seguridad.
+  return !entity || entity.status !== "ACTIVE";
 }
 
 /** Verifica la firma sobre el cuerpo original y serializa el procesamiento por evento para tolerar reintentos. */
@@ -259,7 +261,7 @@ export async function POST(request: Request) {
             subscription: {
               include: {
                 plan: true,
-                clubMembership: true,
+                entityMembership: true,
               },
             },
           },
@@ -287,9 +289,9 @@ export async function POST(request: Request) {
             const claimed = await tx.payment.updateMany({where:{id:payment.id,status:{in:["PENDING","PROCESSING"]}},data:{status:"PAID",paidAt,stripePaymentIntentId:extractId(session.payment_intent)}});
             if (!claimed.count) return;
             if (payment.obligationId) await tx.paymentObligation.update({where:{id:payment.obligationId},data:{status:"PAID",paidAt}});
-            const activated = await tx.subscription.updateMany({where:{id:subscriptionId,status:"PENDING_PAYMENT",firstActivatedAt:null,clubMembership:{status:{not:"REMOVED"},club:{status:"ACTIVE"}}},data:{status:"ACTIVE",startedAt:paidAt,firstActivatedAt:paidAt,expiresAt}});
-            if (activated.count) await tx.membershipEvent.create({data:{clubMembershipId:payment.subscription.clubMembershipId,type:"REACTIVATED",previousStatus:payment.subscription.clubMembership.status,newStatus:"ACTIVE",newRole:payment.subscription.clubMembership.role,eventKey:"activation:"+subscriptionId}});
-            if (activated.count) await tx.clubMembership.update({where:{id:payment.subscription.clubMembershipId},data:{status:"ACTIVE",finishedAt:null}});
+            const activated = await tx.subscription.updateMany({where:{id:subscriptionId,status:"PENDING_PAYMENT",firstActivatedAt:null,entityMembership:{status:{not:"REMOVED"},entity:{status:"ACTIVE"}}},data:{status:"ACTIVE",startedAt:paidAt,firstActivatedAt:paidAt,expiresAt}});
+            if (activated.count) await tx.membershipEvent.create({data:{entityMembershipId:payment.subscription.entityMembershipId,type:"REACTIVATED",previousStatus:payment.subscription.entityMembership.status,newStatus:"ACTIVE",newRole:payment.subscription.entityMembership.role,eventKey:"activation:"+subscriptionId}});
+            if (activated.count) await tx.entityMembership.update({where:{id:payment.subscription.entityMembershipId},data:{status:"ACTIVE",finishedAt:null}});
           });
           break;
         }
@@ -300,8 +302,8 @@ export async function POST(request: Request) {
           });
         }
 
-        const clubBlocked = await isClubSuspensionBlocked(db,
-          payment.subscription.clubMembership.clubId
+        const entityBlocked = await isEntitySuspensionBlocked(db,
+          payment.subscription.entityMembership.entityId
         );
 
         const stripeSubscriptionId = extractId(session.subscription);
@@ -377,8 +379,8 @@ export async function POST(request: Request) {
             },
           });
 
-          if (!clubBlocked && payment.subscription.clubMembership.status!=="REMOVED" && !["CANCELLED","FINISHED"].includes(payment.subscription.status)) {
-            await tx.membershipEvent.createMany({data:[{clubMembershipId:payment.subscription.clubMembershipId,type:"REACTIVATED",previousStatus:payment.subscription.clubMembership.status,newStatus:"ACTIVE",newRole:payment.subscription.clubMembership.role,eventKey:"activation:"+subscriptionId}],skipDuplicates:true});
+          if (!entityBlocked && payment.subscription.entityMembership.status!=="REMOVED" && !["CANCELLED","FINISHED"].includes(payment.subscription.status)) {
+            await tx.membershipEvent.createMany({data:[{entityMembershipId:payment.subscription.entityMembershipId,type:"REACTIVATED",previousStatus:payment.subscription.entityMembership.status,newStatus:"ACTIVE",newRole:payment.subscription.entityMembership.role,eventKey:"activation:"+subscriptionId}],skipDuplicates:true});
             await tx.subscription.update({
               where: {
                 id: payment.subscriptionId,
@@ -392,9 +394,9 @@ export async function POST(request: Request) {
               },
             });
 
-            await tx.clubMembership.update({
+            await tx.entityMembership.update({
               where: {
-                id: payment.subscription.clubMembershipId,
+                id: payment.subscription.entityMembershipId,
               },
               data: {
                 status: "ACTIVE",
@@ -413,7 +415,7 @@ export async function POST(request: Request) {
             });
 
             console.warn(
-              `Pago inicial registrado, pero membresía no activada: club ${payment.subscription.clubMembership.clubId} bloqueado`
+              `Pago inicial registrado, pero membresía no activada: entidad ${payment.subscription.entityMembership.entityId} bloqueada`
             );
           }
         });
@@ -445,7 +447,7 @@ export async function POST(request: Request) {
           where: { stripeSubscriptionId },
           include: {
             plan: true,
-            clubMembership: true,
+            entityMembership: true,
           },
         });
 
@@ -496,15 +498,15 @@ export async function POST(request: Request) {
             subscription.gracePeriodEndsAt <= eventTime
           );
 
-        const clubBlocked = await isClubSuspensionBlocked(db,
-          subscription.clubMembership.clubId
+        const entityBlocked = await isEntitySuspensionBlocked(db,
+          subscription.entityMembership.entityId
         );
 
         const canReactivateMembership =
-          !clubBlocked &&
+          !entityBlocked &&
           !graceAlreadyExpired &&
           (
-            subscription.clubMembership.status === "ACTIVE" ||
+            subscription.entityMembership.status === "ACTIVE" ||
             (
               subscription.status === "PENDING_PAYMENT" &&
               gracePeriodStillValid
@@ -522,7 +524,7 @@ export async function POST(request: Request) {
             update: settlement,
             create: {
               ...settlement, obligationKey, subscriptionId: subscription.id,
-              userId: subscription.clubMembership.userId, clubId: subscription.clubMembership.clubId,
+              userId: subscription.entityMembership.userId, entityId: subscription.entityMembership.entityId,
               amount, currency,
             },
           });
@@ -546,8 +548,8 @@ export async function POST(request: Request) {
             // Crear el registro solo cuando todavía no existe.
             await tx.payment.create({
               data: {
-                clubId: subscription.clubMembership.clubId,
-                userId: subscription.clubMembership.userId,
+                entityId: subscription.entityMembership.entityId,
+                userId: subscription.entityMembership.userId,
                 subscriptionId: subscription.id,
                 amount,
                 currency,
@@ -560,11 +562,11 @@ export async function POST(request: Request) {
             });
           }
 
-          // Solo reactivar la suscripción si la gracia no ha vencido previamente y el club no está bloqueado.
+          // Solo reactivar la suscripción si la gracia no ha vencido previamente y la entidad no está bloqueada.
           if (
-            !clubBlocked &&
+            !entityBlocked &&
             !graceAlreadyExpired &&
-            subscription.clubMembership.status !== "REMOVED" &&
+            subscription.entityMembership.status !== "REMOVED" &&
             subscription.status !== "FINISHED" &&
             (!subscription.expiresAt || expiresAt >= subscription.expiresAt) &&
             subscription.status !== "SUSPENDED"
@@ -591,8 +593,8 @@ export async function POST(request: Request) {
 
             // La membresía sólo recupera acceso tras confirmar la actualización de la suscripción.
             if (canReactivateMembership) {
-              await tx.clubMembership.update({
-                where: { id: subscription.clubMembershipId },
+              await tx.entityMembership.update({
+                where: { id: subscription.entityMembershipId },
                 data: { status: "ACTIVE" },
               });
             }
@@ -628,7 +630,7 @@ export async function POST(request: Request) {
         const subscription = await db.subscription.findUnique({
           where: { stripeSubscriptionId },
           include: {
-            clubMembership: true,
+            entityMembership: true,
           },
         });
 
@@ -636,12 +638,12 @@ export async function POST(request: Request) {
           throw new Error("Suscripción aún no vinculada: reintentar evento");
         }
 
-        const clubBlocked = await isClubSuspensionBlocked(db,
-          subscription.clubMembership.clubId
+        const entityBlocked = await isEntitySuspensionBlocked(db,
+          subscription.entityMembership.entityId
         );
 
         if (
-          clubBlocked ||
+          entityBlocked ||
           subscription.status === "SUSPENDED" ||
           subscription.status === "CANCELLED"
         ) {
@@ -739,7 +741,7 @@ export async function POST(request: Request) {
             update: settlement,
             create: {
               ...settlement, obligationKey, subscriptionId: subscription.id,
-              userId: subscription.clubMembership.userId, clubId: subscription.clubMembership.clubId,
+              userId: subscription.entityMembership.userId, entityId: subscription.entityMembership.entityId,
               amount, currency,
             },
           });
@@ -760,8 +762,8 @@ export async function POST(request: Request) {
           } else {
             await tx.payment.create({
               data: {
-                clubId: subscription.clubMembership.clubId,
-                userId: subscription.clubMembership.userId,
+                entityId: subscription.entityMembership.entityId,
+                userId: subscription.entityMembership.userId,
                 subscriptionId: subscription.id,
 
                 amount,
@@ -811,7 +813,7 @@ export async function POST(request: Request) {
           },
           include: {
             plan: true,
-            clubMembership: true,
+            entityMembership: true,
           },
         });
 
@@ -822,16 +824,16 @@ export async function POST(request: Request) {
           break;
         }
 
-        const clubBlocked = await isClubSuspensionBlocked(db,
-          localSubscription.clubMembership.clubId
+        const entityBlocked = await isEntitySuspensionBlocked(db,
+          localSubscription.entityMembership.entityId
         );
 
         if (
-          clubBlocked ||
+          entityBlocked ||
           localSubscription.status === "CANCELLED"
         ) {
           console.log(
-            `Se omite la actualización de estado de la suscripción ${localSubscription.id} porque el club está bloqueado o la suscripción fue cancelada`
+            `Se omite la actualización de estado de la suscripción ${localSubscription.id} porque la entidad está bloqueada o la suscripción fue cancelada`
           );
           break;
         }
@@ -1092,7 +1094,7 @@ export async function POST(request: Request) {
         });
 
         // IMPORTANTE:
-        // No modificar ClubMembership.
+        // No modificar EntityMembership.
         // La membresía y la suscripción son conceptos distintos.
 
         console.log(

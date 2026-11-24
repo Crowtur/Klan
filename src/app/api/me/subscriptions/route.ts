@@ -56,7 +56,7 @@ export async function GET(request: Request) {
     // 2. Consultar sus suscripciones.
     const subscriptions = await prisma.subscription.findMany({
       where: {
-        clubMembership: {
+        entityMembership: {
           userId: user.id,
         },
       },
@@ -89,13 +89,13 @@ export async function GET(request: Request) {
           },
         },
 
-        clubMembership: {
+        entityMembership: {
           select: {
             id: true,
             role: true,
             status: true,
 
-            club: {
+            entity: {
               select: {
                 id: true,
                 name: true,

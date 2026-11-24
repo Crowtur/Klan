@@ -42,42 +42,44 @@
  * ==============================================================================
  */
 
-import {activeMember} from "@/lib/clubs/active";
-import { prisma } from "@/lib/prisma";
-import { ClubRole } from "@prisma/client";
+// Refactorización Parte 11: permisos y claves compuestas del dominio Entity; se mantienen las comprobaciones de sesión y autorización.
 
-/** Busca la relación mediante la clave compuesta de usuario y club. */
-export async function getClubMembership(
+import {activeMember} from "@/lib/entities/active";
+import { prisma } from "@/lib/prisma";
+import { EntityRole } from "@prisma/client";
+
+/** Busca la relación mediante la clave compuesta de usuario y entidad. */
+export async function getEntityMembership(
   userId: string,
-  clubId: string
+  entityId: string
 ) {
-  return prisma.clubMembership.findUnique({
+  return prisma.entityMembership.findUnique({
     where: {
-      userId_clubId: {
+      userId_entityId: {
         userId,
-        clubId,
+        entityId,
       },
     },
     include: {
-      club: true,
+      entity: true,
     },
   });
 }
 
-/** Resuelve el acceso en el club solicitado y contempla al superadministrador sin crear una membresía. */
-export async function requireClubMembership(
+/** Resuelve el acceso en la entidad solicitada y contempla al superadministrador sin crear una membresía. */
+export async function requireEntityMembership(
   userId: string,
-  clubId: string
+  entityId: string
 ) {
   const actor=await prisma.user.findUnique({where:{id:userId},select:{globalRole:true,status:true}});
   if(actor?.globalRole==="SUPER_ADMIN"&&actor.status==="ACTIVE"){
-    const club=await prisma.club.findUnique({where:{id:clubId}});
-    if(!club)throw new Error("FORBIDDEN");
-    const own=await getClubMembership(userId,clubId);
+    const entity=await prisma.entity.findUnique({where:{id:entityId}});
+    if(!entity)throw new Error("FORBIDDEN");
+    const own=await getEntityMembership(userId,entityId);
     // Empty id explicitly represents an administrative context, never a stored membership.
-    return {id:own?.status==="ACTIVE"?own.id:"",userId,clubId,role:ClubRole.CLUB_ADMIN,status:"ACTIVE" as const,joinedAt:own?.joinedAt??club.createdAt,removedAt:null,removedById:null,removalReason:null,club};
+    return {id:own?.status==="ACTIVE"?own.id:"",userId,entityId,role:EntityRole.ENTITY_ADMIN,status:"ACTIVE" as const,joinedAt:own?.joinedAt??entity.createdAt,removedAt:null,removedById:null,removalReason:null,entity};
   }
-  const membership = await getClubMembership(userId, clubId);
+  const membership = await getEntityMembership(userId, entityId);
 
   if (!membership) {
     throw new Error("FORBIDDEN");
@@ -87,25 +89,25 @@ export async function requireClubMembership(
     throw new Error("FORBIDDEN");
   }
 
-  if (membership.club.status !== "ACTIVE") {
+  if (membership.entity.status !== "ACTIVE") {
     throw new Error("FORBIDDEN");
   }
 
-  if(membership.role==="MEMBER" && !await prisma.clubMembership.count({where:{id:membership.id,...activeMember()}})) throw new Error("FORBIDDEN");
+  if(membership.role==="MEMBER" && !await prisma.entityMembership.count({where:{id:membership.id,...activeMember()}})) throw new Error("FORBIDDEN");
   return membership;
 }
 
-/** Comprueba el rol administrativo dentro del club antes de permitir cambios en sus recursos. */
-export async function requireClubAdmin(
+/** Comprueba el rol administrativo dentro de la entidad antes de permitir cambios en sus recursos. */
+export async function requireEntityAdmin(
   userId: string,
-  clubId: string
+  entityId: string
 ) {
-  const membership = await requireClubMembership(
+  const membership = await requireEntityMembership(
     userId,
-    clubId
+    entityId
   );
 
-  if (membership.role !== ClubRole.CLUB_ADMIN) {
+  if (membership.role !== EntityRole.ENTITY_ADMIN) {
     throw new Error("FORBIDDEN");
   }
 
@@ -135,10 +137,10 @@ export async function requireSuperAdmin(userId: string) {
   return user;
 }
 
-/** Distingue la autorización global de la que corresponde al administrador del club concreto. */
-export async function requireClubSuspensionPermission(
+/** Distingue la autorización global de la que corresponde al administrador de la entidad concreto. */
+export async function requireEntitySuspensionPermission(
   userId: string,
-  clubId: string
+  entityId: string
 ) {
   const user = await prisma.user.findUnique({
     where: { id: userId },
@@ -153,17 +155,17 @@ export async function requireClubSuspensionPermission(
     throw new Error("FORBIDDEN");
   }
 
-  // Un SUPER_ADMIN puede suspender cualquier club.
+  // Un SUPER_ADMIN puede suspender cualquier entidad.
   if (user.globalRole === "SUPER_ADMIN") {
     return;
   }
 
-  // Un CLUB_ADMIN solo puede suspender su propio club.
-  const membership = await prisma.clubMembership.findUnique({
+  // Un ENTITY_ADMIN solo puede suspender su propia entidad.
+  const membership = await prisma.entityMembership.findUnique({
     where: {
-      userId_clubId: {
+      userId_entityId: {
         userId,
-        clubId,
+        entityId,
       },
     },
   });
@@ -171,7 +173,7 @@ export async function requireClubSuspensionPermission(
   if (
     !membership ||
     membership.status !== "ACTIVE" ||
-    membership.role !== "CLUB_ADMIN"
+    membership.role !== "ENTITY_ADMIN"
   ) {
     throw new Error("FORBIDDEN");
   }

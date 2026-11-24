@@ -42,6 +42,8 @@
  * ==============================================================================
  */
 
+// Refactorización Parte 11: el seed mantiene la identidad global; los roles de las entidades se gestionan con EntityRole y EntityMembership.
+
 import { PrismaClient, GlobalRole, UserStatus } from "@prisma/client";
 
 const prisma = new PrismaClient();

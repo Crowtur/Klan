@@ -42,7 +42,7 @@
  * ==============================================================================
  */
 
-import {paymentCsv} from "@/lib/clubs/payment-csv";
+import {paymentCsv} from "@/lib/entities/payment-csv";
 
 import { prisma } from "@/lib/prisma";
 import { requireAuth } from "@/lib/auth/auth";
@@ -120,7 +120,7 @@ export async function GET(request: Request) {
     const where: Prisma.PaymentWhereInput = {
       userId: user.id,
       ...(year && {createdAt:{gte:new Date(Date.UTC(+year,0)),lt:new Date(Date.UTC(+year+1,0))}}),
-      ...(searchParams.get("clubId") ? { clubId: searchParams.get("clubId")! } : {}),
+      ...(searchParams.get("entityId") ? { entityId: searchParams.get("entityId")! } : {}),
       ...(statusParam !== null && {
         status: statusParam as PaymentStatus,
       }),
@@ -128,7 +128,7 @@ export async function GET(request: Request) {
 
     // 6. Consultar los pagos y su cantidad total.
     if(new URL(request.url).searchParams.get("format")==="csv") return paymentCsv(where);
-    const [payments, total, paid, lastPaid, pendingByClub] = await prisma.$transaction([
+    const [payments, total, paid, lastPaid, pendingByEntity] = await prisma.$transaction([
       prisma.payment.findMany({
         where,
         orderBy: [
@@ -146,7 +146,7 @@ export async function GET(request: Request) {
           createdAt: true,
           updatedAt: true,
 
-          club: {
+          entity: {
             select: {
               id: true,
               name: true,
@@ -178,14 +178,14 @@ export async function GET(request: Request) {
 
       prisma.payment.count({ where }),
       prisma.payment.aggregate({where:{userId:user.id,status:"PAID",paidAt:{gte:new Date(Date.UTC(Number(year||new Date().getUTCFullYear()),0)),lt:new Date(Date.UTC(Number(year||new Date().getUTCFullYear())+1,0))}},_sum:{amount:true},_count:true}),
-      prisma.payment.findFirst({where:{userId:user.id,status:"PAID"},orderBy:{paidAt:"desc"},select:{id:true,amount:true,paidAt:true,club:{select:{name:true}}}}),
-      prisma.paymentObligation.groupBy({by:["clubId"],orderBy:{clubId:"asc"},where:{userId:user.id,status:"OPEN",...(where.clubId && {clubId:String(where.clubId)})},_sum:{amount:true}}),
+      prisma.payment.findFirst({where:{userId:user.id,status:"PAID"},orderBy:{paidAt:"desc"},select:{id:true,amount:true,paidAt:true,entity:{select:{name:true}}}}),
+      prisma.paymentObligation.groupBy({by:["entityId"],orderBy:{entityId:"asc"},where:{userId:user.id,status:"OPEN",...(where.entityId && {entityId:String(where.entityId)})},_sum:{amount:true}}),
     ]);
 
     // 7. Devolver el historial paginado.
     return NextResponse.json({
       success: true,
-      payments,summary:{paid,lastPaid,pendingByClub},
+      payments,summary:{paid,lastPaid,pendingByEntity},
       pagination: {
         page,
         limit,

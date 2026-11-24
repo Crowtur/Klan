@@ -61,9 +61,9 @@ export async function GET(request: Request) {
           select: {
             id: true,
             name: true,
-            clubId: true,
+            entityId: true,
             requiresDocumentation: true, billingMode:true,price:true,
-            club: { select: { id: true, name: true,logoUrl:true } },
+            entity: { select: { id: true, name: true,logoUrl:true } },
             documentRequirements: {
               where: { isActive: true },
               select: {

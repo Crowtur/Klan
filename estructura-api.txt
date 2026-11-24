@@ -1,180 +1,68 @@
-﻿Folder PATH listing for volume Windows
-Volume serial number is 84A4-EFB2
-C:\PROJECTS\CLUB-SAAS\SRC\APP\API
-+---admin
-|   +---dashboard
-|   |   +---clubs
-|   |   |       route.ts
-|   |   |       
-|   |   +---finances
-|   |   |       route.ts
-|   |   |       
-|   |   \---overview
-|   |           route.ts
-|   |           
-|   +---settlements
-|   |   |   route.ts
-|   |   |   
-|   |   \---[settlementId]
-|   |           route.ts
-|   |           
-|   \---test
-|           route.ts
-|           
-+---auth
-|   +---login
-|   |       route.ts
-|   |       
-|   +---logout
-|   |       route.ts
-|   |       
-|   +---me
-|   |       route.ts
-|   |       
-|   \---register
-|           route.ts
-|           
-+---clubs
-|   |   route.ts
-|   |   
-|   \---[clubId]
-|       |   route.ts
-|       |   
-|       +---dashboard
-|       |   +---alerts
-|       |   |       route.ts
-|       |   |       
-|       |   +---finances
-|       |   |       route.ts
-|       |   |       
-|       |   +---members
-|       |   |       route.ts
-|       |   |       
-|       |   +---overview
-|       |   |       route.ts
-|       |   |       
-|       |   +---reservations
-|       |   |       route.ts
-|       |   |       
-|       |   \---suscriptions
-|       |           route.ts
-|       |           
-|       +---facilities
-|       |   |   route.ts
-|       |   |   
-|       |   \---[facilityId]
-|       |       |   route.ts
-|       |       |   
-|       |       +---availability
-|       |       |       route.ts
-|       |       |       
-|       |       +---plan-access
-|       |       |       route.ts
-|       |       |       
-|       |       +---reservations
-|       |       |   |   route.ts
-|       |       |   |   
-|       |       |   \---[reservationId]
-|       |       |           route.ts
-|       |       |           
-|       |       \---schedule
-|       |               route.ts
-|       |               
-|       +---members
-|       |   |   route.ts
-|       |   |   
-|       |   \---[memberId]
-|       |           route.ts
-|       |           
-|       +---membership-applications
-|       |   |   route.ts
-|       |   |   
-|       |   \---[applicationId]
-|       |       |   route.ts
-|       |       |   
-|       |       +---documents
-|       |       |   |   route.ts
-|       |       |   |   
-|       |       |   \---[documentId]
-|       |       |           route.ts
-|       |       |           
-|       |       \---review
-|       |               route.ts
-|       |               
-|       +---membership-plans
-|       |   |   route.ts
-|       |   |   
-|       |   \---[planId]
-|       |       |   route.ts
-|       |       |   
-|       |       \---document-requirements
-|       |           |   route.ts
-|       |           |   
-|       |           \---[requirementId]
-|       |                   route.ts
-|       |                   
-|       +---my-reservations
-|       |       route.ts
-|       |       
-|       +---payments
-|       |   |   route.ts
-|       |   |   
-|       |   \---summary
-|       |           route.ts
-|       |           
-|       +---posts
-|       |   |   route.ts
-|       |   |   
-|       |   \---[postId]
-|       |           route.ts
-|       |           
-|       +---reactivate
-|       |       route.ts
-|       |       
-|       +---subscriptions
-|       |   \---[subscriptionId]
-|       |       +---cancel
-|       |       |       route.ts
-|       |       |       
-|       |       \---checkout
-|       |               route.ts
-|       |               
-|       \---suspend
-|               route.ts
-|               
-+---cron
-|   +---expired-plans
-|   |       route.ts
-|   |       
-|   \---settlements
-|           route.ts
-|           
-+---feed
-|       route.ts
-|       
-+---me
-|   +---memberships
-|   |       route.ts
-|   |       
-|   +---payments
-|   |       route.ts
-|   |       
-|   \---subscriptions
-|           route.ts
-|           
-+---payments
-|   \---[paymentId]
-|           route.ts
-|           
-+---search
-|   \---clubs
-|           route.ts
-|           
-+---uploadthing
-|       core.ts
-|       route.ts
-|       
-\---webhooks
-    \---stripe
-            route.ts
-            
+Klan — Parte 11
+Inventario de rutas API desde src/app/api
+
+admin/dashboard/entities/route.ts
+admin/dashboard/finances/route.ts
+admin/dashboard/overview/route.ts
+admin/settlements/[settlementId]/route.ts
+admin/settlements/route.ts
+auth/login/route.ts
+auth/logout/route.ts
+auth/me/route.ts
+auth/register/route.ts
+auth/session/route.ts
+avatars/[key]/route.ts
+catalog/bubbles/route.ts
+catalog/entities/[entityId]/route.ts
+cron/expired-plans/route.ts
+cron/read-notifications/route.ts
+cron/settlements/route.ts
+entities/[entityId]/bank/route.ts
+entities/[entityId]/dashboard/activity/route.ts
+entities/[entityId]/dashboard/alerts/route.ts
+entities/[entityId]/dashboard/finances/route.ts
+entities/[entityId]/dashboard/members/route.ts
+entities/[entityId]/dashboard/overview/route.ts
+entities/[entityId]/dashboard/reservations/route.ts
+entities/[entityId]/dashboard/subscriptions/route.ts
+entities/[entityId]/facilities/[facilityId]/availability/route.ts
+entities/[entityId]/facilities/[facilityId]/plan-access/route.ts
+entities/[entityId]/facilities/[facilityId]/reservations/[reservationId]/route.ts
+entities/[entityId]/facilities/[facilityId]/reservations/route.ts
+entities/[entityId]/facilities/[facilityId]/route.ts
+entities/[entityId]/facilities/[facilityId]/schedule/route.ts
+entities/[entityId]/facilities/route.ts
+entities/[entityId]/members/[memberId]/route.ts
+entities/[entityId]/members/route.ts
+entities/[entityId]/membership-applications/[applicationId]/documents/[documentId]/route.ts
+entities/[entityId]/membership-applications/[applicationId]/documents/route.ts
+entities/[entityId]/membership-applications/[applicationId]/review/route.ts
+entities/[entityId]/membership-applications/[applicationId]/route.ts
+entities/[entityId]/membership-applications/[applicationId]/submit/route.ts
+entities/[entityId]/membership-applications/route.ts
+entities/[entityId]/membership-plans/[planId]/document-requirements/[requirementId]/route.ts
+entities/[entityId]/membership-plans/[planId]/document-requirements/route.ts
+entities/[entityId]/membership-plans/[planId]/route.ts
+entities/[entityId]/membership-plans/route.ts
+entities/[entityId]/my-reservations/route.ts
+entities/[entityId]/payments/route.ts
+entities/[entityId]/payments/summary/route.ts
+entities/[entityId]/posts/[postId]/route.ts
+entities/[entityId]/posts/route.ts
+entities/[entityId]/reactivate/route.ts
+entities/[entityId]/route.ts
+entities/[entityId]/subscriptions/[subscriptionId]/cancel/route.ts
+entities/[entityId]/subscriptions/[subscriptionId]/checkout/route.ts
+entities/[entityId]/suspend/route.ts
+entities/route.ts
+feed/route.ts
+me/applications/route.ts
+me/memberships/route.ts
+me/notifications/route.ts
+me/payments/route.ts
+me/subscriptions/route.ts
+payments/[paymentId]/receipt/route.ts
+payments/[paymentId]/route.ts
+search/entities/route.ts
+uploadthing/route.ts
+webhooks/stripe/route.ts

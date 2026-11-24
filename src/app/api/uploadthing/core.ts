@@ -42,6 +42,8 @@
  * ==============================================================================
  */
 
+// Refactorización Parte 11: contratos de carga y metadatos usan entityId; las autorizaciones se revalidan antes de escribir.
+
 /* Cada tipo de archivo declara sus límites, el permiso necesario y la operación que vincula el resultado con el registro de Klan. */
 import { createUploadthing, type FileRouter } from "uploadthing/next";
 import { UploadThingError } from "uploadthing/server";
@@ -50,13 +52,13 @@ import type { Prisma } from "@prisma/client";
 
 import { prisma } from "@/lib/prisma";
 import { requireAuth } from "@/lib/auth/auth";
-import { requireClubAdmin } from "@/lib/auth/authorization";
+import { requireEntityAdmin } from "@/lib/auth/authorization";
 import { deleteUploadThingFile } from "@/lib/uploadthing-server";
 
 const f = createUploadthing();
 
-const clubUploadInput = z.object({
-  clubId: z.string().uuid(),
+const entityUploadInput = z.object({
+  entityId: z.string().uuid(),
 });
 
 /** Exige una sesión válida para vincular la carga a un usuario. */
@@ -72,13 +74,13 @@ async function getAuthenticatedUser(req: Request) {
 }
 
 /** Vuelve a comprobar el rol antes de permitir una carga administrativa. */
-async function verifyClubAdmin(userId: string, clubId: string) {
+async function verifyEntityAdmin(userId: string, entityId: string) {
   try {
-    await requireClubAdmin(userId, clubId);
+    await requireEntityAdmin(userId, entityId);
   } catch {
     throw new UploadThingError({
       code: "FORBIDDEN",
-      message: "No tienes permisos para subir archivos a este club",
+      message: "No tienes permisos para subir archivos a esta entidad",
     });
   }
 }
@@ -89,13 +91,13 @@ async function verifyClubAdmin(userId: string, clubId: string) {
  */
 /** Busca referencias antes de eliminar una clave que podría seguir en uso. */
 async function isFileReferenced(fileKey: string) {
-  const [receipts, users, clubs, documents, versions, posts] = await Promise.all([
-    prisma.clubSettlement.count({ where: { receiptFileKey: fileKey } }),
+  const [receipts, users, entities, documents, versions, posts] = await Promise.all([
+    prisma.entitySettlement.count({ where: { receiptFileKey: fileKey } }),
     prisma.user.count({
       where: { avatarFileKey: fileKey },
     }),
 
-    prisma.club.count({
+    prisma.entity.count({
       where: { OR: [{ logoFileKey: fileKey }, { coverFileKey: fileKey }] },
     }),
 
@@ -109,7 +111,7 @@ async function isFileReferenced(fileKey: string) {
     }),
   ]);
 
-  return users + clubs + documents + posts + versions + receipts > 0;
+  return users + entities + documents + posts + versions + receipts > 0;
 }
 
 /**
@@ -174,18 +176,18 @@ async function cleanupFailedUpload(fileKey: string) {
 
 export const ourFileRouter = {
   postComposerUploader: f({ image: { maxFileSize: "4MB", maxFileCount: 1 } })
-    .input(z.object({ clubId: z.string().uuid(), postId: z.string().uuid().optional(), requestKey: z.string().uuid(), title: z.string().max(150), content: z.string().trim().min(1).max(5000) }))
-    .middleware(async ({ req, input }) => { const user = await getAuthenticatedUser(req); await verifyClubAdmin(user.id, input.clubId); return { ...input, userId: user.id }; })
+    .input(z.object({ entityId: z.string().uuid(), postId: z.string().uuid().optional(), requestKey: z.string().uuid(), title: z.string().max(150), content: z.string().trim().min(1).max(5000) }))
+    .middleware(async ({ req, input }) => { const user = await getAuthenticatedUser(req); await verifyEntityAdmin(user.id, input.entityId); return { ...input, userId: user.id }; })
     .onUploadComplete(async ({ metadata, file }) => {
       try {
-        await verifyClubAdmin(metadata.userId, metadata.clubId);
-        const club = await prisma.club.findUnique({ where: { id: metadata.clubId }, select: { status: true } });
-        if (club?.status !== "ACTIVE") throw new UploadThingError("El club no está activo");
-        const previous = metadata.postId ? await prisma.post.findFirst({ where: { id: metadata.postId, clubId: metadata.clubId } }) : null;
+        await verifyEntityAdmin(metadata.userId, metadata.entityId);
+        const entity = await prisma.entity.findUnique({ where: { id: metadata.entityId }, select: { status: true } });
+        if (entity?.status !== "ACTIVE") throw new UploadThingError("La entidad no está activa");
+        const previous = metadata.postId ? await prisma.post.findFirst({ where: { id: metadata.postId, entityId: metadata.entityId } }) : null;
         if (metadata.postId && !previous) throw new UploadThingError("Publicación no encontrada");
         const data = { title: metadata.title.trim() || null, content: metadata.content, imageUrl: file.ufsUrl, imageFileKey: file.key };
-        const post = metadata.postId ? await prisma.post.update({ where: { id: metadata.postId, clubId: metadata.clubId }, data }) : await prisma.post.upsert({ where: { id: metadata.requestKey }, create: { id: metadata.requestKey, clubId: metadata.clubId, authorId: metadata.userId, ...data }, update: {} });
-        if (post.clubId !== metadata.clubId || (!metadata.postId && post.authorId !== metadata.userId)) throw new UploadThingError("Identificador de publicación no válido");
+        const post = metadata.postId ? await prisma.post.update({ where: { id: metadata.postId, entityId: metadata.entityId }, data }) : await prisma.post.upsert({ where: { id: metadata.requestKey }, create: { id: metadata.requestKey, entityId: metadata.entityId, authorId: metadata.userId, ...data }, update: {} });
+        if (post.entityId !== metadata.entityId || (!metadata.postId && post.authorId !== metadata.userId)) throw new UploadThingError("Identificador de publicación no válido");
         if (previous) await cleanupOldFile(previous.imageFileKey, file.key);
         if (post.imageFileKey !== file.key) await cleanupFailedUpload(file.key);
         return { persisted: true, postId: post.id };
@@ -193,12 +195,12 @@ export const ourFileRouter = {
     }),
   settlementReceiptUploader: f({ pdf: { maxFileSize: "8MB", maxFileCount: 1 }, image: { maxFileSize: "8MB", maxFileCount: 1 } })
     .input(z.object({ settlementId: z.string().uuid() }))
-    .middleware(async ({ req, input, files }) => { const user = await getAuthenticatedUser(req); if (user.globalRole !== "SUPER_ADMIN" || files.length !== 1) throw new UploadThingError("Carga no autorizada"); const settlement = await prisma.clubSettlement.findUnique({ where: { id: input.settlementId } }); if (!settlement) throw new UploadThingError("Liquidación no encontrada"); return { ...input, userId: user.id }; })
+    .middleware(async ({ req, input, files }) => { const user = await getAuthenticatedUser(req); if (user.globalRole !== "SUPER_ADMIN" || files.length !== 1) throw new UploadThingError("Carga no autorizada"); const settlement = await prisma.entitySettlement.findUnique({ where: { id: input.settlementId } }); if (!settlement) throw new UploadThingError("Liquidación no encontrada"); return { ...input, userId: user.id }; })
     .onUploadComplete(async ({ metadata, file }) => {
       try {
         const user = await prisma.user.findUnique({ where: { id: metadata.userId } }); if (user?.globalRole !== "SUPER_ADMIN" || user.status !== "ACTIVE") throw new UploadThingError("Carga no autorizada");
-        const old = await prisma.clubSettlement.findUniqueOrThrow({ where: { id: metadata.settlementId } });
-        const saved = await prisma.clubSettlement.updateMany({ where: { id: old.id, receiptFileKey: old.receiptFileKey }, data: { receiptUrl: file.ufsUrl, receiptFileKey: file.key, receiptFileName: file.name } });
+        const old = await prisma.entitySettlement.findUniqueOrThrow({ where: { id: metadata.settlementId } });
+        const saved = await prisma.entitySettlement.updateMany({ where: { id: old.id, receiptFileKey: old.receiptFileKey }, data: { receiptUrl: file.ufsUrl, receiptFileKey: file.key, receiptFileName: file.name } });
         if (saved.count !== 1) throw new UploadThingError("El comprobante cambió durante la subida. Actualiza e intenta nuevamente.");
         await cleanupOldFile(old.receiptFileKey, file.key); return { persisted: true };
       } catch (error) { await cleanupFailedUpload(file.key); throw error; }
@@ -266,45 +268,45 @@ export const ourFileRouter = {
       };
     }),
 
-  // 2. Logotipo del club
-  clubLogoUploader: f({
+  // 2. Logotipo de la entidad
+  entityLogoUploader: f({
     image: {
       maxFileSize: "4MB",
       maxFileCount: 1,
     },
   })
-    .input(clubUploadInput)
+    .input(entityUploadInput)
     .middleware(async ({ req, input }) => {
       const user = await getAuthenticatedUser(req);
 
-      await verifyClubAdmin(user.id, input.clubId);
+      await verifyEntityAdmin(user.id, input.entityId);
 
       return {
         userId: user.id,
-        clubId: input.clubId,
+        entityId: input.entityId,
       };
     })
     .onUploadComplete(async ({ metadata, file }) => {
-      // Revalidar permisos antes de modificar el club.
-      await verifyClubAdmin(
+      // Revalidar permisos antes de modificar la entidad.
+      await verifyEntityAdmin(
         metadata.userId,
-        metadata.clubId
+        metadata.entityId
       );
 
       // Consultar el logotipo anterior.
-      const previousClub = await prisma.club.findUnique({
+      const previousEntity = await prisma.entity.findUnique({
         where: {
-          id: metadata.clubId,
+          id: metadata.entityId,
         },
         select: {
           logoFileKey: true,
         },
       });
 
-      if (!previousClub) {
+      if (!previousEntity) {
         throw new UploadThingError({
           code: "FORBIDDEN",
-          message: "El club ya no existe",
+          message: "La entidad ya no existe",
         });
       }
 
@@ -314,75 +316,75 @@ export const ourFileRouter = {
         const { downloadAvatars } = await import("@/lib/thumbnails");
         const sizes = await downloadAvatars(file.ufsUrl);
         await prisma.$transaction(async tx => {
-          const saved = await tx.club.updateMany({
-            where: {id:metadata.clubId,status:"ACTIVE",logoFileKey:previousClub.logoFileKey},
+          const saved = await tx.entity.updateMany({
+            where: {id:metadata.entityId,status:"ACTIVE",logoFileKey:previousEntity.logoFileKey},
             data: {logoUrl:imageUrl,logoFileKey:file.key}
           });
           if (!saved.count) throw new UploadThingError("La imagen cambió. Vuelve a intentarlo.");
           await tx.avatarThumbnail.upsert({where:{key:file.key},create:{key:file.key,...sizes},update:sizes});
-          if (previousClub.logoFileKey && previousClub.logoFileKey !== file.key)
-            await tx.avatarThumbnail.deleteMany({where:{key:previousClub.logoFileKey}});
+          if (previousEntity.logoFileKey && previousEntity.logoFileKey !== file.key)
+            await tx.avatarThumbnail.deleteMany({where:{key:previousEntity.logoFileKey}});
         });
       } catch (error) { await cleanupFailedUpload(file.key); throw error; }
       // Intentar eliminar el logotipo anterior.
       await cleanupOldFile(
-        previousClub.logoFileKey,
+        previousEntity.logoFileKey,
         file.key
       );
 
       return {
         uploadedBy: metadata.userId,
-        clubId: metadata.clubId,
+        entityId: metadata.entityId,
         fileKey: file.key,
         fileUrl: imageUrl,
         persisted: true,
       };
     }),
-  clubCoverUploader: f({
+  entityCoverUploader: f({
     image: {
       maxFileSize: "4MB",
       maxFileCount: 1,
     },
   })
-    .input(clubUploadInput)
+    .input(entityUploadInput)
     .middleware(async ({ req, input }) => {
       const user = await getAuthenticatedUser(req);
 
-      await verifyClubAdmin(user.id, input.clubId);
+      await verifyEntityAdmin(user.id, input.entityId);
 
       return {
         userId: user.id,
-        clubId: input.clubId,
+        entityId: input.entityId,
       };
     })
     .onUploadComplete(async ({ metadata, file }) => {
-      // Revalidar permisos antes de modificar el club.
-      await verifyClubAdmin(
+      // Revalidar permisos antes de modificar la entidad.
+      await verifyEntityAdmin(
         metadata.userId,
-        metadata.clubId
+        metadata.entityId
       );
 
       // Consultar el logotipo anterior.
-      const previousClub = await prisma.club.findUnique({
+      const previousEntity = await prisma.entity.findUnique({
         where: {
-          id: metadata.clubId,
+          id: metadata.entityId,
         },
         select: {
           coverFileKey: true,
         },
       });
 
-      if (!previousClub) {
+      if (!previousEntity) {
         throw new UploadThingError({
           code: "FORBIDDEN",
-          message: "El club ya no existe",
+          message: "La entidad ya no existe",
         });
       }
 
       // Guardar el nuevo logotipo.
-      await prisma.club.update({
+      await prisma.entity.update({
         where: {
-          id: metadata.clubId,
+          id: metadata.entityId,
           status: "ACTIVE",
         },
         data: {
@@ -393,13 +395,13 @@ export const ourFileRouter = {
 
       // Intentar eliminar el logotipo anterior.
       await cleanupOldFile(
-        previousClub.coverFileKey,
+        previousEntity.coverFileKey,
         file.key
       );
 
       return {
         uploadedBy: metadata.userId,
-        clubId: metadata.clubId,
+        entityId: metadata.entityId,
         fileKey: file.key,
         fileUrl: file.ufsUrl,
         persisted: true,
@@ -415,7 +417,7 @@ export const ourFileRouter = {
   })
     .input(
       z.object({
-        clubId: z.string().uuid(),
+        entityId: z.string().uuid(),
         applicationId: z.string().uuid(),
         requirementId: z.string().uuid(),
       })
@@ -423,7 +425,7 @@ export const ourFileRouter = {
     .middleware(async ({ req, input }) => {
       const user = await getAuthenticatedUser(req);
 
-      // Verificar que la solicitud pertenezca al usuario y al club especificado.
+      // Verificar que la solicitud pertenezca al usuario y a la entidad especificada.
       const application = await prisma.membershipApplication.findFirst({
         where: {
           id: input.applicationId,
@@ -432,7 +434,7 @@ export const ourFileRouter = {
             in: ["PENDING", "DOCUMENTATION_REVIEW"],
           },
           plan: {
-            clubId: input.clubId,
+            entityId: input.entityId,
             requiresDocumentation: true,
           },
         },
@@ -493,7 +495,7 @@ export const ourFileRouter = {
 
       return {
         userId: user.id,
-        clubId: input.clubId,
+        entityId: input.entityId,
         applicationId: input.applicationId,
         requirementId: input.requirementId,
         expectedVersion: existing?.version ?? 0,
@@ -512,7 +514,7 @@ export const ourFileRouter = {
                 in: ["PENDING", "DOCUMENTATION_REVIEW"],
               },
               plan: {
-                clubId: metadata.clubId,
+                entityId: metadata.entityId,
                 requiresDocumentation: true,
               },
             },
@@ -617,7 +619,7 @@ export const ourFileRouter = {
                     in: ["PENDING", "DOCUMENTATION_REVIEW"],
                   },
                   plan: {
-                    clubId: metadata.clubId,
+                    entityId: metadata.entityId,
                     requiresDocumentation: true,
                   },
                 },
@@ -674,20 +676,20 @@ export const ourFileRouter = {
   })
     .input(
       z.object({
-        clubId: z.string().uuid(),
+        entityId: z.string().uuid(),
         postId: z.string().uuid(),
       })
     )
     .middleware(async ({ req, input }) => {
       const user = await getAuthenticatedUser(req);
 
-      await verifyClubAdmin(user.id, input.clubId);
+      await verifyEntityAdmin(user.id, input.entityId);
 
       const post = await prisma.post.findFirst({
         where: {
           id: input.postId,
-          clubId: input.clubId,
-          club: {
+          entityId: input.entityId,
+          entity: {
             status: "ACTIVE",
           },
         },
@@ -699,30 +701,30 @@ export const ourFileRouter = {
       if (!post) {
         throw new UploadThingError({
           code: "NOT_FOUND",
-          message: "La publicación no existe en este club activo",
+          message: "La publicación no existe en esta entidad activa",
         });
       }
 
       return {
         userId: user.id,
-        clubId: input.clubId,
+        entityId: input.entityId,
         postId: input.postId,
       };
     })
     .onUploadComplete(async ({ metadata, file }) => {
       try {
         // 1. Revalidar permisos.
-        await verifyClubAdmin(
+        await verifyEntityAdmin(
           metadata.userId,
-          metadata.clubId
+          metadata.entityId
         );
 
         // 2. Consultar el estado actual de la publicación.
         const previousPost = await prisma.post.findFirst({
           where: {
             id: metadata.postId,
-            clubId: metadata.clubId,
-            club: {
+            entityId: metadata.entityId,
+            entity: {
               status: "ACTIVE",
             },
           },
@@ -744,8 +746,8 @@ export const ourFileRouter = {
         const updated = await prisma.post.updateMany({
           where: {
             id: metadata.postId,
-            clubId: metadata.clubId,
-            club: {
+            entityId: metadata.entityId,
+            entity: {
               status: "ACTIVE",
             },
             imageFileKey: previousPost.imageFileKey,
@@ -773,7 +775,7 @@ export const ourFileRouter = {
         return {
           persisted: true,
           postId: metadata.postId,
-          clubId: metadata.clubId,
+          entityId: metadata.entityId,
           fileKey: file.key,
           fileUrl: file.ufsUrl,
         };

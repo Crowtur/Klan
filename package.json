@@ -1,6 +1,6 @@
 {
-  "name": "club-saas",
-  "description": "Klan — Plataforma de clubes, membresías, reservas y pagos",
+  "name": "entity-saas",
+  "description": "Klan — Plataforma de entidades, membresías, reservas y pagos",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -8,7 +8,11 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "postinstall": "prisma generate"
+    "postinstall": "prisma generate",
+    "test": "node --import tsx --test scripts/*.tsx scripts/*.cjs",
+    "test:migration": "node scripts/verify-entity-migration.mjs",
+    "test:http": "node scripts/verify-entity-http.mjs",
+    "db:deploy": "prisma migrate deploy"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"

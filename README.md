@@ -1,30 +1,67 @@
-# Klan — Parte 10.4
+# Klan — Parte 11
 
-Plataforma de clubes, membresías, reservas y pagos. Esta entrega aplica el cambio de identidad sobre el código de la Parte 10.3.
+Plataforma de entidades, membresías, reservas y pagos. Esta versión migra el dominio completo a **Entity** en el código y **Entidad** en la interfaz, partiendo exclusivamente de `Klan_Parte_10.4.zip`.
 
-## Cambios de marca
+## Antes de actualizar
 
-La navegación compartida, el pie de página, el registro, la presentación de acceso y el panel global muestran Klan. Los títulos y metadatos sociales incluyen la nueva marca. El recurso público del monograma K se sirve desde `/brand/klan-icon.png`; se conserva su diseño, válido para la nueva inicial. Los comentarios de identidad y la descripción del paquete se actualizan al mismo nombre.
+**Esta versión requiere una migración de PostgreSQL.** Consulta [MIGRACION_PARTE_11.md](docs/MIGRACION_PARTE_11.md) antes de activar el código nuevo sobre una base existente. El renombrado conserva datos, pagos, relaciones y eventos; las 25 migraciones anteriores se mantienen intactas.
 
-La revisión de los textos transaccionales del repositorio no encontró menciones adicionales de la marca anterior. La configuración comercial almacenada en la cuenta de Stripe y los contenidos históricos de la base de datos se administran fuera de este código.
+La aplicación de la Parte 10.4 no debe seguir atendiendo solicitudes contra la base después del renombrado. Coordina la migración con el cambio de versión.
 
-## Compatibilidad técnica
+## Instalación y ejecución
 
-Se conservan deliberadamente las claves internas `klubo-theme` y `klubo:admin-filters` para recuperar las preferencias guardadas, el evento `klubo-notifications` para coordinar notificaciones y los nombres de animaciones CSS `klubo-grow` y `klubo-enter`. Son identificadores internos. El paquete mantiene el identificador `club-saas` y su archivo de dependencias fijadas.
+Se mantienen las dependencias fijadas de la Parte 10.4. Next.js requiere Node.js 20.9 o superior; la entrega se verificó con Node.js 24.22.3 y Prisma 5.22.0.
 
-Las cabeceras académicas conservan su texto original. Esta entrega no requiere una migración de base de datos.
-
-## Verificación y ejecución
-
-Utiliza las variables de entorno del despliegue anterior.
+1. Conserva las variables de entorno del despliegue anterior. Para una instalación nueva, completa `.env.example` y guarda los valores en `.env` o en la configuración del proveedor.
+2. Instala y valida el cliente:
 
 ```sh
 npm ci
+npx prisma validate
+npx prisma generate
+```
+
+3. En la base correspondiente, aplica las migraciones según la guía:
+
+```sh
+npm run db:deploy
+```
+
+4. Compila, comprueba y ejecuta:
+
+```sh
 npm run build
-node --import tsx --test scripts/*.tsx scripts/*.cjs
+npm test
 npm start
 ```
 
-El comando de instalación genera el cliente Prisma. La compilación verifica TypeScript. Las pruebas existentes incluyen recuperación de pagos Stripe y validación de permisos y cuerpos JSON.
+Para desarrollo utiliza `npm run dev`. El seed original conserva su comportamiento y no es necesario para actualizar una instalación existente. No lo uses como mecanismo de creación de credenciales de producción: mantiene el usuario inicial de prueba de la versión base.
 
-La entrega pasó la compilación de producción y las 51 pruebas automatizadas. Se verificaron por HTTP las páginas /, /login y /register con título y metadatos Klan, el icono con respuesta 200 y /api/test-db con respuesta 404. La comprobación se realizó localmente.
+## Contratos principales
+
+| Ámbito | Parte 11 |
+| --- | --- |
+| Catálogo público | `/entities` |
+| Ficha pública | `/entity/[entityId]` |
+| Espacio privado | `/app?view=entity&entity=<id>` |
+| Colección privada | `/app?view=entities` |
+| API de entidades | `/api/entities` y `/api/entities/[entityId]/…` |
+| Búsqueda y catálogo | `/api/search/entities`, `/api/catalog/entities/[entityId]` |
+| Administración global | `/api/admin/dashboard/entities` |
+| Rol administrativo | `ENTITY_ADMIN` |
+| Notificaciones | `entityId` identifica la organización; `targetType` y `targetId`, el recurso del aviso |
+
+## Vercel
+
+Conserva las variables `DATABASE_URL`, `DIRECT_URL`, `JWT_SECRET`, `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `UPLOADTHING_TOKEN`, `CRON_SECRET` y `NEXT_PUBLIC_APP_URL` de cada entorno. `DIRECT_URL` debe permitir las operaciones de migración en PostgreSQL.
+
+Usa `npm ci` como instalación y `npx prisma generate && npm run build` como comando de compilación. Aplica `npx prisma migrate deploy` en la etapa controlada de actualización de la base, antes de activar la Parte 11. La generación del cliente y la compilación no ejecutan la migración automáticamente.
+
+## Documentación y comprobaciones
+
+- [Cambios y alcance](docs/CAMBIOS_PARTE_11.md).
+- [Migración, despliegue y recuperación](docs/MIGRACION_PARTE_11.md).
+- [Resultados de validación y límites](docs/VALIDACION_PARTE_11.md).
+- [Trazabilidad de la base y archivos](docs/TRAZABILIDAD_PARTE_11.json).
+
+Se mantienen Klan, las cabeceras institucionales PUCE - Icam, los controles HTTP 400/403, la ausencia de `/api/test-db`, la idempotencia de Stripe y las reglas móviles del umbral `< 768px`.

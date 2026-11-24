@@ -47,19 +47,19 @@
 const BASE_URL =
   process.env.TEST_BASE_URL ?? "http://localhost:3000";
 
-const CLUB_ID = process.env.TEST_CLUB_ID;
+const ENTITY_ID = process.env.TEST_ENTITY_ID;
 const FACILITY_ID = process.env.TEST_FACILITY_ID;
 const AUTH_TOKEN = process.env.TEST_AUTH_TOKEN;
 
-if (!CLUB_ID || !FACILITY_ID || !AUTH_TOKEN) {
+if (!ENTITY_ID || !FACILITY_ID || !AUTH_TOKEN) {
   console.error(
-    "Faltan TEST_CLUB_ID, TEST_FACILITY_ID o TEST_AUTH_TOKEN"
+    "Faltan TEST_ENTITY_ID, TEST_FACILITY_ID o TEST_AUTH_TOKEN"
   );
   process.exit(1);
 }
 
 const endpoint =
-  `${BASE_URL}/api/clubs/${CLUB_ID}` +
+  `${BASE_URL}/api/entities/${ENTITY_ID}` +
   `/facilities/${FACILITY_ID}/reservations`;
 
 async function createReservation(startAt, endAt) {

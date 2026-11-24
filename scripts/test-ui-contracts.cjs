@@ -59,20 +59,20 @@ function load(file, prisma, requireAuth=async()=>({id:'owner'})) {
   throw Error('Unexpected import '+name);
  }};vm.runInNewContext(js,context);return exports;
 }
-const catalog='src/app/api/catalog/clubs/[clubId]/route.ts';
+const catalog='src/app/api/catalog/entities/[entityId]/route.ts';
 const applications='src/app/api/me/applications/route.ts';
-test('public catalog limits club and plans to active records and public fields',async()=>{
- let clubQuery,planQuery;
- const route=load(catalog,{club:{findFirst:async q=>(clubQuery=q,{id:'club'})},membershipPlan:{findMany:async q=>(planQuery=q,[])}});
- const r=await route.GET({}, {params:Promise.resolve({clubId:'club'})});
- assert.equal(r.status,200);assert.equal(clubQuery.where.id,'club');assert.equal(clubQuery.where.status,'ACTIVE');
- assert.equal(planQuery.where.clubId,'club');assert.equal(planQuery.where.isActive,true);
+test('public catalog limits entidad and plans to active records and public fields',async()=>{
+ let entityQuery,planQuery;
+ const route=load(catalog,{entity:{findFirst:async q=>(entityQuery=q,{id:'entity'})},membershipPlan:{findMany:async q=>(planQuery=q,[])}});
+ const r=await route.GET({}, {params:Promise.resolve({entityId:'entity'})});
+ assert.equal(r.status,200);assert.equal(entityQuery.where.id,'entity');assert.equal(entityQuery.where.status,'ACTIVE');
+ assert.equal(planQuery.where.entityId,'entity');assert.equal(planQuery.where.isActive,true);
  assert.equal(planQuery.select.documentRequirements.where.isActive,true);
- assert.equal(clubQuery.select.memberships,undefined);assert.equal(planQuery.select.subscriptions,undefined);
+ assert.equal(entityQuery.select.memberships,undefined);assert.equal(planQuery.select.subscriptions,undefined);
 });
-test('unavailable club returns 404 without exposing any plans',async()=>{
- const route=load(catalog,{club:{findFirst:async()=>null},membershipPlan:{findMany:async()=>{throw Error('must not query plans');}}});
- assert.equal((await route.GET({}, {params:Promise.resolve({clubId:'missing'})})).status,404);
+test('unavailable entidad returns 404 without exposing any plans',async()=>{
+ const route=load(catalog,{entity:{findFirst:async()=>null},membershipPlan:{findMany:async()=>{throw Error('must not query plans');}}});
+ assert.equal((await route.GET({}, {params:Promise.resolve({entityId:'missing'})})).status,404);
 });
 test('personal applications always use authenticated user, not supplied userId',async()=>{
  let query;const route=load(applications,{membershipApplication:{findMany:async q=>(query=q,[])}});

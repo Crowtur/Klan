@@ -43,5 +43,5 @@
  */
 
 import { Icon } from "@/components/ui";
-/** Agrupa la ubicación del club o instalación con su icono en una sola línea informativa. */
+/** Agrupa la ubicación de la entidad o instalación con su icono en una sola línea informativa. */
 export function Location({value}:{value?:string|null}){return <span className="location-line"><Icon name="pin" size={16}/>{value || "Ubicación por confirmar"}</span>}

@@ -42,6 +42,8 @@
  * ==============================================================================
  */
 
+// Refactorización Parte 11: agrupación y filtros por entidadId; el recurso notificado usa targetId para evitar colisiones.
+
 import {requireAuth} from "@/lib/auth/auth";
 import {prisma} from "@/lib/prisma";
 function fail(e:unknown) {return Response.json({success:false},{status:e instanceof Error && e.message==="UNAUTHORIZED"?401:500});}
@@ -52,20 +54,20 @@ export async function GET(req:Request) {
     const q=new URL(req.url).searchParams;
     const page=Number(q.get("page")??1);
     if(!Number.isSafeInteger(page)||page<1||page>10000)return Response.json({success:false},{status:400});
-    const where={recipientId:user.id,...(q.get("clubId")&&{clubId:q.get("clubId")!})};
+    const where={recipientId:user.id,...(q.get("entityId")&&{entityId:q.get("entityId")!})};
     const groups = prisma.notification.groupBy({
-      by: ["clubId", "type"], orderBy: {clubId: "asc"},
+      by: ["entityId", "type"], orderBy: {entityId: "asc"},
       where: {...where, readAt: null}, _count: true
     });
     if (q.get("summary") === "1") {
-      return Response.json({success: true, byClub: await groups});
+      return Response.json({success: true, byEntity: await groups});
     }
-    const [notifications,total,byClub]=await prisma.$transaction([
+    const [notifications,total,byEntity]=await prisma.$transaction([
       prisma.notification.findMany({where,orderBy:[{createdAt:"desc"},{id:"desc"}],skip:(page-1)*25,take:25}),
       prisma.notification.count({where}), groups
     ]);
-    const unread = byClub.reduce((sum, group) => sum + group._count, 0);
-    return Response.json({success:true,notifications,total,page,unread,byClub});
+    const unread = byEntity.reduce((sum, group) => sum + group._count, 0);
+    return Response.json({success:true,notifications,total,page,unread,byEntity});
   }catch(e){return fail(e);}
 }
 /** Marca los avisos propios como leídos según el identificador o el ámbito indicado. */
@@ -73,7 +75,7 @@ export async function PATCH(req:Request) {
   try {
     const user=await requireAuth(req);
     const body=await req.json().catch(()=>null);
-    if (body && typeof body.clubId === "string" && typeof body.tab === "string") {
+    if (body && typeof body.entityId === "string" && typeof body.tab === "string") {
       const sections = {
         applications: ["APPLICATION_SUBMITTED","DOCUMENTS_SUBMITTED"],
         reservations: ["RESERVATION_CREATED","RESERVATION_CANCELLED"],
@@ -82,7 +84,7 @@ export async function PATCH(req:Request) {
       if (!Object.hasOwn(sections, body.tab)) return Response.json({success:false},{status:400});
       const types = sections[body.tab as keyof typeof sections];
       const result = await prisma.notification.updateMany({
-        where:{recipientId:user.id, clubId:body.clubId, readAt:null, type:{in:[...types]}},
+        where:{recipientId:user.id, entityId:body.entityId, readAt:null, type:{in:[...types]}},
         data:{readAt:new Date()}
       });
       return Response.json({success:true,updated:result.count});

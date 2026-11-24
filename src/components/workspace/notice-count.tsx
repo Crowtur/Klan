@@ -47,7 +47,7 @@ import {useSyncExternalStore} from "react";
 import {api} from "./common";
 import {notificationDestination} from "@/lib/notification-routing";
 
-type Group = {clubId: string | null; type: string; _count: number};
+type Group = {entityId: string | null; type: string; _count: number};
 const empty: Group[] = [];
 let groups = empty;
 const listeners = new Set<() => void>();
@@ -61,7 +61,7 @@ function refresh() {
   const current = ++generation;
   void api("/api/me/notifications?summary=1").then(data => {
     if (current !== generation) return;
-    groups = data.byClub;
+    groups = data.byEntity;
     listeners.forEach(listener => listener());
   }).catch(() => {}).finally(() => {
     if (current === generation) pending = false;
@@ -96,15 +96,15 @@ export function useNoticeGroups() {
   return useSyncExternalStore(subscribe, () => groups, () => empty);
 }
 
-export function NoticeCount({club,kind}:{club?:string;kind?:"applications"|"clubs"|"reservations"|"overview"|"members"}){
+export function NoticeCount({entity,kind}:{entity?:string;kind?:"applications"|"entities"|"reservations"|"overview"|"members"}){
   const count = useNoticeGroups().reduce((sum, group) => {
-    if (club && group.clubId !== club) return sum;
+    if (entity && group.entityId !== entity) return sum;
     const route = notificationDestination(group);
-    const matches = club
-      ? route.scope === "club" && (!kind || route.tab === kind)
+    const matches = entity
+      ? route.scope === "entity" && (!kind || route.tab === kind)
       : kind === "applications"
         ? route.scope === "personal" && route.tab === "applications"
-        : route.scope === "club";
+        : route.scope === "entity";
     return matches ? sum + group._count : sum;
   }, 0);
   return count ? <span className="notification-count" aria-label={count+" novedades"}>{count}</span> : null;

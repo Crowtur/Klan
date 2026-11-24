@@ -50,15 +50,15 @@ import {Icon} from "@/components/ui";
 import {api,safeUrl,type Row} from "./common";
 const {useUploadThing}=generateReactHelpers<OurFileRouter>();
 /** Coordina texto e imagen en el mismo envío. Al editar distingue conservar, sustituir y retirar la imagen. */
-export function PostComposer({club,post,onDone}:{club:string;post?:Row;onDone:()=>void}){
+export function PostComposer({entity,post,onDone}:{entity:string;post?:Row;onDone:()=>void}){
  const [title,setTitle]=useState(post?.title||""),[content,setContent]=useState(post?.content||""),[file,setFile]=useState<File|null>(null),[preview,setPreview]=useState<string>(),[remove,setRemove]=useState(false),[drag,setDrag]=useState(false),[busy,setBusy]=useState(false),[error,setError]=useState("");
  const input=useRef<HTMLInputElement>(null),form=useRef<HTMLFormElement>(null),requestKey=useRef<string>("");
  const {startUpload}=useUploadThing("postComposerUploader");
  useEffect(()=>{if(!file){setPreview(undefined);return}const url=URL.createObjectURL(file);setPreview(url);return()=>URL.revokeObjectURL(url)},[file]);
  function choose(next?:File){if(!next)return;if(!next.type.startsWith("image/")||next.size>4*1024*1024){setError("Elige una imagen de hasta 4 MB.");return}setError("");setFile(next);setRemove(false)}
  return <form className="post-composer" ref={form} onSubmit={async e=>{e.preventDefault();setBusy(true);setError("");try{
- if(file){requestKey.current ||= crypto.randomUUID();const result=await startUpload([file],{clubId:club,postId:post?.id,requestKey:requestKey.current,title,content});if(!result?.[0]?.serverData?.persisted)throw Error("No se pudo guardar la publicación. Intenta nuevamente.")}
- else await api(`/api/clubs/${club}/posts${post?"/"+post.id:""}`,post?"PATCH":"POST",{title,content,...(remove?{removeImage:true}:{})});
+ if(file){requestKey.current ||= crypto.randomUUID();const result=await startUpload([file],{entityId:entity,postId:post?.id,requestKey:requestKey.current,title,content});if(!result?.[0]?.serverData?.persisted)throw Error("No se pudo guardar la publicación. Intenta nuevamente.")}
+ else await api(`/api/entities/${entity}/posts${post?"/"+post.id:""}`,post?"PATCH":"POST",{title,content,...(remove?{removeImage:true}:{})});
  onDone();form.current?.closest("dialog")?.close();if(!post){setTitle("");setContent("")}setFile(null);requestKey.current="";
  }catch(e){setError((e as Error).message)}finally{setBusy(false)}}}>
  <fieldset disabled={busy}>

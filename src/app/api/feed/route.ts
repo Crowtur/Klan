@@ -42,13 +42,13 @@
  * ==============================================================================
  */
 
-import {activeMember} from "@/lib/clubs/active";
+import {activeMember} from "@/lib/entities/active";
 
 import { prisma } from "@/lib/prisma";
 import { requireAuth } from "@/lib/auth/auth";
 import { NextResponse } from "next/server";
 
-/** Pagina las publicaciones visibles de los clubes del usuario autenticado. */
+/** Pagina las publicaciones visibles de las entidades del usuario autenticado. */
 export async function GET(request: Request) {
   try {
     // 1. Identificar al usuario autenticado.
@@ -93,9 +93,9 @@ export async function GET(request: Request) {
     }
 
     // 3. Filtrar publicaciones por membresía activa
-    // y por clubes activos.
+    // y por entidades activas.
     const where = {
-      club: {
+      entity: {
         status: "ACTIVE" as const,
         memberships: {
           some: {
@@ -131,7 +131,7 @@ export async function GET(request: Request) {
               avatarUrl: true,
             },
           },
-          club: {
+          entity: {
             select: {
               id: true,
               name: true,

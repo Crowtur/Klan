@@ -1,0 +1,70 @@
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+
+> entity-saas@0.1.0 test
+> node --import tsx --test scripts/*.tsx scripts/*.cjs
+
+Pago fallido para Subscription sub_local. Periodo de gracia hasta 2027-01-22T08:00:00.000Z
+Pago fallido para Subscription sub_local. Periodo de gracia hasta 2027-01-22T08:00:00.000Z
+Factura in_test procesada como PAID para Subscription sub_local
+Invoice in_test ya fue pagada. Se ignora el fallo.
+Subscription sub_local sincronizada con Stripe: active
+Factura in_test procesada como PAID para Subscription sub_local
+✔ a processed event exits before touching a payment (118.770441ms)
+✔ confirmed one-time checkout uses the contracted day count (45.85672ms)
+✔ expired pass is FINISHED and another valid access protects the membership (12.760099ms)
+✔ recupera una factura en gracia sin duplicar deuda ni retroceder el período (196.34156ms)
+✔ recipient routing distinguishes administrative applications from personal applications (1.425728ms)
+✔ relative timestamps cover seconds, hours, days, weeks, months, years (0.913106ms)
+✔ reading a notification only mutates its authenticated recipient (50.486863ms)
+✔ unread counter does not discard resolved but unread notifications (11.174711ms)
+✔ pending settlement can be paid directly; conditional transition prevents concurrent overwrite (17.736044ms)
+✔ settlement requires payment reference and reports concurrent changes (31.751985ms)
+✔ next charge falls back to expiry for legacy active recurring subscriptions only (8.181883ms)
+✔ global administrative access does not create or borrow another user membership (8.49132ms)
+✔ ordinary member without membership cannot access entidad administration (14.642564ms)
+✔ historical membership counts apply each member transition rather than summing event totals (6.077764ms)
+✔ post upload commits text and image together and retry does not duplicate the post (96.399566ms)
+✔ post completion revalidates admin permission after an upload (27.002161ms)
+✔ receipt upload forbids regular users before any settlement write (19.703618ms)
+✔ receipt callback validates admin again and persists only server-issued file URL/key (34.286312ms)
+✔ membership history excludes unpaid or expired access but includes administrators (63.632658ms)
+✔ reading a entidad tab scopes the update to its actor, entidad and event types (21.560345ms)
+✔ withdrawal persists the deletion key and reopens review only when no documents are pending (10.412705ms)
+✔ cleanup retries failed files and acknowledges only successful storage deletes (3.437687ms)
+✔ approving the last pending document after a rejection sends the application back to Documentos (8.092399ms)
+✔ los datos bancarios se escriben únicamente para la entidad autorizada y no se devuelven al remitente (9.790907ms)
+✔ un enlace público a una publicación anterior recupera su página dentro de la entidad (7.975504ms)
+✔ la limpieza diaria requiere el secreto y conserva las notificaciones sin leer (3.633774ms)
+✔ solo administradores autorizados pueden recuperar los últimos datos bancarios de la entidad (4.681832ms)
+✔ completed payment opens its hosted invoice without caching the private redirect (4.39519ms)
+✔ legacy checkout-only payment resolves its successful charge receipt (4.83345ms)
+✔ ineligible payment does not contact Stripe or redirect (3.444378ms)
+✔ enlaces de entidad, rutas globales y administradores respetan el destino de entrada (11.091306ms)
+✔ notification badges only read unread groups for the signed-in recipient (5.424075ms)
+✔ availability counts only the member’s own minutes while blocking every confirmed reservation (29.929359ms)
+✔ la ruta de diagnóstico que enumeraba usuarios queda fuera de la aplicación (0.114783ms)
+✔ expulsión distingue sesión ausente y permisos insuficientes en la entidad solicitada (14.740722ms)
+✔ crear planes rechaza JSON inválido o incompleto antes de escribir y admite un plan válido (10.810133ms)
+✔ la portada comienza con siete burbujas genéricas sin enlaces (7.996094ms)
+✔ las miniaturas del servidor son WebP cuadrados de 128 y 300 píxeles (27.733532ms)
+✔ las imágenes nuevas y anteriores ofrecen variantes de densidad (1.371996ms)
+✔ los datos bancarios se presentan cerrados y conservan los ceros de la cuenta (1.319528ms)
+✔ las liquidaciones terminales no ofrecen transiciones y las notas comienzan cerradas (0.808467ms)
+✔ la dona selecciona inicialmente los cinco mayores importes (1.883457ms)
+✔ un lector puede compartir sin ver controles de edición (2.13742ms)
+✔ la variante destructiva distingue una baja, una cancelación y la suspensión global (4.579968ms)
+✔ plan cards render the contracted duration, USD, multiline benefits and actual counts (9.696505ms)
+✔ daily chart groups adjacent months and identifies a single month in its heading (3.340602ms)
+✔ public catalog limits entidad and plans to active records and public fields (57.390241ms)
+✔ unavailable entidad returns 404 without exposing any plans (10.6959ms)
+✔ personal applications always use authenticated user, not supplied userId (21.981088ms)
+✔ unauthenticated requests do not reach the application query (10.071689ms)
+✔ database errors return controlled errors without exception details (8.941298ms)
+ℹ tests 51
+ℹ suites 0
+ℹ pass 51
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1118.462959

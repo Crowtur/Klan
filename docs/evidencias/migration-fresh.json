@@ -1,0 +1,12 @@
+{
+  "mode": "fresh",
+  "result": "PASS",
+  "migrations": 26,
+  "tables": 23,
+  "preservedRows": 0,
+  "checks": [
+    "schema sin diferencias",
+    "historial aplicado",
+    "repetición sin cambios"
+  ]
+}

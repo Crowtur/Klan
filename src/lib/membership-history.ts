@@ -57,6 +57,6 @@ export function activeMembershipsAt(members:Member[],cutoff:Date){return members
  for(const e of m.events){if(e.occurredAt>=cutoff)break;status=e.newStatus;role=e.newRole??role;}
  if(!m.events.length&&endedAt&&endedAt<cutoff)status="REMOVED";
  if(status!=="ACTIVE")return false;
- if(role==="CLUB_ADMIN"||!m.subscriptions)return true;
+ if(role==="ENTITY_ADMIN"||!m.subscriptions)return true;
  return m.subscriptions.some(s=>{const begin=s.firstActivatedAt??s.startedAt;const end=s.gracePeriodEndsAt&&(!s.expiresAt||s.gracePeriodEndsAt>s.expiresAt)?s.gracePeriodEndsAt:s.expiresAt;return begin&&begin<cutoff&&end&&end>=cutoff&&(!s.finishedAt||s.finishedAt>=cutoff)});
  }).length;}

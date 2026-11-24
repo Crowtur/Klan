@@ -48,7 +48,7 @@ import { NextResponse } from "next/server";
 
 // Si ya tenías export async function GET aquí, mantenlo arriba.
 
-/** Calcula la liquidación del club y mes solicitados a partir de sus pagos. */
+/** Calcula la liquidación de la entidad y mes solicitados a partir de sus pagos. */
 export async function POST(request: Request) {
   try {
     const user = await requireAuth(request);
@@ -65,13 +65,13 @@ export async function POST(request: Request) {
 
     const body = await request.json();
 
-    const { clubId, year, month } = body;
+    const { entityId, year, month } = body;
 
-    if (!clubId || year === undefined || month === undefined) {
+    if (!entityId || year === undefined || month === undefined) {
       return NextResponse.json(
         {
           success: false,
-          message: "clubId, year y month son obligatorios",
+          message: "entityId, year y month son obligatorios",
         },
         { status: 400 }
       );
@@ -92,9 +92,9 @@ export async function POST(request: Request) {
       );
     }
 
-    const club = await prisma.club.findUnique({
+    const entity = await prisma.entity.findUnique({
       where: {
-        id: clubId,
+        id: entityId,
       },
       select: {
         id: true,
@@ -102,20 +102,20 @@ export async function POST(request: Request) {
       },
     });
 
-    if (!club) {
+    if (!entity) {
       return NextResponse.json(
         {
           success: false,
-          message: "Club no encontrado",
+          message: "Entidad no encontrada",
         },
         { status: 404 }
       );
     }
 
-    const existingSettlement = await prisma.clubSettlement.findUnique({
+    const existingSettlement = await prisma.entitySettlement.findUnique({
       where: {
-        clubId_year_month: {
-          clubId,
+        entityId_year_month: {
+          entityId,
           year,
           month,
         },
@@ -126,7 +126,7 @@ export async function POST(request: Request) {
       return NextResponse.json(
         {
           success: false,
-          message: "Ya existe una liquidación para este club y período",
+          message: "Ya existe una liquidación para esta entidad y período",
           settlementId: existingSettlement.id,
         },
         { status: 409 }
@@ -138,7 +138,7 @@ export async function POST(request: Request) {
 
     const payments = await prisma.payment.findMany({
       where: {
-        clubId,
+        entityId,
         status: "PAID",
         createdAt: {
           gte: startDate,
@@ -161,9 +161,9 @@ export async function POST(request: Request) {
     const totalFees = stripeFee + transferFee + platformFee;
     const netAmount = grossAmount - totalFees;
 
-    const settlement = await prisma.clubSettlement.create({
+    const settlement = await prisma.entitySettlement.create({
       data: {
-        clubId,
+        entityId,
         year,
         month,
         grossAmount: grossAmount.toFixed(2),
@@ -174,7 +174,7 @@ export async function POST(request: Request) {
         netAmount: netAmount.toFixed(2),
       },
       include: {
-        club: {
+        entity: {
           select: {
             id: true,
             name: true,

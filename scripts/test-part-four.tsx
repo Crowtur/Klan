@@ -49,12 +49,12 @@ import sharp from "sharp";
 import { renderToStaticMarkup as render } from "react-dom/server";
 import {renderAvatars} from "../src/lib/thumbnails";
 import {AvatarImage} from "../src/components/avatar-image";
-import {ClubBubbles} from "../src/components/club-bubbles";
+import {EntityBubbles} from "../src/components/entity-bubbles";
 import {BankDetails,FinanceChart,SettlementForm} from "../src/components/workspace/finance-controls";
 import {PostCard} from "../src/components/workspace/post-card";
 
 test("la portada comienza con siete burbujas genéricas sin enlaces",()=>{
-  const html=render(<ClubBubbles/>);
+  const html=render(<EntityBubbles/>);
   assert.equal((html.match(/class="bubble-position"/g)||[]).length,7);
   assert.doesNotMatch(html,/<a\s/);
 });
@@ -70,7 +70,7 @@ test("las miniaturas del servidor son WebP cuadrados de 128 y 300 píxeles",asyn
 });
 test("las imágenes nuevas y anteriores ofrecen variantes de densidad",()=>{
   for(const src of ["/api/avatars/test","https://demo.ufs.sh/f/test"]){
-    const html=render(<AvatarImage src={src} alt="Club"/>);
+    const html=render(<AvatarImage src={src} alt="Entidad"/>);
     assert.match(html,/128w/);assert.match(html,/300w/);
   }
 });
@@ -85,13 +85,13 @@ test("las liquidaciones terminales no ofrecen transiciones y las notas comienzan
   assert.match(html,/Existente/);assert.match(html,/Agregar notas/);assert.doesNotMatch(html,/<details[^>]* open/);
 });
 test("la dona selecciona inicialmente los cinco mayores importes",()=>{
-  const clubs=Array.from({length:7},(_,i)=>({clubName:"Equipo "+i,clubId:String(i),grossRevenue:i}));
-  const html=render(<FinanceChart clubs={clubs}/>);
+  const entities=Array.from({length:7},(_,i)=>({entityName:"Equipo "+i,entityId:String(i),grossRevenue:i}));
+  const html=render(<FinanceChart entities={entities}/>);
   const chart=html.split("<dialog")[0];
   assert.match(chart,/Equipo 6/);assert.doesNotMatch(chart,/Equipo [01]/);assert.match(chart,/>20<\/span>/);
 });
 test("un lector puede compartir sin ver controles de edición",()=>{
-  const html=render(<PostCard post={{id:"p",createdAt:"2026-11-01",club:{id:"c",name:"Deportivo"},content:"Encuentro"}}/>);
+  const html=render(<PostCard post={{id:"p",createdAt:"2026-11-01",entity:{id:"c",name:"Deportivo"},content:"Encuentro"}}/>);
   assert.match(html,/id="post-p"/);assert.match(html,/Compartir/);assert.doesNotMatch(html,/Eliminar|Editar publicación/);
 });
 
@@ -101,7 +101,7 @@ test("la variante destructiva distingue una baja, una cancelación y la suspensi
     const html=render(<Action url="/operacion" confirm="¿Continuar?" {...props}>Aplicar</Action>);
     assert.equal((html.match(/class="outline-destructive"/g)||[]).length,2);
   }
-  const html=render(<Action url="/suspend" variant="club-suspension" confirm="¿Suspender?">Suspender</Action>);
+  const html=render(<Action url="/suspend" variant="entity-suspension" confirm="¿Suspender?">Suspender</Action>);
   assert.match(html,/<button class="danger">Suspender/);
   assert.match(html,/<button class="outline-destructive">Confirmar/);
   assert.doesNotMatch(render(<Action url="/reservations">Reservar</Action>),/outline-destructive|class="danger"/);

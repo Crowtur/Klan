@@ -48,9 +48,9 @@ import {useEffect,useRef,useId,useState} from "react";
 import {Icon} from "@/components/ui";
 import {api,useData,Status,Action,type Row} from "./common";
 /** Coordina el plan desplegado con el requisito que se está creando o editando. */
-export function Requirements({club,plans,onChanged}:{club:string;plans:Row[];onChanged:()=>void}){
+export function Requirements({entity,plans,onChanged}:{entity:string;plans:Row[];onChanged:()=>void}){
  const [opened,setOpened]=useState<string|null>(null),[editing,setEditing]=useState<{plan:Row;requirement:Row}|null>(null),[version,setVersion]=useState(0);
- const base=`/api/clubs/${club}/membership-plans`;
+ const base=`/api/entities/${entity}/membership-plans`;
  return <section className="requirements-section"><h2>Requisitos documentales</h2><p className="muted">Gestiona los documentos que se solicitan antes de aprobar una membresía.</p><div className={editing?"requirements-layout editing":"requirements-layout"}><div>{plans.map(plan=><RequirementGroup key={plan.id} plan={plan} base={`${base}/${plan.id}/document-requirements`} open={opened===plan.id} version={version} onToggle={()=>{setOpened(opened===plan.id?null:plan.id);setEditing(null)}} onEdit={requirement=>setEditing({plan,requirement})}/>)}</div>{editing && <RequirementEditor key={editing.plan.id + (editing.requirement.id || "new")}
     plan={editing.plan} initial={editing.requirement} base={base}
     onCancel={() => setEditing(null)} onDone={() => {

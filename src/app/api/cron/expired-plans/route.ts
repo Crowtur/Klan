@@ -90,8 +90,8 @@ export async function POST(request: Request) {
       await prisma.$transaction(async tx => {
         const changed = await tx.subscription.updateMany({where:{id:pass.id,status:"ACTIVE",expiresAt:{lte:now}},data:{status:"FINISHED",finishedAt:pass.expiresAt}});
         if (!changed.count) return;
-        const member = await tx.clubMembership.updateMany({where:{id:pass.clubMembershipId,role:"MEMBER",status:"ACTIVE",subscriptions:{none:{OR:[{status:"ACTIVE",expiresAt:{gt:now}},{status:"PENDING_PAYMENT",gracePeriodEndsAt:{gt:now}}]}}},data:{status:"FINISHED",finishedAt:pass.expiresAt}});
-        if(member.count) await tx.membershipEvent.create({data:{clubMembershipId:pass.clubMembershipId,type:"FINISHED",previousStatus:"ACTIVE",newStatus:"FINISHED",newRole:"MEMBER",eventKey:"finished:"+pass.id}});
+        const member = await tx.entityMembership.updateMany({where:{id:pass.entityMembershipId,role:"MEMBER",status:"ACTIVE",subscriptions:{none:{OR:[{status:"ACTIVE",expiresAt:{gt:now}},{status:"PENDING_PAYMENT",gracePeriodEndsAt:{gt:now}}]}}},data:{status:"FINISHED",finishedAt:pass.expiresAt}});
+        if(member.count) await tx.membershipEvent.create({data:{entityMembershipId:pass.entityMembershipId,type:"FINISHED",previousStatus:"ACTIVE",newStatus:"FINISHED",newRole:"MEMBER",eventKey:"finished:"+pass.id}});
       });
     }
     const expiredActiveSubscriptions =
@@ -105,7 +105,7 @@ export async function POST(request: Request) {
         },
         select: {
           id: true,
-          clubMembershipId: true,
+          entityMembershipId: true,
           expiresAt: true,
         },
       });
@@ -133,7 +133,7 @@ export async function POST(request: Request) {
       if (result.count > 0) {
         expiredNormalResults.push({
           id: subscription.id,
-          clubMembershipId: subscription.clubMembershipId,
+          entityMembershipId: subscription.entityMembershipId,
           status: "EXPIRED",
           reason: "SUBSCRIPTION_EXPIRED",
         });
@@ -154,7 +154,7 @@ export async function POST(request: Request) {
         },
         select: {
           id: true,
-          clubMembershipId: true,
+          entityMembershipId: true,
           stripeSubscriptionId: true,
           gracePeriodEndsAt: true,
         },
@@ -271,7 +271,7 @@ export async function POST(request: Request) {
           const anotherActiveSubscription =
             await tx.subscription.findFirst({
               where: {
-                clubMembershipId: subscription.clubMembershipId,
+                entityMembershipId: subscription.entityMembershipId,
                 id: {
                   not: subscription.id,
                 },
@@ -295,9 +295,9 @@ export async function POST(request: Request) {
 
           if (!anotherActiveSubscription) {
             const membershipUpdate =
-              await tx.clubMembership.updateMany({
+              await tx.entityMembership.updateMany({
                 where: {
-                  id: subscription.clubMembershipId,
+                  id: subscription.entityMembershipId,
                   status: "ACTIVE",
                 },
                 data: {
@@ -310,7 +310,7 @@ export async function POST(request: Request) {
 
           return {
             id: subscription.id,
-            clubMembershipId: subscription.clubMembershipId,
+            entityMembershipId: subscription.entityMembershipId,
             status: "EXPIRED",
             reason: "GRACE_PERIOD_EXPIRED",
             gracePeriodEndsAt: subscription.gracePeriodEndsAt,

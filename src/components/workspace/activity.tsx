@@ -175,8 +175,8 @@ export function Pie({ title, values }: {
     return <section className="panel chart-panel"><h3>{title}</h3><div className="pie-layout"><div className="pie" style={{ background: total ? "conic-gradient(" + gradient + ")" : "#e2e8f0" }} role="img" aria-label={values.map(v => v.label + " " + v.value).join(",")}><span>{total.toLocaleString("es-EC")}</span></div><ul>{values.map((v, i) => <li key={i}><i style={{ background: values.length<=colors.length?colors[i]:`hsl(${Math.round(i*137.508)%360} 45% 48%)` }}/>{v.label}<strong>{v.value.toLocaleString("es-EC")}</strong></li>)}</ul></div></section>;
 }
 /** Solicita la actividad para el intervalo elegido y adapta las series a los gráficos. */
-export function Activity({ club }: {
-    club: string;
+export function Activity({ entity }: {
+    entity: string;
 }) {
     const today = new Date().toLocaleDateString("en-CA", { timeZone: "America/Guayaquil" });
     const [start, setStart] = useState(today.slice(0, 7) + "-01"), [end, setEnd] = useState(today), [group, setGroup] = useState("day");
@@ -193,21 +193,21 @@ export function Activity({ club }: {
     const aggregation = monthly ? "day" : group;
     // El filtro de sección oculta únicamente las vistas móviles ajenas a la categoría escogida.
     const visible = (category:string) => !mobile || section==="all" || section===category;
-    const state = useData(queryStart && queryEnd && queryStart <= queryEnd ? `/api/clubs/${club}/dashboard/activity?` + new URLSearchParams({ start:queryStart, end:queryEnd, group:aggregation }) : null);
-    const alerts = useData(`/api/clubs/${club}/dashboard/alerts`);
-    const members = useData(`/api/clubs/${club}/members`);
-    const facilities = useData(`/api/clubs/${club}/facilities`);
+    const state = useData(queryStart && queryEnd && queryStart <= queryEnd ? `/api/entities/${entity}/dashboard/activity?` + new URLSearchParams({ start:queryStart, end:queryEnd, group:aggregation }) : null);
+    const alerts = useData(`/api/entities/${entity}/dashboard/alerts`);
+    const members = useData(`/api/entities/${entity}/members`);
+    const facilities = useData(`/api/entities/${entity}/facilities`);
     const d = state.data, plans: Row[] = d?.plans || [], entries = Object.entries(d?.series || {}) as [
         string,
         Row
     ][];
     const memberRows: Row[] = members.data?.members || [];
-    const active = memberRows.filter(m => m.status === "ACTIVE" && (m.role === "CLUB_ADMIN" || m.plans?.length));
+    const active = memberRows.filter(m => m.status === "ACTIVE" && (m.role === "ENTITY_ADMIN" || m.plans?.length));
     const reservations: Record<string, number> = {}, hours: Record<string, number> = {};
     entries.forEach(([, r]) => Object.entries(r.reservations).forEach(([k, v]) => { const [id, h] = k.split("/"); reservations[id] = (reservations[id] || 0) + Number(v); hours[h] = (hours[h] || 0) + Number(v); }));
     return <>{mobile ? <header className="overview-mobile">
-        <h2>Resumen del club</h2><p>Tu comunidad y tus ingresos, de un vistazo.</p>
-        {/* El resumen consulta registros reales del club para la sección y el período seleccionados. */}
+        <h2>Resumen de la entidad</h2><p>Tu comunidad y tus ingresos, de un vistazo.</p>
+        {/* El resumen consulta registros reales de la entidad para la sección y el período seleccionados. */}
         {/* Las tres listas controlan el conjunto de gráficas y el intervalo real enviado al servidor. */}
         <div><label>Sección<select value={section} onChange={e=>setSection(e.target.value)}>
             <option value="all">Todas las secciones</option><option value="members">Miembros</option>
@@ -230,12 +230,12 @@ export function Activity({ club }: {
             <label>Agrupar<select value={group} onChange={e=>setGroup(e.target.value)}>
                 <option value="day">Días</option><option value="month">Meses</option>
             </select></label></>}
-        </div></header> : <header className="list-heading"><div><p className="eyebrow">Tu club en cifras</p><h2>Resumen y actividad</h2></div><div className="actions"><label>Desde<input type="date" value={start} max={end} onChange={e => setStart(e.target.value)}/></label><label>Hasta<input type="date" value={end} min={start} onChange={e => setEnd(e.target.value)}/></label><label>Agrupar<select value={group} onChange={e => setGroup(e.target.value)}><option value="day">Días</option><option value="month">Meses</option></select></label></div></header>}
+        </div></header> : <header className="list-heading"><div><p className="eyebrow">Tu entidad en cifras</p><h2>Resumen y actividad</h2></div><div className="actions"><label>Desde<input type="date" value={start} max={end} onChange={e => setStart(e.target.value)}/></label><label>Hasta<input type="date" value={end} min={start} onChange={e => setEnd(e.target.value)}/></label><label>Agrupar<select value={group} onChange={e => setGroup(e.target.value)}><option value="day">Días</option><option value="month">Meses</option></select></label></div></header>}
  {!monthly && start > end && <p role="alert">La fecha inicial debe ser anterior a la final.</p>}
  <Status state={state}>{visible("all") && <><div className="metrics-grid"><dl className="metric-card"><dt>Miembros activos</dt><dd>{members.loading ? "—" : active.length}</dd></dl><dl className="metric-card"><dt>Nuevas suscripciones</dt><dd>{entries.reduce((s, [, r]) => s + Object.values(r.activations).reduce((n: number, v) => n + Number(v), 0), 0)}</dd></dl><dl className="metric-card"><dt>Ingresos confirmados</dt><dd>{money(entries.reduce((s, [, r]) => s + Object.values(r.incomeCents).reduce((n: number, v) => n + Number(v), 0), 0) / 100)}</dd></dl></div>
 
- <section className="panel"><h3>Alertas del club</h3><Status state={alerts}><div className="metrics-grid">{Object.entries(alerts.data?.summary || {}).map(([key, value]) => <dl className="metric-card" key={key}><dt>{({ expiringSubscriptions: "Próximos vencimientos", subscriptionsInGracePeriod: "En período de gracia", failedPayments: "Pagos fallidos", pendingApplications: "Solicitudes pendientes", upcomingReservations: "Próximas reservas" } as Record<string, string>)[key] || key}</dt><dd>{String(value)}</dd></dl>)}</div></Status></section></>}
- <div className="charts-grid">{visible("members") && <Pie title="Miembros activos" values={[{ label: "Administradores", value: active.filter(m => m.role === "CLUB_ADMIN").length }, { label: "Miembros", value: active.filter(m => m.role === "MEMBER").length }]}/>}
+ <section className="panel"><h3>Alertas de la entidad</h3><Status state={alerts}><div className="metrics-grid">{Object.entries(alerts.data?.summary || {}).map(([key, value]) => <dl className="metric-card" key={key}><dt>{({ expiringSubscriptions: "Próximos vencimientos", subscriptionsInGracePeriod: "En período de gracia", failedPayments: "Pagos fallidos", pendingApplications: "Solicitudes pendientes", upcomingReservations: "Próximas reservas" } as Record<string, string>)[key] || key}</dt><dd>{String(value)}</dd></dl>)}</div></Status></section></>}
+ <div className="charts-grid">{visible("members") && <Pie title="Miembros activos" values={[{ label: "Administradores", value: active.filter(m => m.role === "ENTITY_ADMIN").length }, { label: "Miembros", value: active.filter(m => m.role === "MEMBER").length }]}/>}
  {visible("members") && <Pie title="Miembros activos por plan" values={plans.map(p=>({label:p.name,value:active.filter(m=>m.plans?.some((s:Row)=>s.plan.id===p.id)).length}))}/>} {visible("finance") && <Pie title="Ingresos por plan (USD)" values={plans.map(p => ({ label: p.name, value: entries.reduce((s, [, r]) => s + (r.incomeCents[p.id] || 0), 0) / 100 }))}/>}</div>
  {visible("finance") && <><Bars mobileTimeline currency title="Ingresos por período (USD)" yAxis="Ingresos (USD)" xAxis={aggregation==="day"?"Días":"Meses"} calendar={aggregation} rows={entries.map(([label, r]) => ({ label, values: plans.map(p => (r.incomeCents[p.id] || 0) / 100) }))} series={plans.map(p => p.name)}/></>}
  {visible("reservations") && <div className="charts-grid"><Bars title="Reservas por hora" yAxis="Reservas" xAxis="Hora del día" series={["Reservas"]} rows={Object.entries(hours).sort().map(([label, value]) => ({ label: label + ":00", values: [value] }))}/><Bars title="Reservas por instalación" yAxis="Reservas" xAxis="Instalaciones" series={["Reservas"]} rows={Object.entries(reservations).map(([id, value]) => ({ label: facilities.data?.facilities.find((f: Row) => f.id === id)?.name || id.slice(0, 8), values: [value] }))}/></div>}
