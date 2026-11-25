@@ -42,6 +42,8 @@
  * ==============================================================================
  */
 
+// Refactorización Parte 12 (UI-Only): Se muestra 'Círculo/Círculos' al usuario manteniendo 'Entity' en código, rutas y BD.
+
 
 import { prisma } from "@/lib/prisma";
 import { requireAuth } from "@/lib/auth/auth";
@@ -77,7 +79,7 @@ export async function PATCH(
       return NextResponse.json(
         {
           success: false,
-          message: "Entidad no encontrada",
+          message: "Círculo no encontrado",
         },
         { status: 404 }
       );
@@ -87,7 +89,7 @@ export async function PATCH(
       return NextResponse.json(
         {
           success: false,
-          message: "No se pueden editar publicaciones de una entidad inactiva o suspendida",
+          message: "No se pueden editar publicaciones de un círculo inactivo o suspendido",
         },
         { status: 403 }
       );
@@ -109,7 +111,7 @@ export async function PATCH(
         return NextResponse.json(
           {
             success: false,
-            message: "No tienes permisos para editar publicaciones de esta entidad",
+            message: "No tienes permisos para editar publicaciones de este círculo",
           },
           { status: 403 }
         );
@@ -129,7 +131,7 @@ export async function PATCH(
       return NextResponse.json(
         {
           success: false,
-          message: "Publicación no encontrada en esta entidad",
+          message: "Publicación no encontrada en este círculo",
         },
         { status: 404 }
       );
@@ -338,7 +340,7 @@ export async function DELETE(
       return NextResponse.json(
         {
           success: false,
-          message: "Entidad no encontrada",
+          message: "Círculo no encontrado",
         },
         { status: 404 }
       );
@@ -349,7 +351,7 @@ export async function DELETE(
         {
           success: false,
           message:
-            "No se pueden eliminar publicaciones de una entidad inactiva o suspendida",
+            "No se pueden eliminar publicaciones de un círculo inactivo o suspendido",
         },
         { status: 403 }
       );
@@ -372,7 +374,7 @@ export async function DELETE(
           {
             success: false,
             message:
-              "No tienes permisos para eliminar publicaciones de esta entidad",
+              "No tienes permisos para eliminar publicaciones de este círculo",
           },
           { status: 403 }
         );
@@ -395,7 +397,7 @@ export async function DELETE(
       return NextResponse.json(
         {
           success: false,
-          message: "Publicación no encontrada en esta entidad",
+          message: "Publicación no encontrada en este círculo",
         },
         { status: 404 }
       );

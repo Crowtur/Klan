@@ -42,6 +42,8 @@
  * ==============================================================================
  */
 
+// Refactorización Parte 12 (UI-Only): Se muestra 'Círculo/Círculos' al usuario manteniendo 'Entity' en código, rutas y BD.
+
 
 import { prisma } from "@/lib/prisma";
 import { requireAuth } from "@/lib/auth/auth";
@@ -174,7 +176,7 @@ export async function PUT(
           {
             success: false,
             message:
-              "Uno o más planes no existen o no pertenecen a esta entidad",
+              "Uno o más planes no existen o no pertenecen a este círculo",
           },
           { status: 400 }
         );
@@ -276,7 +278,7 @@ export async function GET(
       return NextResponse.json(
         {
           success: false,
-          message: "No perteneces a esta entidad",
+          message: "No perteneces a este círculo",
         },
         { status: 403 }
       );

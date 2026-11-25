@@ -42,6 +42,8 @@
  * ==============================================================================
  */
 
+// Refactorización Parte 12 (UI-Only): Se muestra 'Círculo/Círculos' al usuario manteniendo 'Entity' en código, rutas y BD.
+
 // Refactorización Parte 11: vistas, parámetros y componentes del dominio Entity; textos visibles en español con concordancia femenina.
 
 "use client";
@@ -70,12 +72,12 @@ export default function Workspace({user}: {user: {id: string; firstName: string;
     const context = ["entity", "facility"].includes(view), globalView = ["admin", "globalEntities", "settlement", "globalPosts"].includes(view);
     return (<div className="workspace-shell">
       <nav className="workspace-nav" aria-label="Secciones"><div>
-        {[["feed", "Inicio", "home"], ["search", "Explorar entidades", "compass"], ["entities", "Mis entidades", "users"], ["applications", "Mis solicitudes", "document"], ...(global ? [["admin", "Administración global", "grid"], ["globalEntities", "Gestionar entidades", "settings"]] : [])].map(([v, t, i]) => <Link key={v} href={href(v)} aria-current={view === v ? "page" : undefined}><Icon name={i} size={18}/>{t}{(v === "entities" || v === "applications") && <NoticeCount kind={v}/>}</Link>)}
+        {[["feed", "Inicio", "home"], ["search", "Explorar círculos", "compass"], ["entities", "Mis círculos", "users"], ["applications", "Mis solicitudes", "document"], ...(global ? [["admin", "Administración global", "grid"], ["globalEntities", "Gestionar círculos", "settings"]] : [])].map(([v, t, i]) => <Link key={v} href={href(v)} aria-current={view === v ? "page" : undefined}><Icon name={i} size={18}/>{t}{(v === "entities" || v === "applications") && <NoticeCount kind={v}/>}</Link>)}
       </div></nav>
       <main id="main-content" className="workspace">
         {memberships.loading && (view==="entity" || view==="publicEntity") ? <EntityHero/> : <Status state={memberships}>
           {context && !member && !global ? (<p className="notice">
-              No tienes una membresía habilitada en esta entidad.{" "}
+              No tienes una membresía habilitada en este círculo.{" "}
               <Link href={href("publicEntity", { entity })}>
                 Consultar información pública
               </Link>

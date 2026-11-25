@@ -42,6 +42,8 @@
  * ==============================================================================
  */
 
+// Refactorización Parte 12 (UI-Only): Se muestra 'Círculo/Círculos' al usuario manteniendo 'Entity' en código, rutas y BD.
+
 import { prisma } from "@/lib/prisma";
 import { requireAuth } from "@/lib/auth/auth";
 import { requireEntityAdmin } from "@/lib/auth/authorization";
@@ -508,7 +510,7 @@ export async function PATCH(
           {
             success: false,
             message:
-              "No tienes permisos para revisar solicitudes de esta entidad",
+              "No tienes permisos para revisar solicitudes de este círculo",
           },
           { status: 403 }
         );
@@ -529,7 +531,7 @@ export async function PATCH(
           {
             success: false,
             message:
-              "El usuario ya tiene una suscripción vigente en esta entidad",
+              "El usuario ya tiene una suscripción vigente en este círculo",
           },
           { status: 409 }
         );

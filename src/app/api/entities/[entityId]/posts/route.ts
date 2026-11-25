@@ -42,6 +42,8 @@
  * ==============================================================================
  */
 
+// Refactorización Parte 12 (UI-Only): Se muestra 'Círculo/Círculos' al usuario manteniendo 'Entity' en código, rutas y BD.
+
 
 import { prisma } from "@/lib/prisma";
 import { requireAuth } from "@/lib/auth/auth";
@@ -69,7 +71,7 @@ export async function POST(
       return NextResponse.json(
         {
           success: false,
-          message: "Entidad no encontrada",
+          message: "Círculo no encontrado",
         },
         { status: 404 }
       );
@@ -79,7 +81,7 @@ export async function POST(
       return NextResponse.json(
         {
           success: false,
-          message: "No se puede publicar en una entidad inactiva o suspendida",
+          message: "No se puede publicar en un círculo inactivo o suspendido",
         },
         { status: 403 }
       );
@@ -100,7 +102,7 @@ export async function POST(
         return NextResponse.json(
           {
             success: false,
-            message: "No tienes permisos para publicar en esta entidad",
+            message: "No tienes permisos para publicar en este círculo",
           },
           { status: 403 }
         );
@@ -275,7 +277,7 @@ export async function GET(
       return NextResponse.json(
         {
           success: false,
-          message: "Entidad no encontrada",
+          message: "Círculo no encontrado",
         },
         { status: 404 }
       );
@@ -285,7 +287,7 @@ export async function GET(
       return NextResponse.json(
         {
           success: false,
-          message: "Las publicaciones de esta entidad no están disponibles",
+          message: "Las publicaciones de este círculo no están disponibles",
         },
         { status: 403 }
       );

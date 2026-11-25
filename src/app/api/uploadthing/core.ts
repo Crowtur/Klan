@@ -42,6 +42,8 @@
  * ==============================================================================
  */
 
+// Refactorización Parte 12 (UI-Only): Se muestra 'Círculo/Círculos' al usuario manteniendo 'Entity' en código, rutas y BD.
+
 // Refactorización Parte 11: contratos de carga y metadatos usan entityId; las autorizaciones se revalidan antes de escribir.
 
 /* Cada tipo de archivo declara sus límites, el permiso necesario y la operación que vincula el resultado con el registro de Klan. */
@@ -80,7 +82,7 @@ async function verifyEntityAdmin(userId: string, entityId: string) {
   } catch {
     throw new UploadThingError({
       code: "FORBIDDEN",
-      message: "No tienes permisos para subir archivos a esta entidad",
+      message: "No tienes permisos para subir archivos a este círculo",
     });
   }
 }
@@ -182,7 +184,7 @@ export const ourFileRouter = {
       try {
         await verifyEntityAdmin(metadata.userId, metadata.entityId);
         const entity = await prisma.entity.findUnique({ where: { id: metadata.entityId }, select: { status: true } });
-        if (entity?.status !== "ACTIVE") throw new UploadThingError("La entidad no está activa");
+        if (entity?.status !== "ACTIVE") throw new UploadThingError("El círculo no está activo");
         const previous = metadata.postId ? await prisma.post.findFirst({ where: { id: metadata.postId, entityId: metadata.entityId } }) : null;
         if (metadata.postId && !previous) throw new UploadThingError("Publicación no encontrada");
         const data = { title: metadata.title.trim() || null, content: metadata.content, imageUrl: file.ufsUrl, imageFileKey: file.key };
@@ -306,7 +308,7 @@ export const ourFileRouter = {
       if (!previousEntity) {
         throw new UploadThingError({
           code: "FORBIDDEN",
-          message: "La entidad ya no existe",
+          message: "El círculo ya no existe",
         });
       }
 
@@ -377,7 +379,7 @@ export const ourFileRouter = {
       if (!previousEntity) {
         throw new UploadThingError({
           code: "FORBIDDEN",
-          message: "La entidad ya no existe",
+          message: "El círculo ya no existe",
         });
       }
 
@@ -701,7 +703,7 @@ export const ourFileRouter = {
       if (!post) {
         throw new UploadThingError({
           code: "NOT_FOUND",
-          message: "La publicación no existe en esta entidad activa",
+          message: "La publicación no existe en este círculo activo",
         });
       }
 

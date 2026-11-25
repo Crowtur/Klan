@@ -42,6 +42,8 @@
  * ==============================================================================
  */
 
+// Refactorización Parte 12 (UI-Only): Se muestra 'Círculo/Círculos' al usuario manteniendo 'Entity' en código, rutas y BD.
+
 "use client";
 import {AvatarImage} from "@/components/avatar-image";
 import { useEffect,useRef,useState } from "react";
@@ -130,8 +132,8 @@ export function EntityBubbles(){
     motion.addEventListener("change",start);document.addEventListener("visibilitychange",start);
     return ()=>{resize.disconnect();cancelAnimationFrame(frame);motion.removeEventListener("change",start);document.removeEventListener("visibilitychange",start)};
   },[mobile]);
-  return <div ref={canvas} className="entity-bubbles" aria-label="Explorar entidades">{Array.from({length:slotCount},(_,i)=>{
-    const c=visibleEntities[i],name=c?.name||"Entidad "+(i+1);
+  return <div ref={canvas} className="entity-bubbles" aria-label="Explorar círculos">{Array.from({length:slotCount},(_,i)=>{
+    const c=visibleEntities[i],name=c?.name||"Círculo "+(i+1);
     const content=<><BubblePhoto key={c?.logoUrl || "placeholder"} src={c?.logoUrl}/><strong>{name}</strong></>;
     return <div className="bubble-position" key={i}>{c?<Link href={"/entity/"+c.id} title={name}>{content}</Link>:<span>{content}</span>}</div>;
   })}</div>;

@@ -42,6 +42,8 @@
  * ==============================================================================
  */
 
+// Refactorización Parte 12 (UI-Only): Se muestra 'Círculo/Círculos' al usuario manteniendo 'Entity' en código, rutas y BD.
+
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 // Public projection: active entidad and active plans only. Never exposes members or finances.
@@ -64,7 +66,7 @@ export async function GET(
     });
     if (!entity)
       return NextResponse.json(
-        { success: false, message: "Entidad no disponible" },
+        { success: false, message: "Círculo no disponible" },
         { status: 404 },
       );
     const plans = await prisma.membershipPlan.findMany({
@@ -89,7 +91,7 @@ export async function GET(
     return NextResponse.json({ success: true, entity, plans });
   } catch {
     return NextResponse.json(
-      { success: false, message: "No se pudo consultar la entidad" },
+      { success: false, message: "No se pudo consultar el círculo" },
       { status: 500 },
     );
   }

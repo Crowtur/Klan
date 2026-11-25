@@ -42,6 +42,8 @@
  * ==============================================================================
  */
 
+// Refactorización Parte 12 (UI-Only): Se muestra 'Círculo/Círculos' al usuario manteniendo 'Entity' en código, rutas y BD.
+
 "use client";
 import {useMobile} from "../use-mobile";
 import {AvatarImage} from "@/components/avatar-image";
@@ -71,8 +73,8 @@ export function Personal({ view, q = "" }: {
         string
     ]> = {
         feed: ["Inicio", "/api/feed", "posts"],
-        search: ["Explorar entidades", "/api/search/entities", "entities"],
-        entities: ["Mis entidades", "/api/entities", "entities"],
+        search: ["Explorar círculos", "/api/search/entities", "entities"],
+        entities: ["Mis círculos", "/api/entities", "entities"],
         memberships: ["Mis membresías", "/api/me/memberships", "memberships"],
         subscriptions: [
             "Mis suscripciones",
@@ -116,7 +118,7 @@ export function Personal({ view, q = "" }: {
         }
     }
     return (<>
-      <PageHeading eyebrow="Tu espacio personal" title={title} description={{ entities: "Un espacio para cada una de tus comunidades.", memberships: "Tu participación y tu historia en cada entidad.", subscriptions: "Tus planes, fechas de vigencia y renovaciones.", payments: "Revisa tus movimientos y el estado de cada pago.", applications: "Sigue tus solicitudes de ingreso y completa tus documentos." }[view] || "Todas tus novedades, en un solo lugar."}/>
+      <PageHeading eyebrow="Tu espacio personal" title={title} description={{ entities: "Un espacio para cada una de tus comunidades.", memberships: "Tu participación y tu historia en cada círculo.", subscriptions: "Tus planes, fechas de vigencia y renovaciones.", payments: "Revisa tus movimientos y el estado de cada pago.", applications: "Sigue tus solicitudes de ingreso y completa tus documentos." }[view] || "Todas tus novedades, en un solo lugar."}/>
       {view === "subscriptions" && <><div className="metrics-grid">{[["Suscripciones activas", allRows.filter(r => r.status === "ACTIVE" && r.billingMode !== "ONE_TIME").length], ["Pendiente", money(allRows.reduce((sum, r) => sum + (r.obligations || []).reduce((s: number, o: Row) => s + Number(o.amount), 0), 0))], ["Próximo cobro", nextCharge ? money(nextCharge.priceSnapshot ?? nextCharge.plan.price) : "—"]].map(([k, v]) => <dl className="metric-card" key={String(k)}><dt>{k}</dt><dd>{v}{k==="Próximo cobro" && nextCharge && <small>{new Date(nextCharge.nextBillingAt).toLocaleDateString("es-EC",{timeZone:"America/Guayaquil",dateStyle:"long"})}</small>}</dd></dl>)}</div><label className="history-toggle"><input type="checkbox" checked={history} onChange={e => setHistory(e.target.checked)}/> Mostrar historial de suscripciones y pases</label></>}
       {message && <p role="alert">{message}</p>}
       {view === "search" && (<form className="actions" onSubmit={(e) => {
@@ -125,20 +127,20 @@ export function Personal({ view, q = "" }: {
                 setPage(1);
             }}>
           <label>
-            Buscar entidades
+            Buscar círculos
             <input value={term} maxLength={100} onChange={(e) => setTerm(e.target.value)}/>
           </label>
           <button>Buscar</button>
         </form>)}
-      {view === "entities" && (<div className="section-actions"><EditorModal title="Crear una entidad">
+      {view === "entities" && (<div className="section-actions"><EditorModal title="Crear un círculo">
           <CreateEntity />
         </EditorModal></div>)}
 
       <Status state={state}>
         <Empty rows={rows}/>
         {view === "feed" && !rows.length && (<p>
-            Las publicaciones aparecerán cuando pertenezcas a una entidad con
-            actividad. <Link href={href("search")}>Explora entidades</Link>.
+            Las publicaciones aparecerán cuando pertenezcas a un círculo con
+            actividad. <Link href={href("search")}>Explora círculos</Link>.
           </p>)}
         <div className={view === "entities" ? "entity-grid" : (view === "memberships" || view === "subscriptions") ? "bounded-cards" : "personal-grid"}>
         {rows.map((r: Row) => view === "memberships" ? <Link key={r.id} className="membership-medal" href={href("entity", { entity: r.entity.id })}>{safeUrl(r.entity.logoUrl) ? <AvatarImage src={safeUrl(r.entity.logoUrl)} alt=""/> : <span className="medal-placeholder"><Icon name="users" size={48}/></span>}<h2>{r.entity.name}</h2><strong>{label(r.role)}</strong><small>Desde {date(r.joinedAt)}</small></Link> : view === "entities" ? <EntityCard key={r.id} entity={{ ...r, planName: myPlans.data?.subscriptions.filter((s: Row) => s.entityMembership.entity.id === r.id && s.status === "ACTIVE").map((s: Row) => s.plan.name).join(", ") }} destination={href("entity", { entity: r.id })}/> : (<Panel key={r.id} title={r.entity?.name ||
@@ -148,7 +150,7 @@ export function Personal({ view, q = "" }: {
             {r.title && <h3>{r.title}</h3>}
             {r.content && <p style={{ whiteSpace: "pre-wrap" }}>{r.content}</p>}
             {r.description && <p>{r.description}</p>}
-            {safeUrl(r.imageUrl) && (<img src={safeUrl(r.imageUrl)} alt={r.title || "Publicación de la entidad"}/>)}
+            {safeUrl(r.imageUrl) && (<img src={safeUrl(r.imageUrl)} alt={r.title || "Publicación del círculo"}/>)}
             {r.author && (<small>
                 {r.author.firstName} {r.author.lastName}
               </small>)}
@@ -165,13 +167,13 @@ export function Personal({ view, q = "" }: {
               {["entities", "search"].includes(view) && (<Link href={href(view === "entities" ? "entity" : "publicEntity", {
                     entity: r.id,
                 })}>
-                  Ver entidad
+                  Ver círculo
                 </Link>)}
-              {view === "feed" && (<Link href={href("entity", { entity: r.entity.id })}>Ir a la entidad</Link>)}
+              {view === "feed" && (<Link href={href("entity", { entity: r.entity.id })}>Ir al círculo</Link>)}
               {view === "memberships" &&
                 r.status === "ACTIVE" &&
                 r.entity.status === "ACTIVE" && (<Link href={href("entity", { entity: r.entity.id })}>
-                    Abrir entidad
+                    Abrir círculo
                   </Link>)}
               {view === "payments" && (<Link href={href("payment", { id: r.id })}>Ver detalle</Link>)}
               {view === "subscriptions" &&
@@ -217,8 +219,8 @@ export function PublicEntity({entity,target=""}:{entity:string;target?:string}){
   const publications = <section key="posts"><div className="list-heading"><h2>Publicaciones públicas</h2><small>Últimas novedades</small></div>
     <div><Status state={posts}><Empty rows={posts.data?.posts||[]}/>{posts.data?.posts.map((p:Row)=><PostCard key={p.id} post={p}/>)}
     {target && page===null && posts.data?.anchorMissing && <p>La publicación compartida ya no está disponible.</p>}
-    <Pager data={posts.data} page={posts.data?.pagination.page||1} onPage={setPage}/>{!!posts.data?.posts.length&&!posts.data.pagination.hasNextPage&&<p className="feed-end">✓ Estás al día con las novedades de la entidad</p>}</Status></div></section>;
-  const offer = <aside key="plans" className="public-plans"><small>Tu próximo entidad empieza aquí</small><div><Status state={state}><PublicPlans entity={entity} plans={plans}/></Status></div></aside>;
+    <Pager data={posts.data} page={posts.data?.pagination.page||1} onPage={setPage}/>{!!posts.data?.posts.length&&!posts.data.pagination.hasNextPage&&<p className="feed-end">✓ Estás al día con las novedades del círculo</p>}</Status></div></section>;
+  const offer = <aside key="plans" className="public-plans"><small>Tu próximo círculo empieza aquí</small><div><Status state={state}><PublicPlans entity={entity} plans={plans}/></Status></div></aside>;
   // En el perfil público móvil se ofrecen los planes antes del feed. Escritorio conserva las columnas originales.
   return <>{!state.error && <EntityHero entity={state.data?.entity?.id===entity ? state.data.entity : undefined}/>}<div className="public-columns">
     {mobile ? [offer, publications] : [publications, offer]}

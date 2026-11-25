@@ -42,6 +42,8 @@
  * ==============================================================================
  */
 
+// Refactorización Parte 12 (UI-Only): Se muestra 'Círculo/Círculos' al usuario manteniendo 'Entity' en código, rutas y BD.
+
 "use client";
 import { useMobile } from "../use-mobile";
 import { useId, useState, type CSSProperties } from "react";
@@ -206,7 +208,7 @@ export function Activity({ entity }: {
     const reservations: Record<string, number> = {}, hours: Record<string, number> = {};
     entries.forEach(([, r]) => Object.entries(r.reservations).forEach(([k, v]) => { const [id, h] = k.split("/"); reservations[id] = (reservations[id] || 0) + Number(v); hours[h] = (hours[h] || 0) + Number(v); }));
     return <>{mobile ? <header className="overview-mobile">
-        <h2>Resumen de la entidad</h2><p>Tu comunidad y tus ingresos, de un vistazo.</p>
+        <h2>Resumen del círculo</h2><p>Tu comunidad y tus ingresos, de un vistazo.</p>
         {/* El resumen consulta registros reales de la entidad para la sección y el período seleccionados. */}
         {/* Las tres listas controlan el conjunto de gráficas y el intervalo real enviado al servidor. */}
         <div><label>Sección<select value={section} onChange={e=>setSection(e.target.value)}>
@@ -230,11 +232,11 @@ export function Activity({ entity }: {
             <label>Agrupar<select value={group} onChange={e=>setGroup(e.target.value)}>
                 <option value="day">Días</option><option value="month">Meses</option>
             </select></label></>}
-        </div></header> : <header className="list-heading"><div><p className="eyebrow">Tu entidad en cifras</p><h2>Resumen y actividad</h2></div><div className="actions"><label>Desde<input type="date" value={start} max={end} onChange={e => setStart(e.target.value)}/></label><label>Hasta<input type="date" value={end} min={start} onChange={e => setEnd(e.target.value)}/></label><label>Agrupar<select value={group} onChange={e => setGroup(e.target.value)}><option value="day">Días</option><option value="month">Meses</option></select></label></div></header>}
+        </div></header> : <header className="list-heading"><div><p className="eyebrow">Tu círculo en cifras</p><h2>Resumen y actividad</h2></div><div className="actions"><label>Desde<input type="date" value={start} max={end} onChange={e => setStart(e.target.value)}/></label><label>Hasta<input type="date" value={end} min={start} onChange={e => setEnd(e.target.value)}/></label><label>Agrupar<select value={group} onChange={e => setGroup(e.target.value)}><option value="day">Días</option><option value="month">Meses</option></select></label></div></header>}
  {!monthly && start > end && <p role="alert">La fecha inicial debe ser anterior a la final.</p>}
  <Status state={state}>{visible("all") && <><div className="metrics-grid"><dl className="metric-card"><dt>Miembros activos</dt><dd>{members.loading ? "—" : active.length}</dd></dl><dl className="metric-card"><dt>Nuevas suscripciones</dt><dd>{entries.reduce((s, [, r]) => s + Object.values(r.activations).reduce((n: number, v) => n + Number(v), 0), 0)}</dd></dl><dl className="metric-card"><dt>Ingresos confirmados</dt><dd>{money(entries.reduce((s, [, r]) => s + Object.values(r.incomeCents).reduce((n: number, v) => n + Number(v), 0), 0) / 100)}</dd></dl></div>
 
- <section className="panel"><h3>Alertas de la entidad</h3><Status state={alerts}><div className="metrics-grid">{Object.entries(alerts.data?.summary || {}).map(([key, value]) => <dl className="metric-card" key={key}><dt>{({ expiringSubscriptions: "Próximos vencimientos", subscriptionsInGracePeriod: "En período de gracia", failedPayments: "Pagos fallidos", pendingApplications: "Solicitudes pendientes", upcomingReservations: "Próximas reservas" } as Record<string, string>)[key] || key}</dt><dd>{String(value)}</dd></dl>)}</div></Status></section></>}
+ <section className="panel"><h3>Alertas del círculo</h3><Status state={alerts}><div className="metrics-grid">{Object.entries(alerts.data?.summary || {}).map(([key, value]) => <dl className="metric-card" key={key}><dt>{({ expiringSubscriptions: "Próximos vencimientos", subscriptionsInGracePeriod: "En período de gracia", failedPayments: "Pagos fallidos", pendingApplications: "Solicitudes pendientes", upcomingReservations: "Próximas reservas" } as Record<string, string>)[key] || key}</dt><dd>{String(value)}</dd></dl>)}</div></Status></section></>}
  <div className="charts-grid">{visible("members") && <Pie title="Miembros activos" values={[{ label: "Administradores", value: active.filter(m => m.role === "ENTITY_ADMIN").length }, { label: "Miembros", value: active.filter(m => m.role === "MEMBER").length }]}/>}
  {visible("members") && <Pie title="Miembros activos por plan" values={plans.map(p=>({label:p.name,value:active.filter(m=>m.plans?.some((s:Row)=>s.plan.id===p.id)).length}))}/>} {visible("finance") && <Pie title="Ingresos por plan (USD)" values={plans.map(p => ({ label: p.name, value: entries.reduce((s, [, r]) => s + (r.incomeCents[p.id] || 0), 0) / 100 }))}/>}</div>
  {visible("finance") && <><Bars mobileTimeline currency title="Ingresos por período (USD)" yAxis="Ingresos (USD)" xAxis={aggregation==="day"?"Días":"Meses"} calendar={aggregation} rows={entries.map(([label, r]) => ({ label, values: plans.map(p => (r.incomeCents[p.id] || 0) / 100) }))} series={plans.map(p => p.name)}/></>}

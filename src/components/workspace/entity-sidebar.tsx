@@ -42,6 +42,8 @@
  * ==============================================================================
  */
 
+// Refactorización Parte 12 (UI-Only): Se muestra 'Círculo/Círculos' al usuario manteniendo 'Entity' en código, rutas y BD.
+
 "use client";
 import {useState} from "react";
 import {FacilityIcon} from "./facility-icon";
@@ -61,14 +63,14 @@ export function EntitySidebar({entity,admin}: {entity:string;admin:boolean}) {
   const facilities = useData(`/api/entities/${entity}/facilities?summary=popular&limit=2`,version);
   const suggestions:Row[] = [last?.facility,...(facilities.data?.facilities||[])].filter((f,i,rows)=>f && rows.findIndex(item=>item?.id===f.id)===i).slice(0,2);
   return <aside className="entity-post-sidebar">
-    <div className="list-heading"><h3>Tu espacio en la entidad</h3>{admin && <small>Administrador</small>}</div><div className="entity-sidebar-cards"><section className="panel"><h3 className="reservation-title"><Icon name="calendar"/>Mi próxima reserva</h3>
+    <div className="list-heading"><h3>Tu espacio en el círculo</h3>{admin && <small>Administrador</small>}</div><div className="entity-sidebar-cards"><section className="panel"><h3 className="reservation-title"><Icon name="calendar"/>Mi próxima reserva</h3>
       <Status state={bookings}>{next ? <><strong>{next.facility.name}</strong><p>{date(next.startAt)}</p>
         <p>{Math.round((Date.parse(next.endAt)-Date.parse(next.startAt))/60000)} minutos · Confirmada</p><Action variant="destructive" method="PATCH" url={`/api/entities/${entity}/facilities/${next.facilityId}/reservations/${next.id}`} confirm="¿Cancelar esta reserva?" onDone={()=>refresh(v=>v+1)}>Cancelar reserva</Action></> : <p>No tienes ninguna reserva.</p>}</Status>
     </section>
     <section className="panel"><div className="list-heading"><h3>Instalaciones</h3><Link href={href("entity",{entity,tab:"facilities"})}>Ver todas ↗</Link></div>
       <Status state={facilities}>{suggestions.length ? suggestions.map(facility=><article className="facility-preview" key={facility.id}><div><FacilityIcon value={facility.icon}/><strong>{facility.name}</strong></div>
         <small>{facility.location}</small><p>{facility.description}</p>
-        <Link className="btn btn-outline" href={href("facility",{entity,id:facility.id})}>Consultar instalación</Link></article>) : <p><FacilityIcon/> La entidad aún no tiene instalaciones.</p>}</Status>
+        <Link className="btn btn-outline" href={href("facility",{entity,id:facility.id})}>Consultar instalación</Link></article>) : <p><FacilityIcon/> El círculo aún no tiene instalaciones.</p>}</Status>
     </section>
   </div></aside>;
 }

@@ -42,6 +42,8 @@
  * ==============================================================================
  */
 
+// Refactorización Parte 12 (UI-Only): Se muestra 'Círculo/Círculos' al usuario manteniendo 'Entity' en código, rutas y BD.
+
 "use client";
 import {useEffect,useRef,useState} from "react";
 import {avatarSources} from "@/components/avatar-image";
@@ -127,7 +129,7 @@ export function EntityHero({entity}:{entity?:Row}){
     return () => observer.disconnect();
   }, [entity?.name,entity?.description,entity?.address,entity?.googleMapsUrl]);
   const maps=safeUrl(entity?.googleMapsUrl);
-  return <header className="entity-hero" data-ready={ready} aria-busy={!ready} aria-label={ready ? entity?.name : "Cargando entidad"}>
+  return <header className="entity-hero" data-ready={ready} aria-busy={!ready} aria-label={ready ? entity?.name : "Cargando círculo"}>
     <div className="hero-cover hero-media-slot" aria-hidden="true">
       <span className="hero-final hero-image-host" ref={coverHost}/>
       <span className="hero-placeholder hero-banner-skeleton"/>

@@ -42,6 +42,8 @@
  * ==============================================================================
  */
 
+// Refactorización Parte 12 (UI-Only): Se muestra 'Círculo/Círculos' al usuario manteniendo 'Entity' en código, rutas y BD.
+
 "use client";
 import {AvatarImage} from "@/components/avatar-image";
 import { useRef,useState } from "react";
@@ -79,10 +81,10 @@ export function PostCard({post,admin=false,onChanged=()=>{}}:{post:Row;admin?:bo
       </>}</ActionDropdown>}
     </header><div className="feed-copy">{post.title&&<h2>{post.title}</h2>}<p>{post.content}</p></div>
     {safeUrl(post.imageUrl)&&<><button type="button" className="photo-opener" aria-label="Ver imagen completa" onClick={()=>photo.current?.showModal()}>
-      <img className="feed-image" src={safeUrl(post.imageUrl)} alt={post.title||"Publicación de la entidad"} loading="lazy"/></button>
+      <img className="feed-image" src={safeUrl(post.imageUrl)} alt={post.title||"Publicación del círculo"} loading="lazy"/></button>
       <dialog className="editor-modal photo-viewer" ref={photo} aria-label="Imagen completa" onClick={e=>{if(e.target===photo.current)photo.current.close()}}>
         <button type="button" className="secondary" aria-label="Cerrar imagen" onClick={()=>photo.current?.close()}>×</button>
-        <img src={safeUrl(post.imageUrl)} alt={post.title||"Publicación de la entidad"} loading="lazy"/>
+        <img src={safeUrl(post.imageUrl)} alt={post.title||"Publicación del círculo"} loading="lazy"/>
       </dialog></>}
     <footer className="feed-card-bottom"><small>{post.author?.firstName} {post.author?.lastName}</small><button className="secondary" onClick={share}>Compartir ↗</button></footer>
     {feedback&&<p role="status" className="share-result">{feedback}</p>}

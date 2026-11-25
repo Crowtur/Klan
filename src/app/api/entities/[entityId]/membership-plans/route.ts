@@ -42,6 +42,8 @@
  * ==============================================================================
  */
 
+// Refactorización Parte 12 (UI-Only): Se muestra 'Círculo/Círculos' al usuario manteniendo 'Entity' en código, rutas y BD.
+
 import { prisma } from "@/lib/prisma";
 import { requireAuth } from "@/lib/auth/auth";
 import { requireEntityAdmin } from "@/lib/auth/authorization";
@@ -247,7 +249,7 @@ export async function POST(
         return NextResponse.json(
           {
             success: false,
-            message: "No tienes permisos para administrar los planes de esta entidad",
+            message: "No tienes permisos para administrar los planes de este círculo",
           },
           { status: 403 }
         );
@@ -325,7 +327,7 @@ export async function GET(
         return NextResponse.json(
           {
             success: false,
-            message: "No tienes permisos para ver los planes de esta entidad",
+            message: "No tienes permisos para ver los planes de este círculo",
           },
           { status: 403 }
         );

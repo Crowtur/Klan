@@ -42,6 +42,8 @@
  * ==============================================================================
  */
 
+// Refactorización Parte 12 (UI-Only): Se muestra 'Círculo/Círculos' al usuario manteniendo 'Entity' en código, rutas y BD.
+
 
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
@@ -69,7 +71,7 @@ export async function POST(
 
     if (!entity) {
       return NextResponse.json(
-        { success: false, message: "Entidad no encontrada" },
+        { success: false, message: "Círculo no encontrado" },
         { status: 404 }
       );
     }
@@ -127,8 +129,8 @@ export async function POST(
     return NextResponse.json({
       success: true,
       message: stripeCancellationComplete
-        ? "Entidad y membresías suspendidas correctamente"
-        : "Entidad y membresías suspendidas. Algunas cancelaciones de Stripe requieren revisión o reintento.",
+        ? "Círculo y membresías suspendidos correctamente"
+        : "Círculo y membresías suspendidos. Algunas cancelaciones de Stripe requieren revisión o reintento.",
       entityId,
       status: "SUSPENDED",
       stripeCancellationComplete,

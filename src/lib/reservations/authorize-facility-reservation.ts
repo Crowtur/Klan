@@ -42,6 +42,8 @@
  * ==============================================================================
  */
 
+// Refactorización Parte 12 (UI-Only): Se muestra 'Círculo/Círculos' al usuario manteniendo 'Entity' en código, rutas y BD.
+
 
 import { prisma } from "@/lib/prisma";
 
@@ -106,14 +108,14 @@ export async function authorizeFacilityReservation(
   if (!entity || entity.status !== "ACTIVE") {
     throw new ReservationAuthorizationError(
       "ENTITY_INACTIVE",
-      "La entidad no existe o no está activa."
+      "El círculo no existe o no está activo."
     );
   }
 
   if (!facility) {
     throw new ReservationAuthorizationError(
       "FACILITY_NOT_FOUND",
-      "La instalación no existe en esta entidad."
+      "La instalación no existe en este círculo."
     );
   }
 
@@ -157,7 +159,7 @@ export async function authorizeFacilityReservation(
   if (!membership || membership.status !== "ACTIVE") {
     throw new ReservationAuthorizationError(
       "ENTITY_MEMBERSHIP_REQUIRED",
-      "Necesitas una membresía activa en esta entidad para reservar."
+      "Necesitas una membresía activa en este círculo para reservar."
     );
   }
 

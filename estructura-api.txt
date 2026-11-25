@@ -1,4 +1,4 @@
-Klan — Parte 11
+Klan — Parte 12
 Inventario de rutas API desde src/app/api
 
 admin/dashboard/entities/route.ts

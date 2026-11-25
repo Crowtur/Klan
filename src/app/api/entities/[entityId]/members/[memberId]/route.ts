@@ -42,6 +42,8 @@
  * ==============================================================================
  */
 
+// Refactorización Parte 12 (UI-Only): Se muestra 'Círculo/Círculos' al usuario manteniendo 'Entity' en código, rutas y BD.
+
 import { NextRequest, NextResponse } from "next/server";
 
 // AJUSTAR estas rutas a tu proyecto:
@@ -104,7 +106,7 @@ export async function DELETE(
 
     if (!membership) {
       return NextResponse.json(
-        { error: "El usuario no pertenece a la entidad" },
+        { error: "El usuario no pertenece al círculo" },
         { status: 404 }
       );
     }
@@ -190,7 +192,7 @@ export async function DELETE(
 
       const key = "removed:"+crypto.randomUUID();
       await tx.membershipEvent.create({data:{entityMembershipId:membership.id,actorId:user.id,type:leaving?"LEFT":"REMOVED",previousStatus:membership.status,newStatus:"REMOVED",newRole:"MEMBER",reason,eventKey:key}});
-      await tx.notification.create({data:{recipientId:membership.userId,entityId,type:leaving?"MEMBER_LEFT":"MEMBER_REMOVED",eventKey:key,title:"Retiro de la entidad",targetType:"membership",targetId:membership.id,targetPath:"/app?view=memberships"}});
+      await tx.notification.create({data:{recipientId:membership.userId,entityId,type:leaving?"MEMBER_LEFT":"MEMBER_REMOVED",eventKey:key,title:"Retiro del círculo",targetType:"membership",targetId:membership.id,targetPath:"/app?view=memberships"}});
       await tx.subscription.updateMany({
         where: {
           entityMembershipId: membership.id,
@@ -246,7 +248,7 @@ export async function DELETE(
 
     return NextResponse.json({
       success: true,
-      message: "Miembro expulsado de la entidad",
+      message: "Miembro expulsado del círculo",
       membershipStatus: "REMOVED",
       canReapply: true,
       stripeCancellationPending: stripeErrors.length > 0,
@@ -260,7 +262,7 @@ export async function DELETE(
     }
     if (error instanceof Error && error.message === "FORBIDDEN") {
       return NextResponse.json(
-        { error: "No tienes permisos para expulsar miembros de esta entidad" },
+        { error: "No tienes permisos para expulsar miembros de este círculo" },
         { status: 403 }
       );
     }

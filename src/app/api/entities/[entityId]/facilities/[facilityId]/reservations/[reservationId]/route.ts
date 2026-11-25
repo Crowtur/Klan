@@ -42,6 +42,8 @@
  * ==============================================================================
  */
 
+// Refactorización Parte 12 (UI-Only): Se muestra 'Círculo/Círculos' al usuario manteniendo 'Entity' en código, rutas y BD.
+
 
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
@@ -152,7 +154,7 @@ export async function GET(
           {
             success: false,
             message:
-              "No tienes permisos para consultar reservas de esta entidad",
+              "No tienes permisos para consultar reservas de este círculo",
           },
           { status: 403 }
         );
@@ -343,7 +345,7 @@ export async function PATCH(
           {
             success: false,
             message:
-              "No tienes permisos para cancelar reservas de esta entidad",
+              "No tienes permisos para cancelar reservas de este círculo",
           },
           { status: 403 }
         );

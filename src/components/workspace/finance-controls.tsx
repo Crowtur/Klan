@@ -42,6 +42,8 @@
  * ==============================================================================
  */
 
+// Refactorización Parte 12 (UI-Only): Se muestra 'Círculo/Círculos' al usuario manteniendo 'Entity' en código, rutas y BD.
+
 "use client";
 import { useRef,useState } from "react";
 import {Pie} from "./activity";
@@ -51,14 +53,14 @@ const bankLabels = {beneficiary:"Nombre completo del beneficiario",identity:"Nú
 /** Solicita los datos bancarios al abrir el editor autorizado para mostrar la versión guardada. */
 export function EntityBankForm({entity}:{entity:string}){
   const [open,setOpen]=useState(false);
-  return <details className="panel finance-disclosure" onToggle={e=>setOpen(e.currentTarget.open)}><summary>Datos bancarios de la entidad</summary>
+  return <details className="panel finance-disclosure" onToggle={e=>setOpen(e.currentTarget.open)}><summary>Datos bancarios del círculo</summary>
     {open&&<BankEditor key={entity} entity={entity}/>}</details>;
 }
 /** Inicializa el formulario con los datos consultados y los actualiza mediante la ruta privada de la entidad. */
 function BankEditor({entity}:{entity:string}){
   const url=`/api/entities/${entity}/bank`;
   const state=useData(url);
-  return <div><p>Los administradores de esta entidad y el superadministrador pueden consultar estos datos para gestionar las liquidaciones.</p>
+  return <div><p>Los administradores de este círculo y el superadministrador pueden consultar estos datos para gestionar las liquidaciones.</p>
     <Status state={state}><Form method="PUT" url={url} initial={state.data?.details||{}} fields={[
       {name:"beneficiary",label:bankLabels.beneficiary,required:true,max:160},
       {name:"identity",label:bankLabels.identity,required:true,max:40},
@@ -90,9 +92,9 @@ export function FinanceChart({entities}:{entities:Row[]}){
  const dialog=useRef<HTMLDialogElement>(null);
  const top=[...entities].sort((a,b)=>Number(b.grossRevenue)-Number(a.grossRevenue)).slice(0,5).map(c=>c.entityId);
  const selected=chosen??top;
- return <div className="finance-chart"><button className="secondary filter-trigger" onClick={()=>{setDraft([...selected]);setSearch("");dialog.current?.showModal()}}>☷ Seleccionar entidades</button>
- <Pie title="Finanzas · ingresos por entidad (USD)" values={entities.filter(c=>selected.includes(c.entityId)).map(c=>({label:c.entityName,value:Number(c.grossRevenue)}))}/>
- <dialog ref={dialog} className="editor-modal filter-modal"><h2>Seleccionar entidades</h2><input type="search" aria-label="Buscar entidad" placeholder="Buscar entidad..." value={search} onChange={e=>setSearch(e.target.value)}/>
+ return <div className="finance-chart"><button className="secondary filter-trigger" onClick={()=>{setDraft([...selected]);setSearch("");dialog.current?.showModal()}}>☷ Seleccionar círculos</button>
+ <Pie title="Finanzas · ingresos por círculo (USD)" values={entities.filter(c=>selected.includes(c.entityId)).map(c=>({label:c.entityName,value:Number(c.grossRevenue)}))}/>
+ <dialog ref={dialog} className="editor-modal filter-modal"><h2>Seleccionar círculos</h2><input type="search" aria-label="Buscar círculo" placeholder="Buscar círculo..." value={search} onChange={e=>setSearch(e.target.value)}/>
  <div className="actions"><button className="secondary" onClick={()=>setDraft(entities.map(c=>c.entityId))}>Seleccionar todos</button><button className="secondary" onClick={()=>setDraft([])}>Desmarcar todos</button></div>
  <div className="filter-list">{entities.filter(c=>c.entityName.toLocaleLowerCase().includes(search.trim().toLocaleLowerCase())).map(c=><label key={c.entityId}><input type="checkbox" checked={draft.includes(c.entityId)} onChange={e=>setDraft(e.target.checked?[...draft,c.entityId]:draft.filter(id=>id!==c.entityId))}/>{c.entityName}</label>)}</div>
  <footer className="actions"><button className="outline-destructive" onClick={()=>dialog.current?.close()}>Cancelar</button><button onClick={()=>{choose(draft);dialog.current?.close()}}>Aplicar</button></footer></dialog></div>

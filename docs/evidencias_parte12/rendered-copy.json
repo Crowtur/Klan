@@ -1,0 +1,37 @@
+{
+  "circleBadge": "<span class=\"badge\" data-status=\"ACTIVE\">Activo</span>",
+  "membershipBadge": "<span class=\"badge\" data-status=\"ACTIVE\">Activa</span>",
+  "notices": [
+    {
+      "type": "MEMBER_LEFT",
+      "storedTitle": "Retiro de la entidad",
+      "displayTitle": "Retiro del círculo",
+      "destination": {
+        "scope": "personal",
+        "tab": "memberships",
+        "path": "/app?view=memberships"
+      }
+    },
+    {
+      "type": "MEMBER_REMOVED",
+      "storedTitle": "Retiro de la entidad",
+      "displayTitle": "Retiro del círculo",
+      "destination": {
+        "scope": "personal",
+        "tab": "memberships",
+        "path": "/app?view=memberships"
+      }
+    },
+    {
+      "type": "UNRELATED",
+      "storedTitle": "Retiro de la entidad",
+      "displayTitle": "Retiro de la entidad",
+      "destination": {
+        "scope": "personal",
+        "tab": "memberships",
+        "path": "/app?view=memberships"
+      }
+    }
+  ],
+  "entityCard": "<article class=\"entity-card\"><img class=\"entity-cover\" src=\"https://zzfy7uc7kn.ufs.sh/f/6fXj4wSjS1d2UrFvuZOpoDmPWyTvaMHENCVG67fOI8tlwRQr\" alt=\"\" loading=\"lazy\"/><div class=\"entity-card-body\"><div class=\"row\"><span class=\"avatar\"><svg width=\"25\" height=\"25\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.7\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><circle cx=\"9\" cy=\"7\" r=\"3\"></circle><path d=\"M3 21v-3a6 6 0 0 1 12 0v3M16 4a3 3 0 0 1 0 6m2 4a5 5 0 0 1 3 4v3\"></path></svg></span><h2>Comunidad de ejemplo</h2></div><p>Conoce este círculo y encuentra tu próxima comunidad.</p><p class=\"entity-meta\"><span class=\"location-line\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.7\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M20 10c0 6-8 11-8 11S4 16 4 10a8 8 0 0 1 16 0Z\"></path><circle cx=\"12\" cy=\"10\" r=\"2.5\"></circle></svg>Ubicación por confirmar</span><span>— miembros</span></p><a class=\"btn btn-outline\" href=\"/entity/sample\">Ver círculo <svg width=\"17\" height=\"17\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.7\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M4 12h16m-6-6 6 6-6 6\"></path></svg></a></div></article>"
+}

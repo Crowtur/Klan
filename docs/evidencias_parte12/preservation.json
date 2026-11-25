@@ -1,0 +1,1444 @@
+{
+  "result": "PASS",
+  "baseArchive": {
+    "name": "Klan_Parte_11.zip",
+    "sha256": "19dc029fb65d74913dd63c01f809016d31a5db59bfc74e7ebde0249643d6018d"
+  },
+  "sourcePathsUnchanged": 135,
+  "headersPreserved": 131,
+  "technicalEntitySymbols": "identical",
+  "technicalEntityStringsAndRoutes": "identical",
+  "imports": "identical",
+  "jsxClassesStylesStatusAndIds": "equivalent; column label comparison updated from Entidad to Círculo in global-finances.tsx",
+  "sourceFilesChanged": 57,
+  "filesWithOnlyLiteralAndCommentChanges": [
+    "src/app/api/admin/settlements/route.ts",
+    "src/app/api/catalog/entities/[entityId]/route.ts",
+    "src/app/api/entities/[entityId]/dashboard/alerts/route.ts",
+    "src/app/api/entities/[entityId]/dashboard/finances/route.ts",
+    "src/app/api/entities/[entityId]/dashboard/members/route.ts",
+    "src/app/api/entities/[entityId]/dashboard/overview/route.ts",
+    "src/app/api/entities/[entityId]/dashboard/reservations/route.ts",
+    "src/app/api/entities/[entityId]/dashboard/subscriptions/route.ts",
+    "src/app/api/entities/[entityId]/facilities/[facilityId]/availability/route.ts",
+    "src/app/api/entities/[entityId]/facilities/[facilityId]/plan-access/route.ts",
+    "src/app/api/entities/[entityId]/facilities/[facilityId]/reservations/[reservationId]/route.ts",
+    "src/app/api/entities/[entityId]/facilities/[facilityId]/reservations/route.ts",
+    "src/app/api/entities/[entityId]/facilities/[facilityId]/route.ts",
+    "src/app/api/entities/[entityId]/facilities/[facilityId]/schedule/route.ts",
+    "src/app/api/entities/[entityId]/facilities/route.ts",
+    "src/app/api/entities/[entityId]/members/[memberId]/route.ts",
+    "src/app/api/entities/[entityId]/members/route.ts",
+    "src/app/api/entities/[entityId]/membership-applications/[applicationId]/review/route.ts",
+    "src/app/api/entities/[entityId]/membership-applications/route.ts",
+    "src/app/api/entities/[entityId]/membership-plans/[planId]/document-requirements/[requirementId]/route.ts",
+    "src/app/api/entities/[entityId]/membership-plans/[planId]/document-requirements/route.ts",
+    "src/app/api/entities/[entityId]/membership-plans/route.ts",
+    "src/app/api/entities/[entityId]/my-reservations/route.ts",
+    "src/app/api/entities/[entityId]/payments/route.ts",
+    "src/app/api/entities/[entityId]/payments/summary/route.ts",
+    "src/app/api/entities/[entityId]/posts/[postId]/route.ts",
+    "src/app/api/entities/[entityId]/posts/route.ts",
+    "src/app/api/entities/[entityId]/reactivate/route.ts",
+    "src/app/api/entities/[entityId]/route.ts",
+    "src/app/api/entities/[entityId]/subscriptions/[subscriptionId]/checkout/route.ts",
+    "src/app/api/entities/[entityId]/suspend/route.ts",
+    "src/app/api/entities/route.ts",
+    "src/app/api/uploadthing/core.ts",
+    "src/app/layout.tsx",
+    "src/app/page.tsx",
+    "src/components/auth-form.tsx",
+    "src/components/entity-bubbles.tsx",
+    "src/components/member-header.tsx",
+    "src/components/workspace/activity.tsx",
+    "src/components/workspace/create-entity.tsx",
+    "src/components/workspace/entity-hero.tsx",
+    "src/components/workspace/entity-sidebar.tsx",
+    "src/components/workspace/entity.tsx",
+    "src/components/workspace/explore.tsx",
+    "src/components/workspace/facilities.tsx",
+    "src/components/workspace/feed.tsx",
+    "src/components/workspace/finance-controls.tsx",
+    "src/components/workspace/global-finances.tsx",
+    "src/components/workspace/index.tsx",
+    "src/components/workspace/payment-history.tsx",
+    "src/components/workspace/personal.tsx",
+    "src/components/workspace/post-card.tsx",
+    "src/lib/entities/payment-csv.ts",
+    "src/lib/reservations/authorize-facility-reservation.ts"
+  ],
+  "displayAdaptations": [
+    "src/components/workspace/common.tsx",
+    "src/components/workspace/dashboard.tsx",
+    "src/lib/notification-routing.ts"
+  ],
+  "remainingLegacyCopy": [
+    {
+      "file": "src/app/api/entities/[entityId]/dashboard/alerts/route.ts",
+      "line": 520,
+      "text": "Entidad dashboard alerts error:",
+      "reason": "internal_log"
+    },
+    {
+      "file": "src/app/api/entities/[entityId]/dashboard/finances/route.ts",
+      "line": 576,
+      "text": "Entidad dashboard finances error:",
+      "reason": "internal_log"
+    },
+    {
+      "file": "src/app/api/entities/[entityId]/dashboard/members/route.ts",
+      "line": 389,
+      "text": "Entidad dashboard members error:",
+      "reason": "internal_log"
+    },
+    {
+      "file": "src/app/api/entities/[entityId]/dashboard/overview/route.ts",
+      "line": 289,
+      "text": "Entidad dashboard overview error:",
+      "reason": "internal_log"
+    },
+    {
+      "file": "src/app/api/entities/[entityId]/dashboard/reservations/route.ts",
+      "line": 530,
+      "text": "Entidad dashboard reservations error:",
+      "reason": "internal_log"
+    },
+    {
+      "file": "src/app/api/entities/[entityId]/dashboard/subscriptions/route.ts",
+      "line": 485,
+      "text": "Entidad dashboard subscriptions error:",
+      "reason": "internal_log"
+    },
+    {
+      "file": "src/app/api/entities/[entityId]/members/route.ts",
+      "line": 98,
+      "text": "Get entidad members error:",
+      "reason": "internal_log"
+    },
+    {
+      "file": "src/app/api/entities/[entityId]/membership-applications/route.ts",
+      "line": 283,
+      "text": "Get entidad membership applications error:",
+      "reason": "internal_log"
+    },
+    {
+      "file": "src/app/api/entities/[entityId]/payments/route.ts",
+      "line": 148,
+      "text": "Get entidad payments error:",
+      "reason": "internal_log"
+    },
+    {
+      "file": "src/app/api/entities/[entityId]/payments/summary/route.ts",
+      "line": 147,
+      "text": "Get entidad payment summary error:",
+      "reason": "internal_log"
+    },
+    {
+      "file": "src/app/api/entities/[entityId]/posts/route.ts",
+      "line": 399,
+      "text": "Get entidad posts error:",
+      "reason": "internal_log"
+    },
+    {
+      "file": "src/app/api/entities/[entityId]/reactivate/route.ts",
+      "line": 129,
+      "text": "Reactivate entidad error:",
+      "reason": "internal_log"
+    },
+    {
+      "file": "src/app/api/entities/[entityId]/route.ts",
+      "line": 79,
+      "text": "Get entidad error:",
+      "reason": "internal_log"
+    },
+    {
+      "file": "src/app/api/entities/[entityId]/route.ts",
+      "line": 279,
+      "text": "Update entidad error:",
+      "reason": "internal_log"
+    },
+    {
+      "file": "src/app/api/entities/[entityId]/suspend/route.ts",
+      "line": 141,
+      "text": "Suspend entidad error:",
+      "reason": "internal_log"
+    },
+    {
+      "file": "src/app/api/entities/route.ts",
+      "line": 181,
+      "text": "Create entidad error:",
+      "reason": "internal_log"
+    },
+    {
+      "file": "src/app/api/webhooks/stripe/route.ts",
+      "line": 418,
+      "text": "Pago inicial registrado, pero membresía no activada: entidad ",
+      "reason": "internal_log"
+    },
+    {
+      "file": "src/app/api/webhooks/stripe/route.ts",
+      "line": 836,
+      "text": " porque la entidad está bloqueada o la suscripción fue cancelada",
+      "reason": "internal_log"
+    },
+    {
+      "file": "src/lib/notification-routing.ts",
+      "line": 61,
+      "text": "Retiro de la entidad",
+      "reason": "legacy_title_match"
+    }
+  ],
+  "byteIdentical": [
+    {
+      "file": ".env.example",
+      "sha256": "aa16737f4067d7bcf18e238677038dd7f520a0d922c08cc4eebad6f4959c100f"
+    },
+    {
+      "file": "next.config.ts",
+      "sha256": "3ba47c0ca5bb4f2deab1eceea15716f3d6f9de43c0b5d7d711de52744d3d43b4"
+    },
+    {
+      "file": "package-lock.json",
+      "sha256": "1cdc5171fc9966242d75227fee3e020391659bd6f8210b2d5000a00326e073a7"
+    },
+    {
+      "file": "package.json",
+      "sha256": "353dd538f88beb2cbf8cccb92b3e24f251a9679057816024524b49ad1e19808e"
+    },
+    {
+      "file": "prisma/migrations/20260926012535_init/migration.sql",
+      "sha256": "2267c70a1a0574e60cfbae09cd516922843405376198f4d6661c8b3bdf8a9d6c"
+    },
+    {
+      "file": "prisma/migrations/20260926164643_add_clubs_and_memberships/migration.sql",
+      "sha256": "d87acdadd0052667b08e7d21c9692c70902b94833ad2473ee620ada46fd1dbed"
+    },
+    {
+      "file": "prisma/migrations/20260927152007_add_membership_plans/migration.sql",
+      "sha256": "0a6f8514cad4f9c2b71d02741a1102d454a6b181096615c89170cd7020808864"
+    },
+    {
+      "file": "prisma/migrations/20260927204818_simplify_membership_plan_benefits/migration.sql",
+      "sha256": "63886c7189df32df63031cb90dd3476ffe10c53ac70e7faac3817955ffd9b761"
+    },
+    {
+      "file": "prisma/migrations/20260928183658_add_stripe_connect_account/migration.sql",
+      "sha256": "936f8e8059c11e8adbd9f039512f342484771b16f11aabff94a08287a918b2aa"
+    },
+    {
+      "file": "prisma/migrations/20260930031645_remove_stripe_connect/migration.sql",
+      "sha256": "30bcbfa6ed93099597b66c3a72774411ba685880449d1a51e2b5f5bdffa8db18"
+    },
+    {
+      "file": "prisma/migrations/20260930035450_add_unified_stripe_payments_and_settlements/migration.sql",
+      "sha256": "b8343cb6bcfb3d265abd494d1f3c2efb7531b2e029e443a5044531bb51a9964a"
+    },
+    {
+      "file": "prisma/migrations/20260930185008_add_stripe_subscription_id/migration.sql",
+      "sha256": "e72ce3ba3a019d76c82dfdcd645308ad791a893e796df875b43c904cb9c2439e"
+    },
+    {
+      "file": "prisma/migrations/20261001002810_add_stripe_invoice_id/migration.sql",
+      "sha256": "936cba3ca0f4a12b3fe9c74c0565bb0b935d22b0182a1b890992645754e840df"
+    },
+    {
+      "file": "prisma/migrations/20261007212504_add_facilities/migration.sql",
+      "sha256": "71e251cd9e7754e597a152a1d8a7225d516b93e28e6958d6ff50a15e8b8f4faa"
+    },
+    {
+      "file": "prisma/migrations/20261008023438_add_facility_schedules/migration.sql",
+      "sha256": "c9c984bacb464401c5385898464a0baef98ab0342b3f1a6700acfca974fd90f2"
+    },
+    {
+      "file": "prisma/migrations/20261008130026_update_facility_schedules_multiple_intervals/migration.sql",
+      "sha256": "c606db7cb5c953f2c5dd88ad58d1fe1286fd9e8cc2c82791ee2c3ecad78e7f65"
+    },
+    {
+      "file": "prisma/migrations/20261008131434_add_facility_plan_access/migration.sql",
+      "sha256": "25d3501dd1c1b1131e9677ebbeaa81047b201214017f8f5c3599b69e7d7f3a79"
+    },
+    {
+      "file": "prisma/migrations/20261010161800_add_subscription_grace_period/migration.sql",
+      "sha256": "4fe477373076bc0a773fbb2e2b089c723690484e39fb33c38d30deb329b96d33"
+    },
+    {
+      "file": "prisma/migrations/20261014165822_add_membership_removal/migration.sql",
+      "sha256": "07b1b589923c9935a3297c0e11273d9b985217e2401c5b3ec920504340a1b996"
+    },
+    {
+      "file": "prisma/migrations/20261014174550_add_reservations/migration.sql",
+      "sha256": "ad8d4b8b783e83b59caa234c63e6d65b761fd4939d499d368506d008c839784a"
+    },
+    {
+      "file": "prisma/migrations/20261018214658_prevent_reservation_overlap/migration.sql",
+      "sha256": "e0b1a6f057892110257277082a4858ae409c0a0ef175aebc02c47753ec1f99ae"
+    },
+    {
+      "file": "prisma/migrations/20261024211437_add_uploadthing_file_metadata/migration.sql",
+      "sha256": "ed7e5472cbaaaec11014c4db2609660a7b531f5be66861c855df75e44354b08f"
+    },
+    {
+      "file": "prisma/migrations/20261025192022_add_posts/migration.sql",
+      "sha256": "7af527d931e8184ce40fba682ed007f9cbee9e5babfcbcbcb27437d5219ce1fd"
+    },
+    {
+      "file": "prisma/migrations/20261028165427_remove_unused_benefit_models/migration.sql",
+      "sha256": "95ad382ae7b3b7220bc918868cc3c861de43c756839dd675eb4db58bf27d804c"
+    },
+    {
+      "file": "prisma/migrations/20261103025355_add_membership_events_payment_obligations_and_notifications/migration.sql",
+      "sha256": "f80755d5c8f1f57df22c5e8d0c5ada8475fe077a8d6ddd38380657686063f47d"
+    },
+    {
+      "file": "prisma/migrations/20261104000100_add_settlement_receipts/migration.sql",
+      "sha256": "a04a06160bf171c2201728011605a9ea333378cf27fb1c7dfb9af98058563df7"
+    },
+    {
+      "file": "prisma/migrations/20261105000100_queue_document_withdrawals/migration.sql",
+      "sha256": "b48a232048c52a3ebab34788f4d656327e0ffcc3b3a6f361a7e60b086f83ae35"
+    },
+    {
+      "file": "prisma/migrations/20261107000100_club_profiles/migration.sql",
+      "sha256": "e2db661bd57d86183a67b8cb6c9ec1625eb26e88c67c61e2b9012c63b26fb060"
+    },
+    {
+      "file": "prisma/migrations/20261108000100_subscription_suspension_date/migration.sql",
+      "sha256": "d2a534c403b62ae874572fe98d05d4d6f0254a280a4d0e6add8df54562d527f4"
+    },
+    {
+      "file": "prisma/migrations/20261124000100_rename_domain_to_entity/migration.sql",
+      "sha256": "d46b24259699c668f851fc0a89e99386893c09ed518ce8af38c582efd0253dce"
+    },
+    {
+      "file": "prisma/migrations/migration_lock.toml",
+      "sha256": "693566b52c49db47a2b0901d12400aa3d710d13a49f4a2a154b80c0505ed737c"
+    },
+    {
+      "file": "prisma/schema.prisma",
+      "sha256": "9bd8c30b5550fddc4bdbc944e074a38665fe886fa0218f2ee1632aadaa211b3c"
+    },
+    {
+      "file": "prisma/seed.ts",
+      "sha256": "7909bdca585aa4abd26fca1172e2b35e91490bf61673f5ec299273ac1af4da65"
+    },
+    {
+      "file": "public/brand/klan-icon.png",
+      "sha256": "17197dce72343a6909dda3f97e215fed9d7f033623d265480841a33fe1b78ea3"
+    },
+    {
+      "file": "public/file.svg",
+      "sha256": "2b67812c325c199a02536cdbeea0c593a72f707d323b72ee3e08dbab06753bd4"
+    },
+    {
+      "file": "public/globe.svg",
+      "sha256": "b614b9bf183925957661ac851498fe1d8029fd43a62fbfed86f9e2624a57e7cf"
+    },
+    {
+      "file": "public/next.svg",
+      "sha256": "55995dfad6ecb4945a1e856ddca03c5e16aa5bf13fd21b4df6a74ae79357bcfc"
+    },
+    {
+      "file": "public/vercel.svg",
+      "sha256": "f081337b2fee635b455b63275406a3e7f39d6a014e25ad90dab5a67e62a12ac4"
+    },
+    {
+      "file": "public/window.svg",
+      "sha256": "644768c4aaeb4767bce293344eeb0c125fb804a94d801440424072202d85e3a1"
+    },
+    {
+      "file": "scripts/test-backend-lifecycle.cjs",
+      "sha256": "87caa3f132155b6059db700a250965c6e216706563a640a4f6eb8847e92c913b"
+    },
+    {
+      "file": "scripts/test-feedback-part2.cjs",
+      "sha256": "a296878d6d97ed31292233d92f687baa221a07bbb7adfd82bf38d67a7ac90cb0"
+    },
+    {
+      "file": "scripts/test-part-four.tsx",
+      "sha256": "59125194fb83ebb24d00a756997a9ce8302468ba5865781ae6275191a5527f6f"
+    },
+    {
+      "file": "scripts/test-plan-charts.tsx",
+      "sha256": "a1a968d0c837e8fce2282d8d0f62d6f24b7575aa153884606de6f95de5b58165"
+    },
+    {
+      "file": "scripts/test-reservation-concurrency.mjs",
+      "sha256": "76ee5e362e5f2a73472c75654f228d03d6a0b54ab36e5aa9613d8d003c9781e4"
+    },
+    {
+      "file": "scripts/test-reservation-v2.mjs",
+      "sha256": "ef24739e8547aafd1635a40b78fe04fe55c50eb60a9d9cd69f74ff2aae85d9f3"
+    },
+    {
+      "file": "scripts/test-ui-contracts.cjs",
+      "sha256": "7b80dc88a805af7926102ec30a1510f83207edf42eb21055b594176c9af4c5df"
+    },
+    {
+      "file": "scripts/verify-entity-http.mjs",
+      "sha256": "5b9613f19172c289a3eba227afaafdf21a263e3035173d8896a9f93d66234582"
+    },
+    {
+      "file": "scripts/verify-entity-migration.mjs",
+      "sha256": "de4ee4b2042bf47c4fe1caa0e04538f940bad189a6c529f632866a5645476b5a"
+    },
+    {
+      "file": "src/app/api/webhooks/stripe/route.ts",
+      "sha256": "a609018e1864a31fd3dbcfe845aac00909e5906cbf3db8a1b81471da34108e13"
+    },
+    {
+      "file": "src/app/globals.css",
+      "sha256": "c4e1b39883ec8edbdd2d5a70726b464350597f8d4febc82ed2018b0c54286b3b"
+    },
+    {
+      "file": "src/components/basic.module.css",
+      "sha256": "eb01b37dac2ea2423343697342d7d2ce61e98d30955334457a509c11a5e1535c"
+    },
+    {
+      "file": "src/components/use-mobile.ts",
+      "sha256": "321faf3c407d7ac9a13097ec468972f5a4fd6b123f3aff0708b17851d29b9af2"
+    },
+    {
+      "file": "src/components/workspace/workspace.css",
+      "sha256": "0b6f726711d12a34cceb22a622749df03ee6c44713e7a49a2da7ffa68a3cb66c"
+    },
+    {
+      "file": "src/lib/auth/authorization.ts",
+      "sha256": "e0606281049a5dd5215cce9ad325e5835d8bb595660014a49de8702c8ce77cac"
+    },
+    {
+      "file": "tsconfig.json",
+      "sha256": "5c51df4c59f4510d8c7dadf07a5c32132228826a3b331da5e286207b4df7ef9c"
+    },
+    {
+      "file": "vercel.json",
+      "sha256": "ca3d163bab055381827226140568f3bef7eaac187cebd76878e0b63e9e442356"
+    }
+  ],
+  "originalFiles": [
+    {
+      "file": ".env.example",
+      "before": "aa16737f4067d7bcf18e238677038dd7f520a0d922c08cc4eebad6f4959c100f",
+      "after": "aa16737f4067d7bcf18e238677038dd7f520a0d922c08cc4eebad6f4959c100f"
+    },
+    {
+      "file": ".gitignore",
+      "before": "f0416fec23a0900f1eb777fe780ace53b3e76148145bc71653a3f24afbd815d1",
+      "after": "f0416fec23a0900f1eb777fe780ace53b3e76148145bc71653a3f24afbd815d1"
+    },
+    {
+      "file": "README.md",
+      "before": "5be9147ea86076c6fe9a36871a05e75280378b8d242678f167bb1118f06a37f4",
+      "after": "a752fc4a4e04022845c3cbf4732bd2e52ffa2b5335a177b6c49062e500f084e8"
+    },
+    {
+      "file": "docs/CAMBIOS_PARTE_11.md",
+      "before": "1bbcfda36eefebb1ff49769c41f76dce5fb3347b42eb65aa8612ce81b305f4b3",
+      "after": "1bbcfda36eefebb1ff49769c41f76dce5fb3347b42eb65aa8612ce81b305f4b3"
+    },
+    {
+      "file": "docs/MIGRACION_PARTE_11.md",
+      "before": "85448290226909c0a9c1712de991e90cc7c876ec80cbbda650672ae4272900b1",
+      "after": "85448290226909c0a9c1712de991e90cc7c876ec80cbbda650672ae4272900b1"
+    },
+    {
+      "file": "docs/TRAZABILIDAD_PARTE_11.json",
+      "before": "b4a51ab35c5594ce5aa736c23269b72b390f373538764341c4e318299e20b517",
+      "after": "b4a51ab35c5594ce5aa736c23269b72b390f373538764341c4e318299e20b517"
+    },
+    {
+      "file": "docs/VALIDACION_PARTE_11.md",
+      "before": "c17a4de18885cfd5c123f1f360d6d4283fa1825374440b80d697438c6090f4ff",
+      "after": "c17a4de18885cfd5c123f1f360d6d4283fa1825374440b80d697438c6090f4ff"
+    },
+    {
+      "file": "docs/evidencias/automated-tests.txt",
+      "before": "030ef0ab2f95c5f1720988462f63a6fb33ae742e509b63d1144c3c3a7d54b304",
+      "after": "030ef0ab2f95c5f1720988462f63a6fb33ae742e509b63d1144c3c3a7d54b304"
+    },
+    {
+      "file": "docs/evidencias/build.txt",
+      "before": "f8e0279aa0ca46b56c2b51a475dc1447ea46f634fc5d12fb950259c84c1fe1e1",
+      "after": "f8e0279aa0ca46b56c2b51a475dc1447ea46f634fc5d12fb950259c84c1fe1e1"
+    },
+    {
+      "file": "docs/evidencias/http.json",
+      "before": "869232811ca271edd65336f4638fd6f2699b08cf0c119be9db68a162ef43914c",
+      "after": "869232811ca271edd65336f4638fd6f2699b08cf0c119be9db68a162ef43914c"
+    },
+    {
+      "file": "docs/evidencias/jsx-style-audit.json",
+      "before": "398a5e5ff062dfa94e4b01b6c35bfd05bd0769ddfd59226b0a1c1ff1d0b649b0",
+      "after": "398a5e5ff062dfa94e4b01b6c35bfd05bd0769ddfd59226b0a1c1ff1d0b649b0"
+    },
+    {
+      "file": "docs/evidencias/migration-fresh.json",
+      "before": "53049dba1ddd1a3a67a6d12019a7dc59c0179d31405de7143e2c20a7f3167927",
+      "after": "53049dba1ddd1a3a67a6d12019a7dc59c0179d31405de7143e2c20a7f3167927"
+    },
+    {
+      "file": "docs/evidencias/migration-upgrade.json",
+      "before": "95f124e06fbd8ca876c81caeaac0cfc8b5c74b1941871ca8c5b22facf7f53326",
+      "after": "95f124e06fbd8ca876c81caeaac0cfc8b5c74b1941871ca8c5b22facf7f53326"
+    },
+    {
+      "file": "docs/evidencias/preservation.json",
+      "before": "8e891e9ea548e94bdc738635162acbc3626f530d68fd6dd13f202959313b5ea1",
+      "after": "8e891e9ea548e94bdc738635162acbc3626f530d68fd6dd13f202959313b5ea1"
+    },
+    {
+      "file": "docs/evidencias/prisma-generate.txt",
+      "before": "476b19f19c579de01d819eb87681583186f03fa42856738b758d7d7b7d43ee28",
+      "after": "476b19f19c579de01d819eb87681583186f03fa42856738b758d7d7b7d43ee28"
+    },
+    {
+      "file": "docs/evidencias/prisma-validate.txt",
+      "before": "c5678578e6ed6a656c4ed1964c9b57bf963a1310fc264da487b120e4e6db85f9",
+      "after": "c5678578e6ed6a656c4ed1964c9b57bf963a1310fc264da487b120e4e6db85f9"
+    },
+    {
+      "file": "eslint.config.mjs",
+      "before": "e75150df84a9b7d4d65a71f6132826ce76879a85896e3d07dcdd47a9edcf72a0",
+      "after": "e75150df84a9b7d4d65a71f6132826ce76879a85896e3d07dcdd47a9edcf72a0"
+    },
+    {
+      "file": "estructura-api.txt",
+      "before": "fa02ceac3fb015ecdada92c4593bf712d7ff0bd1f6b4584c1949ca0faa74a9bd",
+      "after": "32dbda0705ff9ab875a8c6eefc4031cc18bf1cad3b73b385e320ca73abf06a4f"
+    },
+    {
+      "file": "exportaciones-api.txt",
+      "before": "44eaf279c83cf286bf93876f0b3b6111b303b65c52fcd2404adcf153acd57beb",
+      "after": "875f5aed7f190f818ca96720edf8ce2a7f74b7bcee1a27070205e3e6e6b75492"
+    },
+    {
+      "file": "next-env.d.ts",
+      "before": "1862ac4bbbc5192d4bf562161df66ea547ed3e67173100656ab606ae9797db2b",
+      "after": "1862ac4bbbc5192d4bf562161df66ea547ed3e67173100656ab606ae9797db2b"
+    },
+    {
+      "file": "next.config.ts",
+      "before": "3ba47c0ca5bb4f2deab1eceea15716f3d6f9de43c0b5d7d711de52744d3d43b4",
+      "after": "3ba47c0ca5bb4f2deab1eceea15716f3d6f9de43c0b5d7d711de52744d3d43b4"
+    },
+    {
+      "file": "package-lock.json",
+      "before": "1cdc5171fc9966242d75227fee3e020391659bd6f8210b2d5000a00326e073a7",
+      "after": "1cdc5171fc9966242d75227fee3e020391659bd6f8210b2d5000a00326e073a7"
+    },
+    {
+      "file": "package.json",
+      "before": "353dd538f88beb2cbf8cccb92b3e24f251a9679057816024524b49ad1e19808e",
+      "after": "353dd538f88beb2cbf8cccb92b3e24f251a9679057816024524b49ad1e19808e"
+    },
+    {
+      "file": "postcss.config.mjs",
+      "before": "eac5ea09fe9f0b90d38559c1677bd583ec10c41d82e09450902a2d50427ad22d",
+      "after": "eac5ea09fe9f0b90d38559c1677bd583ec10c41d82e09450902a2d50427ad22d"
+    },
+    {
+      "file": "prisma/migrations/20260926012535_init/migration.sql",
+      "before": "2267c70a1a0574e60cfbae09cd516922843405376198f4d6661c8b3bdf8a9d6c",
+      "after": "2267c70a1a0574e60cfbae09cd516922843405376198f4d6661c8b3bdf8a9d6c"
+    },
+    {
+      "file": "prisma/migrations/20260926164643_add_clubs_and_memberships/migration.sql",
+      "before": "d87acdadd0052667b08e7d21c9692c70902b94833ad2473ee620ada46fd1dbed",
+      "after": "d87acdadd0052667b08e7d21c9692c70902b94833ad2473ee620ada46fd1dbed"
+    },
+    {
+      "file": "prisma/migrations/20260927152007_add_membership_plans/migration.sql",
+      "before": "0a6f8514cad4f9c2b71d02741a1102d454a6b181096615c89170cd7020808864",
+      "after": "0a6f8514cad4f9c2b71d02741a1102d454a6b181096615c89170cd7020808864"
+    },
+    {
+      "file": "prisma/migrations/20260927204818_simplify_membership_plan_benefits/migration.sql",
+      "before": "63886c7189df32df63031cb90dd3476ffe10c53ac70e7faac3817955ffd9b761",
+      "after": "63886c7189df32df63031cb90dd3476ffe10c53ac70e7faac3817955ffd9b761"
+    },
+    {
+      "file": "prisma/migrations/20260928183658_add_stripe_connect_account/migration.sql",
+      "before": "936f8e8059c11e8adbd9f039512f342484771b16f11aabff94a08287a918b2aa",
+      "after": "936f8e8059c11e8adbd9f039512f342484771b16f11aabff94a08287a918b2aa"
+    },
+    {
+      "file": "prisma/migrations/20260930031645_remove_stripe_connect/migration.sql",
+      "before": "30bcbfa6ed93099597b66c3a72774411ba685880449d1a51e2b5f5bdffa8db18",
+      "after": "30bcbfa6ed93099597b66c3a72774411ba685880449d1a51e2b5f5bdffa8db18"
+    },
+    {
+      "file": "prisma/migrations/20260930035450_add_unified_stripe_payments_and_settlements/migration.sql",
+      "before": "b8343cb6bcfb3d265abd494d1f3c2efb7531b2e029e443a5044531bb51a9964a",
+      "after": "b8343cb6bcfb3d265abd494d1f3c2efb7531b2e029e443a5044531bb51a9964a"
+    },
+    {
+      "file": "prisma/migrations/20260930185008_add_stripe_subscription_id/migration.sql",
+      "before": "e72ce3ba3a019d76c82dfdcd645308ad791a893e796df875b43c904cb9c2439e",
+      "after": "e72ce3ba3a019d76c82dfdcd645308ad791a893e796df875b43c904cb9c2439e"
+    },
+    {
+      "file": "prisma/migrations/20261001002810_add_stripe_invoice_id/migration.sql",
+      "before": "936cba3ca0f4a12b3fe9c74c0565bb0b935d22b0182a1b890992645754e840df",
+      "after": "936cba3ca0f4a12b3fe9c74c0565bb0b935d22b0182a1b890992645754e840df"
+    },
+    {
+      "file": "prisma/migrations/20261007212504_add_facilities/migration.sql",
+      "before": "71e251cd9e7754e597a152a1d8a7225d516b93e28e6958d6ff50a15e8b8f4faa",
+      "after": "71e251cd9e7754e597a152a1d8a7225d516b93e28e6958d6ff50a15e8b8f4faa"
+    },
+    {
+      "file": "prisma/migrations/20261008023438_add_facility_schedules/migration.sql",
+      "before": "c9c984bacb464401c5385898464a0baef98ab0342b3f1a6700acfca974fd90f2",
+      "after": "c9c984bacb464401c5385898464a0baef98ab0342b3f1a6700acfca974fd90f2"
+    },
+    {
+      "file": "prisma/migrations/20261008130026_update_facility_schedules_multiple_intervals/migration.sql",
+      "before": "c606db7cb5c953f2c5dd88ad58d1fe1286fd9e8cc2c82791ee2c3ecad78e7f65",
+      "after": "c606db7cb5c953f2c5dd88ad58d1fe1286fd9e8cc2c82791ee2c3ecad78e7f65"
+    },
+    {
+      "file": "prisma/migrations/20261008131434_add_facility_plan_access/migration.sql",
+      "before": "25d3501dd1c1b1131e9677ebbeaa81047b201214017f8f5c3599b69e7d7f3a79",
+      "after": "25d3501dd1c1b1131e9677ebbeaa81047b201214017f8f5c3599b69e7d7f3a79"
+    },
+    {
+      "file": "prisma/migrations/20261010161800_add_subscription_grace_period/migration.sql",
+      "before": "4fe477373076bc0a773fbb2e2b089c723690484e39fb33c38d30deb329b96d33",
+      "after": "4fe477373076bc0a773fbb2e2b089c723690484e39fb33c38d30deb329b96d33"
+    },
+    {
+      "file": "prisma/migrations/20261014165822_add_membership_removal/migration.sql",
+      "before": "07b1b589923c9935a3297c0e11273d9b985217e2401c5b3ec920504340a1b996",
+      "after": "07b1b589923c9935a3297c0e11273d9b985217e2401c5b3ec920504340a1b996"
+    },
+    {
+      "file": "prisma/migrations/20261014174550_add_reservations/migration.sql",
+      "before": "ad8d4b8b783e83b59caa234c63e6d65b761fd4939d499d368506d008c839784a",
+      "after": "ad8d4b8b783e83b59caa234c63e6d65b761fd4939d499d368506d008c839784a"
+    },
+    {
+      "file": "prisma/migrations/20261018214658_prevent_reservation_overlap/migration.sql",
+      "before": "e0b1a6f057892110257277082a4858ae409c0a0ef175aebc02c47753ec1f99ae",
+      "after": "e0b1a6f057892110257277082a4858ae409c0a0ef175aebc02c47753ec1f99ae"
+    },
+    {
+      "file": "prisma/migrations/20261024211437_add_uploadthing_file_metadata/migration.sql",
+      "before": "ed7e5472cbaaaec11014c4db2609660a7b531f5be66861c855df75e44354b08f",
+      "after": "ed7e5472cbaaaec11014c4db2609660a7b531f5be66861c855df75e44354b08f"
+    },
+    {
+      "file": "prisma/migrations/20261025192022_add_posts/migration.sql",
+      "before": "7af527d931e8184ce40fba682ed007f9cbee9e5babfcbcbcb27437d5219ce1fd",
+      "after": "7af527d931e8184ce40fba682ed007f9cbee9e5babfcbcbcb27437d5219ce1fd"
+    },
+    {
+      "file": "prisma/migrations/20261028165427_remove_unused_benefit_models/migration.sql",
+      "before": "95ad382ae7b3b7220bc918868cc3c861de43c756839dd675eb4db58bf27d804c",
+      "after": "95ad382ae7b3b7220bc918868cc3c861de43c756839dd675eb4db58bf27d804c"
+    },
+    {
+      "file": "prisma/migrations/20261103025355_add_membership_events_payment_obligations_and_notifications/migration.sql",
+      "before": "f80755d5c8f1f57df22c5e8d0c5ada8475fe077a8d6ddd38380657686063f47d",
+      "after": "f80755d5c8f1f57df22c5e8d0c5ada8475fe077a8d6ddd38380657686063f47d"
+    },
+    {
+      "file": "prisma/migrations/20261104000100_add_settlement_receipts/migration.sql",
+      "before": "a04a06160bf171c2201728011605a9ea333378cf27fb1c7dfb9af98058563df7",
+      "after": "a04a06160bf171c2201728011605a9ea333378cf27fb1c7dfb9af98058563df7"
+    },
+    {
+      "file": "prisma/migrations/20261105000100_queue_document_withdrawals/migration.sql",
+      "before": "b48a232048c52a3ebab34788f4d656327e0ffcc3b3a6f361a7e60b086f83ae35",
+      "after": "b48a232048c52a3ebab34788f4d656327e0ffcc3b3a6f361a7e60b086f83ae35"
+    },
+    {
+      "file": "prisma/migrations/20261107000100_club_profiles/migration.sql",
+      "before": "e2db661bd57d86183a67b8cb6c9ec1625eb26e88c67c61e2b9012c63b26fb060",
+      "after": "e2db661bd57d86183a67b8cb6c9ec1625eb26e88c67c61e2b9012c63b26fb060"
+    },
+    {
+      "file": "prisma/migrations/20261108000100_subscription_suspension_date/migration.sql",
+      "before": "d2a534c403b62ae874572fe98d05d4d6f0254a280a4d0e6add8df54562d527f4",
+      "after": "d2a534c403b62ae874572fe98d05d4d6f0254a280a4d0e6add8df54562d527f4"
+    },
+    {
+      "file": "prisma/migrations/20261124000100_rename_domain_to_entity/migration.sql",
+      "before": "d46b24259699c668f851fc0a89e99386893c09ed518ce8af38c582efd0253dce",
+      "after": "d46b24259699c668f851fc0a89e99386893c09ed518ce8af38c582efd0253dce"
+    },
+    {
+      "file": "prisma/migrations/migration_lock.toml",
+      "before": "693566b52c49db47a2b0901d12400aa3d710d13a49f4a2a154b80c0505ed737c",
+      "after": "693566b52c49db47a2b0901d12400aa3d710d13a49f4a2a154b80c0505ed737c"
+    },
+    {
+      "file": "prisma/schema.prisma",
+      "before": "9bd8c30b5550fddc4bdbc944e074a38665fe886fa0218f2ee1632aadaa211b3c",
+      "after": "9bd8c30b5550fddc4bdbc944e074a38665fe886fa0218f2ee1632aadaa211b3c"
+    },
+    {
+      "file": "prisma/seed.ts",
+      "before": "7909bdca585aa4abd26fca1172e2b35e91490bf61673f5ec299273ac1af4da65",
+      "after": "7909bdca585aa4abd26fca1172e2b35e91490bf61673f5ec299273ac1af4da65"
+    },
+    {
+      "file": "public/brand/klan-icon.png",
+      "before": "17197dce72343a6909dda3f97e215fed9d7f033623d265480841a33fe1b78ea3",
+      "after": "17197dce72343a6909dda3f97e215fed9d7f033623d265480841a33fe1b78ea3"
+    },
+    {
+      "file": "public/file.svg",
+      "before": "2b67812c325c199a02536cdbeea0c593a72f707d323b72ee3e08dbab06753bd4",
+      "after": "2b67812c325c199a02536cdbeea0c593a72f707d323b72ee3e08dbab06753bd4"
+    },
+    {
+      "file": "public/globe.svg",
+      "before": "b614b9bf183925957661ac851498fe1d8029fd43a62fbfed86f9e2624a57e7cf",
+      "after": "b614b9bf183925957661ac851498fe1d8029fd43a62fbfed86f9e2624a57e7cf"
+    },
+    {
+      "file": "public/next.svg",
+      "before": "55995dfad6ecb4945a1e856ddca03c5e16aa5bf13fd21b4df6a74ae79357bcfc",
+      "after": "55995dfad6ecb4945a1e856ddca03c5e16aa5bf13fd21b4df6a74ae79357bcfc"
+    },
+    {
+      "file": "public/vercel.svg",
+      "before": "f081337b2fee635b455b63275406a3e7f39d6a014e25ad90dab5a67e62a12ac4",
+      "after": "f081337b2fee635b455b63275406a3e7f39d6a014e25ad90dab5a67e62a12ac4"
+    },
+    {
+      "file": "public/window.svg",
+      "before": "644768c4aaeb4767bce293344eeb0c125fb804a94d801440424072202d85e3a1",
+      "after": "644768c4aaeb4767bce293344eeb0c125fb804a94d801440424072202d85e3a1"
+    },
+    {
+      "file": "scripts/test-backend-lifecycle.cjs",
+      "before": "87caa3f132155b6059db700a250965c6e216706563a640a4f6eb8847e92c913b",
+      "after": "87caa3f132155b6059db700a250965c6e216706563a640a4f6eb8847e92c913b"
+    },
+    {
+      "file": "scripts/test-feedback-part2.cjs",
+      "before": "a296878d6d97ed31292233d92f687baa221a07bbb7adfd82bf38d67a7ac90cb0",
+      "after": "a296878d6d97ed31292233d92f687baa221a07bbb7adfd82bf38d67a7ac90cb0"
+    },
+    {
+      "file": "scripts/test-part-four.tsx",
+      "before": "59125194fb83ebb24d00a756997a9ce8302468ba5865781ae6275191a5527f6f",
+      "after": "59125194fb83ebb24d00a756997a9ce8302468ba5865781ae6275191a5527f6f"
+    },
+    {
+      "file": "scripts/test-plan-charts.tsx",
+      "before": "a1a968d0c837e8fce2282d8d0f62d6f24b7575aa153884606de6f95de5b58165",
+      "after": "a1a968d0c837e8fce2282d8d0f62d6f24b7575aa153884606de6f95de5b58165"
+    },
+    {
+      "file": "scripts/test-reservation-concurrency.mjs",
+      "before": "76ee5e362e5f2a73472c75654f228d03d6a0b54ab36e5aa9613d8d003c9781e4",
+      "after": "76ee5e362e5f2a73472c75654f228d03d6a0b54ab36e5aa9613d8d003c9781e4"
+    },
+    {
+      "file": "scripts/test-reservation-v2.mjs",
+      "before": "ef24739e8547aafd1635a40b78fe04fe55c50eb60a9d9cd69f74ff2aae85d9f3",
+      "after": "ef24739e8547aafd1635a40b78fe04fe55c50eb60a9d9cd69f74ff2aae85d9f3"
+    },
+    {
+      "file": "scripts/test-ui-contracts.cjs",
+      "before": "7b80dc88a805af7926102ec30a1510f83207edf42eb21055b594176c9af4c5df",
+      "after": "7b80dc88a805af7926102ec30a1510f83207edf42eb21055b594176c9af4c5df"
+    },
+    {
+      "file": "scripts/verify-entity-http.mjs",
+      "before": "5b9613f19172c289a3eba227afaafdf21a263e3035173d8896a9f93d66234582",
+      "after": "5b9613f19172c289a3eba227afaafdf21a263e3035173d8896a9f93d66234582"
+    },
+    {
+      "file": "scripts/verify-entity-migration.mjs",
+      "before": "de4ee4b2042bf47c4fe1caa0e04538f940bad189a6c529f632866a5645476b5a",
+      "after": "de4ee4b2042bf47c4fe1caa0e04538f940bad189a6c529f632866a5645476b5a"
+    },
+    {
+      "file": "src/app/api/admin/dashboard/entities/route.ts",
+      "before": "f4d91d813166e8bbf4759f5a6401011d5c018ccfe54778a2b357525d2a72acf8",
+      "after": "f4d91d813166e8bbf4759f5a6401011d5c018ccfe54778a2b357525d2a72acf8"
+    },
+    {
+      "file": "src/app/api/admin/dashboard/finances/route.ts",
+      "before": "3d5d9ea4ef37df0ea0b0f4ba4e5971c322a6abc73684f572952962cfef2e499b",
+      "after": "3d5d9ea4ef37df0ea0b0f4ba4e5971c322a6abc73684f572952962cfef2e499b"
+    },
+    {
+      "file": "src/app/api/admin/dashboard/overview/route.ts",
+      "before": "886275734bd487bba0fd7619cf6f9fb7a841cb993d05d21829765c8df50ab84f",
+      "after": "886275734bd487bba0fd7619cf6f9fb7a841cb993d05d21829765c8df50ab84f"
+    },
+    {
+      "file": "src/app/api/admin/settlements/[settlementId]/route.ts",
+      "before": "ff725a799bc2b635c592913b863c4f2e9f4fd7352c60c465cc64ed9ee74e8c36",
+      "after": "ff725a799bc2b635c592913b863c4f2e9f4fd7352c60c465cc64ed9ee74e8c36"
+    },
+    {
+      "file": "src/app/api/admin/settlements/route.ts",
+      "before": "0cec82775c952f65237ea5b6c60ce706f7a5be88fbfe1c59216c0f9a15b9d5f1",
+      "after": "49bdb6aa411fbca1c820b633bbbdd6679952d4669a61ca3dcef29e99db33f198"
+    },
+    {
+      "file": "src/app/api/auth/login/route.ts",
+      "before": "392ea3cd4263331e6fc083f6fb1ed56c55404bd58db87784dac092bc22ae6928",
+      "after": "392ea3cd4263331e6fc083f6fb1ed56c55404bd58db87784dac092bc22ae6928"
+    },
+    {
+      "file": "src/app/api/auth/logout/route.ts",
+      "before": "39587c8765e2f752fc8decc70b717ae3a611315cad9be2a2ceda66577286ce71",
+      "after": "39587c8765e2f752fc8decc70b717ae3a611315cad9be2a2ceda66577286ce71"
+    },
+    {
+      "file": "src/app/api/auth/me/route.ts",
+      "before": "70c1aa6d42af51786e8843822e6dfff9512c5faec6bd3b7290af745090ba1632",
+      "after": "70c1aa6d42af51786e8843822e6dfff9512c5faec6bd3b7290af745090ba1632"
+    },
+    {
+      "file": "src/app/api/auth/register/route.ts",
+      "before": "b93db1cf21de5df2f20bf5476779b02c13d71a81141519ace38a50f6bf746869",
+      "after": "b93db1cf21de5df2f20bf5476779b02c13d71a81141519ace38a50f6bf746869"
+    },
+    {
+      "file": "src/app/api/auth/session/route.ts",
+      "before": "011b0de9751abb57879cb148afb3ba1808bb713cec66d6c9813e6ba521220eb9",
+      "after": "011b0de9751abb57879cb148afb3ba1808bb713cec66d6c9813e6ba521220eb9"
+    },
+    {
+      "file": "src/app/api/avatars/[key]/route.ts",
+      "before": "6c8e87d0420a1caf80439549d6d68c0cd5ee5e9f6aedb01c9736bfeb9c6e5d28",
+      "after": "6c8e87d0420a1caf80439549d6d68c0cd5ee5e9f6aedb01c9736bfeb9c6e5d28"
+    },
+    {
+      "file": "src/app/api/catalog/bubbles/route.ts",
+      "before": "6ec2c15a57525e210a3931877d74f309b7a27ab1aedbb8ce770a64d1a865cc43",
+      "after": "6ec2c15a57525e210a3931877d74f309b7a27ab1aedbb8ce770a64d1a865cc43"
+    },
+    {
+      "file": "src/app/api/catalog/entities/[entityId]/route.ts",
+      "before": "34b01bf3aacaa152bcb3f9cce4ae5b368d69d2ab9af286b5cde345e272e393e0",
+      "after": "c63689d75f0d74e4e2a0e30676192258a5a273c4eae83b58966fb6e406cf2dca"
+    },
+    {
+      "file": "src/app/api/cron/expired-plans/route.ts",
+      "before": "f523bb91d71ef7203349045f0b2b2bad2aa8074f5579582044f9e92720bb1e1d",
+      "after": "f523bb91d71ef7203349045f0b2b2bad2aa8074f5579582044f9e92720bb1e1d"
+    },
+    {
+      "file": "src/app/api/cron/read-notifications/route.ts",
+      "before": "fa337be89af30aecd514ad40865601ccf6ecb4e619b9f7c8571e618c72d292a3",
+      "after": "fa337be89af30aecd514ad40865601ccf6ecb4e619b9f7c8571e618c72d292a3"
+    },
+    {
+      "file": "src/app/api/cron/settlements/route.ts",
+      "before": "d28dbadb7f97e9e8aec6e678cbae85ed8d571e34f5e27c6e4bd6ee69d61b8ad9",
+      "after": "d28dbadb7f97e9e8aec6e678cbae85ed8d571e34f5e27c6e4bd6ee69d61b8ad9"
+    },
+    {
+      "file": "src/app/api/entities/[entityId]/bank/route.ts",
+      "before": "6efc2aa399f1da8b96f265941e8defabe573fcae8a247574fb20378d5004f8ea",
+      "after": "6efc2aa399f1da8b96f265941e8defabe573fcae8a247574fb20378d5004f8ea"
+    },
+    {
+      "file": "src/app/api/entities/[entityId]/dashboard/activity/route.ts",
+      "before": "381b82f2c50fa9bf6d62ee534d308931057e292b500be4e8c0c47473f3a28fe7",
+      "after": "381b82f2c50fa9bf6d62ee534d308931057e292b500be4e8c0c47473f3a28fe7"
+    },
+    {
+      "file": "src/app/api/entities/[entityId]/dashboard/alerts/route.ts",
+      "before": "d23b04d94cd88607f34bce1c025c7bcb5d2b5ceb31c783954ce9218c11ecf878",
+      "after": "9b62cc2c17dd8b676d1b4f8c1487375d6074e752fc20437a0229ee62f3c4f2e5"
+    },
+    {
+      "file": "src/app/api/entities/[entityId]/dashboard/finances/route.ts",
+      "before": "ba905290542b87a867a21b2d706dc4553d4c00af58baa116b46439a2351abc31",
+      "after": "2349b81097d280d80262d00bc30396c5f1e8779407f7599c03a64f151551a6a7"
+    },
+    {
+      "file": "src/app/api/entities/[entityId]/dashboard/members/route.ts",
+      "before": "ebd0222d782b4cd90275f3833956f9ca5be25104dacc2ecb2a92ff33db36e752",
+      "after": "e6dec57c67cfcc2e86bc3f46affa02db320eacb62212443cf38f169751351e48"
+    },
+    {
+      "file": "src/app/api/entities/[entityId]/dashboard/overview/route.ts",
+      "before": "557a2f698024e7f3e98a3b16b20b86da78a21f8c0b80c5ceee2e3f8c1b43cba3",
+      "after": "759933dde67325c223795bc877f5b4163a4d909d25f1982c84f2632ec62bacce"
+    },
+    {
+      "file": "src/app/api/entities/[entityId]/dashboard/reservations/route.ts",
+      "before": "4765d2464e2bd5ff011aff44527b4761497fa502c692ee2e4e2f1ffe26945e19",
+      "after": "a4a7c935bf9114ffe203301fd61171af4b2a27f1a85caff341e4bf7e4f005b61"
+    },
+    {
+      "file": "src/app/api/entities/[entityId]/dashboard/subscriptions/route.ts",
+      "before": "14604c39037f51514bad6e44ef325c2c84ac80d66cd0e166a12918130aeab41b",
+      "after": "a729f7e92ccf7d09bbdd631b3c1730fe2730792705fff0a93120628b85e308ac"
+    },
+    {
+      "file": "src/app/api/entities/[entityId]/facilities/[facilityId]/availability/route.ts",
+      "before": "6a1030cdee00980d9f782fb50ff90362fab26ecf86d9d8e3df9abb8be35cbe75",
+      "after": "90f1d0cf5213f226f627a85f8c540204a878f01896172ab14ca41fc906c9beb8"
+    },
+    {
+      "file": "src/app/api/entities/[entityId]/facilities/[facilityId]/plan-access/route.ts",
+      "before": "2945a54f89f992c8a9b69a3b2d71d208265481389965a537d9a90808f3e3c4d2",
+      "after": "60a452d39bdd34a891c631286be6fae63196bb4031505b4053f9604f347c9439"
+    },
+    {
+      "file": "src/app/api/entities/[entityId]/facilities/[facilityId]/reservations/[reservationId]/route.ts",
+      "before": "e69e76659ef18b4e0bd240ad8bfe76ac1a54119cde77be0a80a43815c7c68336",
+      "after": "971009813d944deb06d2bdbd7a63305e9fca2436cda781c28e57024fd2fa98bc"
+    },
+    {
+      "file": "src/app/api/entities/[entityId]/facilities/[facilityId]/reservations/route.ts",
+      "before": "6e390a6bf44940084708b6f5e093e52846a92f1512b4a75ac7ba38ed93e654b1",
+      "after": "dea95ad7e5867edc6da29f78059bf35ae049df4d8271617364fc1343221d028e"
+    },
+    {
+      "file": "src/app/api/entities/[entityId]/facilities/[facilityId]/route.ts",
+      "before": "4096328cce510ce0606ea51259d89b4df7276f180a69cf270b6595c0396fdbc2",
+      "after": "6d1ad05857e22c069bdd9fe1ad62b11a2178f92919503d81470ca9d260789547"
+    },
+    {
+      "file": "src/app/api/entities/[entityId]/facilities/[facilityId]/schedule/route.ts",
+      "before": "979da3fdb6b941a12ea1d4c4e0e9e71aef3c5f6362e0e0c196a71b88f5a464aa",
+      "after": "c9925027316ad2fef086a0b5e2b4051e9686f273a584c9dd986b0e72934c4da2"
+    },
+    {
+      "file": "src/app/api/entities/[entityId]/facilities/route.ts",
+      "before": "9f028e8e90d010b66550634d51036a75b8bcd29e4eb3d43f8f92b5e8a3669be2",
+      "after": "0cb97e7e48dea1944facf5acea6d3e460784d0d4cec4f09e0ba86d7b4bd9fdfd"
+    },
+    {
+      "file": "src/app/api/entities/[entityId]/members/[memberId]/route.ts",
+      "before": "23037abbed287cb49007312be4106eb0408dca86b0656b4ce950f6143c915c86",
+      "after": "c2756b3e12962092fab0e073b2c49988b4fa8f032d2bf8906e769cbff3c4d2fc"
+    },
+    {
+      "file": "src/app/api/entities/[entityId]/members/route.ts",
+      "before": "df161b18a287a4ff42a3f24239f009761936d93a3561d90b9c8a66356bd82155",
+      "after": "238060fd2dcd2bb32553492aa3089b63e004603e0a5c463e2169749f2d64f744"
+    },
+    {
+      "file": "src/app/api/entities/[entityId]/membership-applications/[applicationId]/documents/[documentId]/route.ts",
+      "before": "ba0c91e6ddc1d3f5b9d7909de580d53aadc9947c4c68977f3b32cebfad6f292b",
+      "after": "ba0c91e6ddc1d3f5b9d7909de580d53aadc9947c4c68977f3b32cebfad6f292b"
+    },
+    {
+      "file": "src/app/api/entities/[entityId]/membership-applications/[applicationId]/documents/route.ts",
+      "before": "e8bb51a7352446de5225151e811672edfcb70c20b6b636eabd75f5e99980ff10",
+      "after": "e8bb51a7352446de5225151e811672edfcb70c20b6b636eabd75f5e99980ff10"
+    },
+    {
+      "file": "src/app/api/entities/[entityId]/membership-applications/[applicationId]/review/route.ts",
+      "before": "131798ca0632aef333b037afe5caf9e5ab7723de8298002e8261f9024ceea897",
+      "after": "337c7a745d6aa8878ae39b835e313e700fe05c135835254fbfcf1b0a50ab0899"
+    },
+    {
+      "file": "src/app/api/entities/[entityId]/membership-applications/[applicationId]/route.ts",
+      "before": "619711a168bdfa710aa474ee900fe8f7e2532101e149228d48916cc6aa99883f",
+      "after": "619711a168bdfa710aa474ee900fe8f7e2532101e149228d48916cc6aa99883f"
+    },
+    {
+      "file": "src/app/api/entities/[entityId]/membership-applications/[applicationId]/submit/route.ts",
+      "before": "74a375bd02da6552b96055661f4e4b24276b67fdef75734fbf8aac3d13a7f3a6",
+      "after": "74a375bd02da6552b96055661f4e4b24276b67fdef75734fbf8aac3d13a7f3a6"
+    },
+    {
+      "file": "src/app/api/entities/[entityId]/membership-applications/route.ts",
+      "before": "0f6bc3b79dd1ba8c14c0da7c4ab7960ea289ceb210efe80e8f8ba22f1e810787",
+      "after": "c0c61bb04332ed5d8ad898828460c460be6631ef0700705f03592e7d7ada3225"
+    },
+    {
+      "file": "src/app/api/entities/[entityId]/membership-plans/[planId]/document-requirements/[requirementId]/route.ts",
+      "before": "47016a3ee81437219ab08e70aac6522b47a53f97612d620839c096937dc55d53",
+      "after": "7ee591e10b1e87fb868acf9b64a1fa9d423b427b768cfa31c2d663a3e3f6c764"
+    },
+    {
+      "file": "src/app/api/entities/[entityId]/membership-plans/[planId]/document-requirements/route.ts",
+      "before": "27c5483c37de969d55f654fbf2a592c460a996896dc5b4bfcb4ebf8b01e0e8a3",
+      "after": "c1a5070c138b62ba4da7ecaac6f80f9ebd149c34840dc6bed2ed5ca945cc64b7"
+    },
+    {
+      "file": "src/app/api/entities/[entityId]/membership-plans/[planId]/route.ts",
+      "before": "f890b99013800dca7248f22d229db49d08b16b4e1d95aa9ff813be540222f98f",
+      "after": "f890b99013800dca7248f22d229db49d08b16b4e1d95aa9ff813be540222f98f"
+    },
+    {
+      "file": "src/app/api/entities/[entityId]/membership-plans/route.ts",
+      "before": "a7903ad13f447b5b6516c61af559b2c91307a8697f1ee44c3b88eb6327a68f9c",
+      "after": "561a6e9febd06ddc95c13913df6ca5ad21ddbf2dbf29636c463a4b02acda9f66"
+    },
+    {
+      "file": "src/app/api/entities/[entityId]/my-reservations/route.ts",
+      "before": "3b2f4bc0bcba79b400c0557ca8af601546f1ef1f64b33e9dff9032861e0e2f00",
+      "after": "aa9d8d8113dfeebf1d8efbb63394641b2352f9f947a110ba4b6870d63a63adb7"
+    },
+    {
+      "file": "src/app/api/entities/[entityId]/payments/route.ts",
+      "before": "4a080e60b5400090fa0e3bad1cc24cc92646bf70d2c529e06123c8407c09c565",
+      "after": "96399c00088b3e8eaa717f71500abba5c52add9310e45691e80e6f42655697c6"
+    },
+    {
+      "file": "src/app/api/entities/[entityId]/payments/summary/route.ts",
+      "before": "da4eaeddf1df4bfcce677ce2cd5fe90d7724d308ca69a82e7c2034f97e99122d",
+      "after": "6b6a1cf37178878854125c47a0ae285c9db03dab91812817411165f4676bf062"
+    },
+    {
+      "file": "src/app/api/entities/[entityId]/posts/[postId]/route.ts",
+      "before": "7212ded58fbfbabba5fd27fe13dcf12071b391b7d0cfa3b525925af17468ff2a",
+      "after": "4edab496d4b2c59c7baab8160b3f63acd31ae7e22dd1a954256c7f63a4c5c226"
+    },
+    {
+      "file": "src/app/api/entities/[entityId]/posts/route.ts",
+      "before": "d8f48852bc9ddd0aa7e860be5157ac12831b25750b8ccaac996f0c81f299e184",
+      "after": "c267708013b18bd1cece4c8baa86f783ce398a7daec82426e834155dc9a11a48"
+    },
+    {
+      "file": "src/app/api/entities/[entityId]/reactivate/route.ts",
+      "before": "72153d7a751440b577a4f2dddea2811339cbdf67d225efc35b35d5b7b6b2ca34",
+      "after": "6d7552ec0760949a29c950a9e45be93af664ce0abad69f41883ec405f81126bb"
+    },
+    {
+      "file": "src/app/api/entities/[entityId]/route.ts",
+      "before": "ffff8d490bc667eb526ed5123c6e1e477ddd601d12a6f6381ef38231c30161d9",
+      "after": "5212eb66349ccc69ea9e1731f63364b95f20531b6ef0e0dc74f49175f70165fd"
+    },
+    {
+      "file": "src/app/api/entities/[entityId]/subscriptions/[subscriptionId]/cancel/route.ts",
+      "before": "9fbe9f33c28854dea8e50daa34ea1a8d0ff9c096324f2d2cc5611d05337ab2bd",
+      "after": "9fbe9f33c28854dea8e50daa34ea1a8d0ff9c096324f2d2cc5611d05337ab2bd"
+    },
+    {
+      "file": "src/app/api/entities/[entityId]/subscriptions/[subscriptionId]/checkout/route.ts",
+      "before": "93aafdc19ccb510d581f699886f7010466d1fd4df5b2ab41c96a0591534cc70d",
+      "after": "2bb8f5126b072d8b8cfc573eb1f842a00c5025b7238b920b46c13a8c35602a13"
+    },
+    {
+      "file": "src/app/api/entities/[entityId]/suspend/route.ts",
+      "before": "559c0f584f4e68673fff5c4875b1312a37d48d1d5664fb2d8dda47ba44ad942e",
+      "after": "2857cdc07db362d1d3fe6072342fb35065b04ae5010ffdb2e1d46d68923c86f5"
+    },
+    {
+      "file": "src/app/api/entities/route.ts",
+      "before": "df1e5eb6cac1d850a847ae4268aeb9160ffb930b79f41f42a4200de4d93dfa70",
+      "after": "493f06a21fed9d628516f3480411143b8151bb0f15e2b00c7da6c9facd6e6825"
+    },
+    {
+      "file": "src/app/api/feed/route.ts",
+      "before": "7183b0edfe166bb1a25c5617b699ea368c735d184ee837989afd2a5094a23579",
+      "after": "7183b0edfe166bb1a25c5617b699ea368c735d184ee837989afd2a5094a23579"
+    },
+    {
+      "file": "src/app/api/me/applications/route.ts",
+      "before": "14ad4aab6aa83ebcfa7d4deb96ff24b6289611f513c702a0aa5c1e64e8bd1047",
+      "after": "14ad4aab6aa83ebcfa7d4deb96ff24b6289611f513c702a0aa5c1e64e8bd1047"
+    },
+    {
+      "file": "src/app/api/me/memberships/route.ts",
+      "before": "88f2327b3a309aa9c94172c2c421994596a60c4ca718fc13f61ff1d2e8bae17a",
+      "after": "88f2327b3a309aa9c94172c2c421994596a60c4ca718fc13f61ff1d2e8bae17a"
+    },
+    {
+      "file": "src/app/api/me/notifications/route.ts",
+      "before": "f806ea4ff468b6b8ef2e8847cc95df6fb0bdee28a6bf9012fda017c9b7de9766",
+      "after": "f806ea4ff468b6b8ef2e8847cc95df6fb0bdee28a6bf9012fda017c9b7de9766"
+    },
+    {
+      "file": "src/app/api/me/payments/route.ts",
+      "before": "4b1f8179e0926b6a6993e10afa20a369a25025dc68f268c75a9e75895fac0173",
+      "after": "4b1f8179e0926b6a6993e10afa20a369a25025dc68f268c75a9e75895fac0173"
+    },
+    {
+      "file": "src/app/api/me/subscriptions/route.ts",
+      "before": "c2383b81f40167001ec1bd772dc0bd0d3d5ff267122690d3f0746d755c75f2af",
+      "after": "c2383b81f40167001ec1bd772dc0bd0d3d5ff267122690d3f0746d755c75f2af"
+    },
+    {
+      "file": "src/app/api/payments/[paymentId]/receipt/route.ts",
+      "before": "ded8da6a2cb58b358a0de48f14af03ca199ac770b98c922873fe6fbec4bf6d5d",
+      "after": "ded8da6a2cb58b358a0de48f14af03ca199ac770b98c922873fe6fbec4bf6d5d"
+    },
+    {
+      "file": "src/app/api/payments/[paymentId]/route.ts",
+      "before": "f11adb24b00fb15d3ae554728ea316ae04d00468e968abc22a159a0954c47bbe",
+      "after": "f11adb24b00fb15d3ae554728ea316ae04d00468e968abc22a159a0954c47bbe"
+    },
+    {
+      "file": "src/app/api/search/entities/route.ts",
+      "before": "df6c23cabe7c524579a269415e707a912a2a372012bd2a2cd7655cae2a890429",
+      "after": "df6c23cabe7c524579a269415e707a912a2a372012bd2a2cd7655cae2a890429"
+    },
+    {
+      "file": "src/app/api/uploadthing/core.ts",
+      "before": "d580d59e018617496168fb52316af52336f164ac5fa7597ca53c18bbc9630101",
+      "after": "224af65ad4b9e03c126c350485214cc95ea122a45e255ac3c60287facc3001f4"
+    },
+    {
+      "file": "src/app/api/uploadthing/route.ts",
+      "before": "7daf5924d9fcbfb3fc1bfd4b59046ba7d1c9616027f9914c1f161d4d6ebd5b0c",
+      "after": "7daf5924d9fcbfb3fc1bfd4b59046ba7d1c9616027f9914c1f161d4d6ebd5b0c"
+    },
+    {
+      "file": "src/app/api/webhooks/stripe/route.ts",
+      "before": "a609018e1864a31fd3dbcfe845aac00909e5906cbf3db8a1b81471da34108e13",
+      "after": "a609018e1864a31fd3dbcfe845aac00909e5906cbf3db8a1b81471da34108e13"
+    },
+    {
+      "file": "src/app/app/layout.tsx",
+      "before": "cad61dcbcc538c965026d5e72a83fec919db94dfccae01918cbd2c29366fd20a",
+      "after": "cad61dcbcc538c965026d5e72a83fec919db94dfccae01918cbd2c29366fd20a"
+    },
+    {
+      "file": "src/app/app/page.tsx",
+      "before": "c6f0f61322c49d4b95ed2d19cd7c869ca45dd2a7421142d0130da433d57e08d5",
+      "after": "c6f0f61322c49d4b95ed2d19cd7c869ca45dd2a7421142d0130da433d57e08d5"
+    },
+    {
+      "file": "src/app/entities/page.tsx",
+      "before": "a39ff2b304c8aa0881e54a744f8104c21e19fa480a59b8b14390530af0f4efe6",
+      "after": "a39ff2b304c8aa0881e54a744f8104c21e19fa480a59b8b14390530af0f4efe6"
+    },
+    {
+      "file": "src/app/entity/[entityId]/page.tsx",
+      "before": "78e796c0bab4358856b9374a467e55fd4dce250619d6f35451403448e305303a",
+      "after": "78e796c0bab4358856b9374a467e55fd4dce250619d6f35451403448e305303a"
+    },
+    {
+      "file": "src/app/favicon.ico",
+      "before": "e2472f5c83ab7a964fba176a3a3c8d2ac1c0ad29263efe5dfcb92a7ea65a347f",
+      "after": "e2472f5c83ab7a964fba176a3a3c8d2ac1c0ad29263efe5dfcb92a7ea65a347f"
+    },
+    {
+      "file": "src/app/globals.css",
+      "before": "c4e1b39883ec8edbdd2d5a70726b464350597f8d4febc82ed2018b0c54286b3b",
+      "after": "c4e1b39883ec8edbdd2d5a70726b464350597f8d4febc82ed2018b0c54286b3b"
+    },
+    {
+      "file": "src/app/layout.tsx",
+      "before": "135d18c7ad440a19b16a38f224a4ca5745164b45ffd958abc2e940e0b74555aa",
+      "after": "6bffabef9e9c9f49c5182198ef96b78838abba934d25f1d4a2efa833f84616e8"
+    },
+    {
+      "file": "src/app/login/page.tsx",
+      "before": "ba7e20189bb30378aa6cd8426b798ae36512b6e75bd6a3f9f6d53682f9ed480c",
+      "after": "ba7e20189bb30378aa6cd8426b798ae36512b6e75bd6a3f9f6d53682f9ed480c"
+    },
+    {
+      "file": "src/app/page.tsx",
+      "before": "bfc495a9d5ff59de22379ea792625d761a348ed34b4cb75ad190f9148f1eecc5",
+      "after": "92f170c3ba2318a5ac4e095d026ceb80b0291579979d2a032bd592749ceb6109"
+    },
+    {
+      "file": "src/app/payment/cancelled/page.tsx",
+      "before": "3c935aa64cc9b779014ace8170565f838605d43ef955c5710831ebb423b12147",
+      "after": "3c935aa64cc9b779014ace8170565f838605d43ef955c5710831ebb423b12147"
+    },
+    {
+      "file": "src/app/payment/success/page.tsx",
+      "before": "9c45090e1971286a7d092029f610166656ab4ccc1cb89318b9eb7c5a1097251a",
+      "after": "9c45090e1971286a7d092029f610166656ab4ccc1cb89318b9eb7c5a1097251a"
+    },
+    {
+      "file": "src/app/register/page.tsx",
+      "before": "1dfc6d3acbd797f45630d3e93a0c6bcb05871e264b0b3b5f393ce21686b93201",
+      "after": "1dfc6d3acbd797f45630d3e93a0c6bcb05871e264b0b3b5f393ce21686b93201"
+    },
+    {
+      "file": "src/components/auth-form.tsx",
+      "before": "7c0461b8fd56eede3b78ba7f0063547a28c2cc72cfde753944335a3d084424bb",
+      "after": "357b07f1bce0b73afbea967f27055f3c0e462fc80f9c86c778206ed3c73dee3e"
+    },
+    {
+      "file": "src/components/avatar-image.tsx",
+      "before": "11cd55bffb5f9a9b1e8cb985d37fb31e6f106742f6965afa50f8fba4e38225f1",
+      "after": "11cd55bffb5f9a9b1e8cb985d37fb31e6f106742f6965afa50f8fba4e38225f1"
+    },
+    {
+      "file": "src/components/avatar-upload.tsx",
+      "before": "d4f8a23efddb59ec4e92e362ab13407b439f7a698ae942f8a38acf73b0d9da25",
+      "after": "d4f8a23efddb59ec4e92e362ab13407b439f7a698ae942f8a38acf73b0d9da25"
+    },
+    {
+      "file": "src/components/basic.module.css",
+      "before": "eb01b37dac2ea2423343697342d7d2ce61e98d30955334457a509c11a5e1535c",
+      "after": "eb01b37dac2ea2423343697342d7d2ce61e98d30955334457a509c11a5e1535c"
+    },
+    {
+      "file": "src/components/entity-bubbles.tsx",
+      "before": "0dbb32804eb5ad6a54d41fe9fbc9fda8381ebeb8d943d3e8d90025ff61a21ec1",
+      "after": "a850195daa0aceb03eda0640a86ee886875acb70f534aac534a77881d761165d"
+    },
+    {
+      "file": "src/components/member-header.tsx",
+      "before": "d661699b8dcaad118dec1700437b6122a914290f96a93ffa5ef5f78ce2ed6f5c",
+      "after": "d9f69bb4a9ada772e2dc8baaa053fed81647e28c10c6004345714a28d63eda87"
+    },
+    {
+      "file": "src/components/theme-toggle.tsx",
+      "before": "808922819f0477dacf72d75949c73f62d1482dabc83baaa0290fc3bd3854c82e",
+      "after": "808922819f0477dacf72d75949c73f62d1482dabc83baaa0290fc3bd3854c82e"
+    },
+    {
+      "file": "src/components/ui.tsx",
+      "before": "070fcec17676e7718fae170048681b4688d3df33d2fed76502986c601a250917",
+      "after": "070fcec17676e7718fae170048681b4688d3df33d2fed76502986c601a250917"
+    },
+    {
+      "file": "src/components/use-mobile.ts",
+      "before": "321faf3c407d7ac9a13097ec468972f5a4fd6b123f3aff0708b17851d29b9af2",
+      "after": "321faf3c407d7ac9a13097ec468972f5a4fd6b123f3aff0708b17851d29b9af2"
+    },
+    {
+      "file": "src/components/workspace/action-dropdown.tsx",
+      "before": "5919a534108c3b3ea77a192379c85c978d92b93e09e9a21a728c070e0b79d44c",
+      "after": "5919a534108c3b3ea77a192379c85c978d92b93e09e9a21a728c070e0b79d44c"
+    },
+    {
+      "file": "src/components/workspace/activity.tsx",
+      "before": "8963a0a8b38bcd88f6334e6b0694bf544cbfe7bb30a42480615f4efb9a2c78e9",
+      "after": "5017f9bc8e05fd03be785c41fb0f612dbd58d115243f8c935796606e71fd0b3d"
+    },
+    {
+      "file": "src/components/workspace/common.tsx",
+      "before": "402aa4838a616b100af98f07590cfe468316fe643f954baf85f32f2b0ccc6f85",
+      "after": "14a49189a5be39b3990862f222ab4af2e8a7cb6b202abc3725c7772d8b319751"
+    },
+    {
+      "file": "src/components/workspace/create-entity.tsx",
+      "before": "3ad0d6054283bc22437f6a36b91796673bee1bc9c204c9a8b7d6adf4173933a7",
+      "after": "6e43992dfb5e86aef7b9b8e630e79744c779bb1b8a3ce02d2b9bab63132cc4cb"
+    },
+    {
+      "file": "src/components/workspace/dashboard.tsx",
+      "before": "bba91c91ac290665df90177c4a9ff9ffcd73883a5aeff71cb4d41524c22d6f5e",
+      "after": "edd7db770797085f075a74615ff31bee250b27d16be26b7ff75b945b4fa0902a"
+    },
+    {
+      "file": "src/components/workspace/entity-hero.tsx",
+      "before": "33c61407c1d32feda3c16c060ab5f0a62b7484edf58d6bb4d0e511347317ed62",
+      "after": "d214a4c56cac8e7b0071d5c6e27e58686b3cfe7c8b707d7d73b9341cd7b2bc68"
+    },
+    {
+      "file": "src/components/workspace/entity-sidebar.tsx",
+      "before": "e05fecdfd8fa348f2d071bdf7376dcfe257a903a6000b6c56f52d77e6e13e22f",
+      "after": "d843f9937fea78082cb68a74dcb551c33704454894a294e7c529c306b4b9f9d7"
+    },
+    {
+      "file": "src/components/workspace/entity.tsx",
+      "before": "783f2564480cb8f4ff97945831c60a71067d49a5f701e0357116836e574eaf67",
+      "after": "b60fd09f0ae68d315111cc9dbe7011a909067395bf6139d5e528af9f5ff924fe"
+    },
+    {
+      "file": "src/components/workspace/explore.tsx",
+      "before": "df42f324bcdbe579aab0366e90d723fea069c9eef9e59f137a046d57837d5e21",
+      "after": "214526800fea86f4f12c1bde502651f88ff235476d9df256adb0412e9f426efc"
+    },
+    {
+      "file": "src/components/workspace/facilities.tsx",
+      "before": "1eb43c2c434084f6a4e1ece898c35107b892414bc12e8fc75df62511fc2c1fe8",
+      "after": "20e6c186749ddc147f062d49c8e1ec6aada6ab4d29c0fe855001a05d81c597a0"
+    },
+    {
+      "file": "src/components/workspace/facility-icon.tsx",
+      "before": "26410dc46e123026e8c1bd4d83ef345c08dc1ac64ce50332bcc115259d9ee6b0",
+      "after": "26410dc46e123026e8c1bd4d83ef345c08dc1ac64ce50332bcc115259d9ee6b0"
+    },
+    {
+      "file": "src/components/workspace/feed.tsx",
+      "before": "f2bdbd6fb5038a5e787686e03b8df38c73d61ab2daaf82b53d833135e5ede91e",
+      "after": "62b0976af37542b6d1dc60f4436c8fb9ebabeb8170c2dddfcbc9a60909e34acb"
+    },
+    {
+      "file": "src/components/workspace/finance-controls.tsx",
+      "before": "294c9c427482176b2fbac36678a943cfc16316526b772911358f0650550f016f",
+      "after": "783ba81e1114085b12d17174582a70c15086007e4fa295c877f0464417c543c7"
+    },
+    {
+      "file": "src/components/workspace/global-dashboard.tsx",
+      "before": "28d231a334ccaeb92e4d14794185befab4ad3a4510f7982ca851f432a282aac5",
+      "after": "28d231a334ccaeb92e4d14794185befab4ad3a4510f7982ca851f432a282aac5"
+    },
+    {
+      "file": "src/components/workspace/global-finances.tsx",
+      "before": "ee1315d5789424c3015e23fad1fb9b9090267c310a3dea1f22db4af50830de94",
+      "after": "95da84a46dc13ebfc1653168c658b8d89ab4fcbe463f35768156844470230cae"
+    },
+    {
+      "file": "src/components/workspace/index.tsx",
+      "before": "3d1ae72e182f3b1f427a7dca67666b86cbd1c912fa848f33b825b9cec5c4dc1d",
+      "after": "cf9d1637dd796d786c4cd7971cfef83a98edfab78c739fcf66758273cb3c8737"
+    },
+    {
+      "file": "src/components/workspace/location.tsx",
+      "before": "c58a125179812a87dc21336b51712c889a7752d7227af6c715d4408cf9563b42",
+      "after": "c58a125179812a87dc21336b51712c889a7752d7227af6c715d4408cf9563b42"
+    },
+    {
+      "file": "src/components/workspace/modal.tsx",
+      "before": "2b7e79c35f6e07b8efb44836031f1b1eaaeeebe92497619ba4c56edce376792c",
+      "after": "2b7e79c35f6e07b8efb44836031f1b1eaaeeebe92497619ba4c56edce376792c"
+    },
+    {
+      "file": "src/components/workspace/notice-count.tsx",
+      "before": "3ebe7cffc7a0ea9e3970ba3a23d524a826c59c802bc7ceb26b78764d1567fb03",
+      "after": "3ebe7cffc7a0ea9e3970ba3a23d524a826c59c802bc7ceb26b78764d1567fb03"
+    },
+    {
+      "file": "src/components/workspace/notifications.tsx",
+      "before": "24b73894abb65eb2b567bf719e8d7eddef68ba6fe47421d7228b6db9b5c0c163",
+      "after": "24b73894abb65eb2b567bf719e8d7eddef68ba6fe47421d7228b6db9b5c0c163"
+    },
+    {
+      "file": "src/components/workspace/payment-history.tsx",
+      "before": "b268168b236394771538a82e4c29d762362d6b4ae12b99dfc53141e20dce4de1",
+      "after": "68cabc39a75a5eeabf80950e90ff1238b376f57f5370232a3d5a29cd711c644c"
+    },
+    {
+      "file": "src/components/workspace/payment-return.tsx",
+      "before": "05748ee1583ca1e30f4d1d91ec4b0e5c7b146c2843d8051f513c6c025b7a489c",
+      "after": "05748ee1583ca1e30f4d1d91ec4b0e5c7b146c2843d8051f513c6c025b7a489c"
+    },
+    {
+      "file": "src/components/workspace/personal.tsx",
+      "before": "a0814cd7a34fc0b0bc326859baffbdef78908cb796fe0b8eed7c4601e0850c46",
+      "after": "431913f4457ed5473eba3b1e3db3cda74cd03409305e4a571195a885da352cf8"
+    },
+    {
+      "file": "src/components/workspace/plan-card.tsx",
+      "before": "57191a0c93e85133be6c38d9f44970eb5b7f452fec4580ce73baf777716b45bc",
+      "after": "57191a0c93e85133be6c38d9f44970eb5b7f452fec4580ce73baf777716b45bc"
+    },
+    {
+      "file": "src/components/workspace/post-card.tsx",
+      "before": "49aa1dbe0815c6f62a4007b922e7ba3ec99e6afe0893defe4e0afd574c7f7938",
+      "after": "3c5aa7264b0f669c64776d612318bc3d22b07635899fb50c0490bfb9a1004226"
+    },
+    {
+      "file": "src/components/workspace/post-composer.tsx",
+      "before": "a430b916cdbfc8472eaca85eda314777507de8bb02a99ded9e9068fe0443a3f6",
+      "after": "a430b916cdbfc8472eaca85eda314777507de8bb02a99ded9e9068fe0443a3f6"
+    },
+    {
+      "file": "src/components/workspace/public-plans.tsx",
+      "before": "714401f91836ab0b317084340a5203a7a5c5627fd97991b89f816eda77f1af84",
+      "after": "714401f91836ab0b317084340a5203a7a5c5627fd97991b89f816eda77f1af84"
+    },
+    {
+      "file": "src/components/workspace/requirements.tsx",
+      "before": "291c90648aca1e79473470a558b1ab70d8ed55aeea3893be3b25dc39b37f4940",
+      "after": "291c90648aca1e79473470a558b1ab70d8ed55aeea3893be3b25dc39b37f4940"
+    },
+    {
+      "file": "src/components/workspace/workspace.css",
+      "before": "0b6f726711d12a34cceb22a622749df03ee6c44713e7a49a2da7ffa68a3cb66c",
+      "after": "0b6f726711d12a34cceb22a622749df03ee6c44713e7a49a2da7ffa68a3cb66c"
+    },
+    {
+      "file": "src/lib/auth/auth.ts",
+      "before": "cb37ed2508a6e09fdd10df4319bc053e5ea37224900b7e0be8a561e20ddbaebb",
+      "after": "cb37ed2508a6e09fdd10df4319bc053e5ea37224900b7e0be8a561e20ddbaebb"
+    },
+    {
+      "file": "src/lib/auth/authorization.ts",
+      "before": "e0606281049a5dd5215cce9ad325e5835d8bb595660014a49de8702c8ce77cac",
+      "after": "e0606281049a5dd5215cce9ad325e5835d8bb595660014a49de8702c8ce77cac"
+    },
+    {
+      "file": "src/lib/auth/guest.ts",
+      "before": "fb8f375435a332ac02139a2aeaef6a2709427d8de1d9289c7248209e8dd7b5c1",
+      "after": "fb8f375435a332ac02139a2aeaef6a2709427d8de1d9289c7248209e8dd7b5c1"
+    },
+    {
+      "file": "src/lib/auth/jwt.ts",
+      "before": "1aed2726ae8e183520ff31880c08e07c8c165c89a9af66ea7aa4821c77025687",
+      "after": "1aed2726ae8e183520ff31880c08e07c8c165c89a9af66ea7aa4821c77025687"
+    },
+    {
+      "file": "src/lib/auth/password.ts",
+      "before": "fe8ef17b1ff0281f4701a19f284f8fb47c4b52ce2f06b111a5b0efda08278285",
+      "after": "fe8ef17b1ff0281f4701a19f284f8fb47c4b52ce2f06b111a5b0efda08278285"
+    },
+    {
+      "file": "src/lib/auth/workspace-access.ts",
+      "before": "6e48b86bb0a04be4b80fa797ece59e690b0f19362ee183f6ad9606ec54738b72",
+      "after": "6e48b86bb0a04be4b80fa797ece59e690b0f19362ee183f6ad9606ec54738b72"
+    },
+    {
+      "file": "src/lib/document-cleanup.ts",
+      "before": "e185ed8673f1c608b8fcb0d8f7738df49ce096281ca5bd0740369e1997e0b0dd",
+      "after": "e185ed8673f1c608b8fcb0d8f7738df49ce096281ca5bd0740369e1997e0b0dd"
+    },
+    {
+      "file": "src/lib/entities/active.ts",
+      "before": "1cfa564187c3edb3f3f26a32de0616f0d5c493d43b226150c045a073bc179bdc",
+      "after": "1cfa564187c3edb3f3f26a32de0616f0d5c493d43b226150c045a073bc179bdc"
+    },
+    {
+      "file": "src/lib/entities/cancel-entity-subscriptions.ts",
+      "before": "b5830ddf5944bb9728b1f125d97347f65adc7d09039ced32b34c7d675065aa8f",
+      "after": "b5830ddf5944bb9728b1f125d97347f65adc7d09039ced32b34c7d675065aa8f"
+    },
+    {
+      "file": "src/lib/entities/payment-csv.ts",
+      "before": "b4019d3ba2d16ae72855527add9b94689831f937527a96b12fe48caf370a4b64",
+      "after": "aec6a14857d8f89aefc47e435c2f40f829f6505ebf8641000673027cb5fe31dd"
+    },
+    {
+      "file": "src/lib/facility-icons.ts",
+      "before": "a6f12df89f7375bef0ca9dbae1008ceba742770a968272277e97ab13de528131",
+      "after": "a6f12df89f7375bef0ca9dbae1008ceba742770a968272277e97ab13de528131"
+    },
+    {
+      "file": "src/lib/membership-history.ts",
+      "before": "ef2f76a8ce66b7a55b3660bf6c675fa94eb8c2137207d58571a49eef16765e44",
+      "after": "ef2f76a8ce66b7a55b3660bf6c675fa94eb8c2137207d58571a49eef16765e44"
+    },
+    {
+      "file": "src/lib/notification-routing.ts",
+      "before": "f8808e6247bac890862d779d55bd0b982777185e17e663a1d34df50ca498975a",
+      "after": "4fb0e769eadfc48c918784a54d72f96fec5f87b2321f8d22dfd9dda508d78cd4"
+    },
+    {
+      "file": "src/lib/prisma.ts",
+      "before": "b3762b726387d67b91946daa5f0030fe99305f779fed1b17d1f02d49a5ebe255",
+      "after": "b3762b726387d67b91946daa5f0030fe99305f779fed1b17d1f02d49a5ebe255"
+    },
+    {
+      "file": "src/lib/reservations/authorize-facility-reservation.ts",
+      "before": "c45009e488f07985da6f3c564c9d67404b0e72bb5747f9197db4f9fafffc3827",
+      "after": "44e4c7731a9b040952154af2880c6440211d8f2e5cf206245de6371302e061e2"
+    },
+    {
+      "file": "src/lib/stripe.ts",
+      "before": "0e2df5da29f3fb5208f4e627af1a3214196cd90903475ed3b3f8fbd2a269ba10",
+      "after": "0e2df5da29f3fb5208f4e627af1a3214196cd90903475ed3b3f8fbd2a269ba10"
+    },
+    {
+      "file": "src/lib/thumbnails.ts",
+      "before": "f639dd7944e03fcbf3e2408187b836efd9099cdea288fcef0e61bb0a70ea30b6",
+      "after": "f639dd7944e03fcbf3e2408187b836efd9099cdea288fcef0e61bb0a70ea30b6"
+    },
+    {
+      "file": "src/lib/uploadthing-server.ts",
+      "before": "748db0bd0df3abed616d63267779f3cb3b493a1142db3958232f06bc559de2b6",
+      "after": "748db0bd0df3abed616d63267779f3cb3b493a1142db3958232f06bc559de2b6"
+    },
+    {
+      "file": "src/lib/uploadthing.ts",
+      "before": "2a1107e261d143436b3c6c33f4c9c31f0c33787ea2e922e75152f1befd892392",
+      "after": "2a1107e261d143436b3c6c33f4c9c31f0c33787ea2e922e75152f1befd892392"
+    },
+    {
+      "file": "tsconfig.json",
+      "before": "5c51df4c59f4510d8c7dadf07a5c32132228826a3b331da5e286207b4df7ef9c",
+      "after": "5c51df4c59f4510d8c7dadf07a5c32132228826a3b331da5e286207b4df7ef9c"
+    },
+    {
+      "file": "vercel.json",
+      "before": "ca3d163bab055381827226140568f3bef7eaac187cebd76878e0b63e9e442356",
+      "after": "ca3d163bab055381827226140568f3bef7eaac187cebd76878e0b63e9e442356"
+    }
+  ]
+}

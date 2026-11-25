@@ -42,6 +42,8 @@
  * ==============================================================================
  */
 
+// Refactorización Parte 12 (UI-Only): Se muestra 'Círculo/Círculos' al usuario manteniendo 'Entity' en código, rutas y BD.
+
 // Refactorización Parte 11: gestión de la entidad con las mismas reglas de permisos, distribución y comportamiento móvil.
 
 "use client";
@@ -112,13 +114,13 @@ function EntitySections({entity,tab,admin,readTab}:{
                 ]
                 : []),
         ];
-  const current=sections.find(([key])=>key===tab)?.[1] ?? "Secciones de la entidad";
+  const current=sections.find(([key])=>key===tab)?.[1] ?? "Secciones del círculo";
   // La ruta y el efecto de lectura son los originales. Solo un selector abierto requiere restaurar el foco.
   function select(key:string) {
     if(open) { setOpen(false); trigger.current?.focus(); }
     void readTab(key);
   }
-  return <nav ref={nav} className="tabs entity-sections" aria-label="Secciones de la entidad" data-open={open}
+  return <nav ref={nav} className="tabs entity-sections" aria-label="Secciones del círculo" data-open={open}
     onKeyDown={event=>{
       // Escape cierra la lista sin navegar ni modificar los avisos.
       if(open && event.key==="Escape") { event.preventDefault(); setOpen(false); trigger.current?.focus(); }
@@ -128,7 +130,7 @@ function EntitySections({entity,tab,admin,readTab}:{
     }}>
     {/* Oculto de origen: únicamente la regla móvil puede hacerlo visible y enfocable. */}
     <button ref={trigger} type="button" style={{display:"none"}} className="entity-section-trigger"
-      aria-expanded={open} aria-label={`Sección de la entidad: ${current}`} onClick={()=>setOpen(value=>!value)}>
+      aria-expanded={open} aria-label={`Sección del círculo: ${current}`} onClick={()=>setOpen(value=>!value)}>
       {current}<span aria-hidden="true">▾</span>
     </button>
     {sections.map(([key,title])=><Link scroll={false} key={key} onClick={()=>select(key)}
@@ -170,11 +172,11 @@ export function Entity({ entity, tab = "posts", admin, }: {
         {admin && tab === "applications" && <Applications entity={entity}/>}
         {admin && tab === "payments" && <EntityPayments entity={entity}/>}
         {admin && tab === "overview" && <Activity entity={entity}/>}
-        {admin && tab === "settings" && state.data && (<div className="entity-settings"><Panel title="Editar perfil de la entidad">
+        {admin && tab === "settings" && state.data && (<div className="entity-settings"><Panel title="Editar perfil del círculo">
             <Form fields={entityFields} initial={state.data.entity} url={base} onDone={() => setVersion(v => v + 1)} method="PATCH"/>
             <div className="entity-image-settings">{(["logo","cover"] as const).map(kind=><section key={kind}>{safeUrl(state.data?.entity[kind+"Url"])&&(kind==="logo"?<AvatarImage className="settings-logo" src={safeUrl(state.data?.entity.logoUrl)} alt="Logotipo actual"/>:<img className="settings-cover" src={safeUrl(state.data?.entity.coverUrl)} alt="Portada actual"/>)}<UploadFeedback endpoint={kind==="logo"?"entityLogoUploader":"entityCoverUploader"} input={{entityId:entity}} onDone={()=>setVersion(v=>v+1)}/><h3>{kind==="logo"?"Logotipo":"Portada"}</h3>{state.data?.entity[kind+"Url"]&&<Action variant="destructive" url={base} method="PATCH" body={kind==="logo"?{clearLogo:true}:{clearCover:true}} confirm="¿Quitar esta imagen?" onDone={()=>setVersion(v=>v+1)}>Quitar imagen</Action>}</section>)}</div>
-            <Action variant="destructive" url={`${base}/suspend`} confirm="¿Suspender la entidad y sus membresías? Se intentará cancelar las suscripciones recurrentes. Solo la administración global puede reactivarla.">
-              Suspender entidad
+            <Action variant="destructive" url={`${base}/suspend`} confirm="¿Suspender el círculo y sus membresías? Se intentará cancelar las suscripciones recurrentes. Solo la administración global puede reactivarlo.">
+              Suspender círculo
             </Action>
           </Panel><EntityBankForm entity={entity}/></div>)}
       </Status>
@@ -215,7 +217,7 @@ export function Posts({ entity, admin, canUpload = admin, }: {
       <div><Status state={state}>
         <Empty rows={state.data?.posts || []}/>
         {state.data?.posts.map((p: Row) => (<PostCard key={p.id} post={p} admin={admin} onChanged={()=>setV(v=>v+1)}/>))}
-        <Pager data={state.data} page={page} onPage={setPage}/>{!!state.data?.posts?.length && !state.data.pagination.hasNextPage && <p className="feed-end">✓ Estás al día con las novedades de la entidad</p>}
+        <Pager data={state.data} page={page} onPage={setPage}/>{!!state.data?.posts?.length && !state.data.pagination.hasNextPage && <p className="feed-end">✓ Estás al día con las novedades del círculo</p>}
       </Status></div>
     </>);
 }
@@ -272,9 +274,9 @@ function Members({entity}:{entity:string}){
  // La misma colección y la misma comprobación de permisos alimentan las dos presentaciones.
  const mobile = useMobile();
  const current=(m:Row)=>m.status==="ACTIVE"&&(m.role==="ENTITY_ADMIN"||m.plans?.length>0);
- return <><h2>Miembros de la entidad</h2><Status state={state}>{[true,false].map(active=><section className="member-section" key={String(active)}><h3>{active?"Miembros activos":"Historial de miembros"}</h3><div className="bounded-cards member-cards">{members.filter(m=>Boolean(current(m))===active).map(m=>{
+ return <><h2>Miembros del círculo</h2><Status state={state}>{[true,false].map(active=><section className="member-section" key={String(active)}><h3>{active?"Miembros activos":"Historial de miembros"}</h3><div className="bounded-cards member-cards">{members.filter(m=>Boolean(current(m))===active).map(m=>{
  // La acción de retiro se construye una vez y conserva el motivo y el refresco de la lista.
- const action = active&&m.role==="MEMBER"&&<EditorModal destructive title="Retirar de la entidad"><p>Confirma el retiro de {m.user.firstName}.</p><Form fields={[{name:"reason",label:"Motivo",type:"textarea"}]} url={`/api/entities/${entity}/members/${m.user.id}`} method="DELETE" submit="Confirmar retiro" onDone={()=>setVersion(v=>v+1)}/></EditorModal>;
+ const action = active&&m.role==="MEMBER"&&<EditorModal destructive title="Retirar del círculo"><p>Confirma el retiro de {m.user.firstName}.</p><Form fields={[{name:"reason",label:"Motivo",type:"textarea"}]} url={`/api/entities/${entity}/members/${m.user.id}`} method="DELETE" submit="Confirmar retiro" onDone={()=>setVersion(v=>v+1)}/></EditorModal>;
  if (mobile) return <PersonRow key={m.membershipId} user={m.user} role={label(m.role)}
      plans={m.plans?.map((item:Row)=>item.plan.name).join(", ") || "Sin plan vigente"}
      status={m.status}>{action}</PersonRow>;
@@ -363,7 +365,7 @@ function EntityPayments({ entity }: {
     const state = useData(`/api/entities/${entity}/payments?${query}`);
     const summary = useData(`/api/entities/${entity}/payments/summary?${query}`);
     return (<>
-      <div className="list-heading"><h2>Pagos de la entidad</h2><a className="btn btn-outline" href={`/api/entities/${entity}/payments?${query}&format=csv`}>↓ Exportar CSV</a></div>
+      <div className="list-heading"><h2>Pagos del círculo</h2><a className="btn btn-outline" href={`/api/entities/${entity}/payments?${query}&format=csv`}>↓ Exportar CSV</a></div>
       <label>
         Período
         <input type="month" min="2000-01" max="2100-12" value={period} onChange={(e) => {
@@ -376,7 +378,7 @@ function EntityPayments({ entity }: {
 
       <Status state={summary}>
         {summary.data && (<Panel title="Resumen del período">
-            <div className="metrics-grid">{[["Ingresos brutos", summary.data.summary.grossAmount], ["Comisiones", summary.data.summary.totalFees], ["Neto de la entidad", summary.data.summary.netAmount]].map(([title, value]) => <dl className="metric-card" key={String(title)}><dt>{title}</dt><dd>{money(value)}</dd></dl>)}</div>
+            <div className="metrics-grid">{[["Ingresos brutos", summary.data.summary.grossAmount], ["Comisiones", summary.data.summary.totalFees], ["Neto del círculo", summary.data.summary.netAmount]].map(([title, value]) => <dl className="metric-card" key={String(title)}><dt>{title}</dt><dd>{money(value)}</dd></dl>)}</div>
             <small>
               Este resumen usa la fecha de creación de los pagos; puede diferir
               del panel financiero que usa la fecha de pago.

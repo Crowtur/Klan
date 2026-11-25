@@ -42,6 +42,8 @@
  * ==============================================================================
  */
 
+// Refactorización Parte 12 (UI-Only): Se muestra 'Círculo/Círculos' al usuario manteniendo 'Entity' en código, rutas y BD.
+
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAuth } from "@/lib/auth/auth";
@@ -73,7 +75,7 @@ export async function POST(
       return NextResponse.json(
         {
           success: false,
-          message: "Entidad no encontrada",
+          message: "Círculo no encontrado",
         },
         { status: 404 }
       );
@@ -83,7 +85,7 @@ export async function POST(
       return NextResponse.json(
         {
           success: false,
-          message: "Solo se pueden reactivar entidades suspendidas",
+          message: "Solo se pueden reactivar círculos suspendidos",
         },
         { status: 409 }
       );
@@ -119,7 +121,7 @@ export async function POST(
 
     return NextResponse.json({
       success: true,
-      message: "Entidad reactivada correctamente",
+      message: "Círculo reactivado correctamente",
       entityId,
       status: "ACTIVE",
     });
@@ -141,7 +143,7 @@ export async function POST(
         return NextResponse.json(
           {
             success: false,
-            message: "Solo el SUPER_ADMIN puede reactivar entidades",
+            message: "Solo el SUPER_ADMIN puede reactivar círculos",
           },
           { status: 403 }
         );
@@ -151,7 +153,7 @@ export async function POST(
         return NextResponse.json(
           {
             success: false,
-            message: "El estado de la entidad cambió antes de procesar la solicitud",
+            message: "El estado del círculo cambió antes de procesar la solicitud",
           },
           { status: 409 }
         );

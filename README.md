@@ -1,67 +1,57 @@
-# Klan — Parte 11
+# Klan — Parte 12
 
-Plataforma de entidades, membresías, reservas y pagos. Esta versión migra el dominio completo a **Entity** en el código y **Entidad** en la interfaz, partiendo exclusivamente de `Klan_Parte_10.4.zip`.
+Plataforma de círculos, membresías, reservas y pagos. Esta entrega parte exactamente de `Klan_Parte_11.zip` y cambia únicamente la presentación: **Círculo / Círculos** en los textos de la aplicación, con el dominio técnico **Entity** intacto.
 
-## Antes de actualizar
+## Actualización desde la Parte 11
 
-**Esta versión requiere una migración de PostgreSQL.** Consulta [MIGRACION_PARTE_11.md](docs/MIGRACION_PARTE_11.md) antes de activar el código nuevo sobre una base existente. El renombrado conserva datos, pagos, relaciones y eventos; las 25 migraciones anteriores se mantienen intactas.
+**La Parte 12 no requiere ninguna migración nueva de base de datos.** El esquema Prisma, el seed y las 26 migraciones existentes son idénticos a los de la Parte 11. Se conservan los identificadores, roles, rutas, parámetros y contratos de la API.
 
-La aplicación de la Parte 10.4 no debe seguir atendiendo solicitudes contra la base después del renombrado. Coordina la migración con el cambio de versión.
+Los avisos históricos de retiro se muestran con la nueva terminología sin actualizar sus registros. Los nombres, descripciones y publicaciones escritos por los usuarios se conservan.
 
 ## Instalación y ejecución
 
-Se mantienen las dependencias fijadas de la Parte 10.4. Next.js requiere Node.js 20.9 o superior; la entrega se verificó con Node.js 24.22.3 y Prisma 5.22.0.
+Utiliza las mismas variables de entorno y dependencias de la Parte 11. La entrega se verificó con Node.js 24.22.3, npm 11.19.1, Next.js 16.3.6, TypeScript 5.9.3 y Prisma 5.22.0.
 
-1. Conserva las variables de entorno del despliegue anterior. Para una instalación nueva, completa `.env.example` y guarda los valores en `.env` o en la configuración del proveedor.
-2. Instala y valida el cliente:
+1. Configura las variables de `.env.example` en tu entorno.
+2. Instala las dependencias; `postinstall` genera el cliente Prisma:
 
 ```sh
 npm ci
-npx prisma validate
-npx prisma generate
 ```
 
-3. En la base correspondiente, aplica las migraciones según la guía:
-
-```sh
-npm run db:deploy
-```
-
-4. Compila, comprueba y ejecuta:
+3. Compila y comprueba:
 
 ```sh
 npm run build
+npx tsc --noEmit
 npm test
-npm start
 ```
 
-Para desarrollo utiliza `npm run dev`. El seed original conserva su comportamiento y no es necesario para actualizar una instalación existente. No lo uses como mecanismo de creación de credenciales de producción: mantiene el usuario inicial de prueba de la versión base.
+4. Ejecuta `npm start` para producción o `npm run dev` para desarrollo.
 
-## Contratos principales
+Para una base nueva o una instalación anterior a la Parte 11, sigue [la guía de migración de la Parte 11](docs/MIGRACION_PARTE_11.md). El historial se incluye completo. No es necesario ejecutar el seed al actualizar una instalación existente.
 
-| Ámbito | Parte 11 |
+## Terminología y contratos
+
+| Presentación | Contrato técnico conservado |
 | --- | --- |
-| Catálogo público | `/entities` |
-| Ficha pública | `/entity/[entityId]` |
-| Espacio privado | `/app?view=entity&entity=<id>` |
-| Colección privada | `/app?view=entities` |
-| API de entidades | `/api/entities` y `/api/entities/[entityId]/…` |
-| Búsqueda y catálogo | `/api/search/entities`, `/api/catalog/entities/[entityId]` |
-| Administración global | `/api/admin/dashboard/entities` |
-| Rol administrativo | `ENTITY_ADMIN` |
-| Notificaciones | `entityId` identifica la organización; `targetType` y `targetId`, el recurso del aviso |
+| Círculo | `Entity`, `entityId` |
+| Círculos | `entities` |
+| Explorar círculos | `/entities` |
+| Ficha de un círculo | `/entity/[entityId]` |
+| Espacio del círculo | `/app?view=entity&entity=<id>` |
+| Mis círculos | `/app?view=entities` |
+| API | `/api/entities` y sus rutas existentes |
+| Administrador | `ENTITY_ADMIN` |
 
 ## Vercel
 
-Conserva las variables `DATABASE_URL`, `DIRECT_URL`, `JWT_SECRET`, `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `UPLOADTHING_TOKEN`, `CRON_SECRET` y `NEXT_PUBLIC_APP_URL` de cada entorno. `DIRECT_URL` debe permitir las operaciones de migración en PostgreSQL.
+Mantén la configuración y las variables del despliegue de la Parte 11. Puedes conservar `npm ci` como instalación y `npx prisma generate && npm run build` como comando de compilación. Esta actualización no añade pasos de migración ni modifica `vercel.json`.
 
-Usa `npm ci` como instalación y `npx prisma generate && npm run build` como comando de compilación. Aplica `npx prisma migrate deploy` en la etapa controlada de actualización de la base, antes de activar la Parte 11. La generación del cliente y la compilación no ejecutan la migración automáticamente.
+## Documentación
 
-## Documentación y comprobaciones
+- [Cambios de interfaz y preservación](docs/CAMBIOS_PARTE_12.md).
+- [Validación de esta entrega](docs/VALIDACION_PARTE_12.md).
+- [Trazabilidad y hashes de la base](docs/TRAZABILIDAD_PARTE_12.json).
 
-- [Cambios y alcance](docs/CAMBIOS_PARTE_11.md).
-- [Migración, despliegue y recuperación](docs/MIGRACION_PARTE_11.md).
-- [Resultados de validación y límites](docs/VALIDACION_PARTE_11.md).
-- [Trazabilidad de la base y archivos](docs/TRAZABILIDAD_PARTE_11.json).
-
-Se mantienen Klan, las cabeceras institucionales PUCE - Icam, los controles HTTP 400/403, la ausencia de `/api/test-db`, la idempotencia de Stripe y las reglas móviles del umbral `< 768px`.
+Los documentos `*_PARTE_11` y `docs/evidencias/` se conservan como historial. Las evidencias de esta entrega están en `docs/evidencias_parte12/`.

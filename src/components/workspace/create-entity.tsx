@@ -42,6 +42,8 @@
  * ==============================================================================
  */
 
+// Refactorización Parte 12 (UI-Only): Se muestra 'Círculo/Círculos' al usuario manteniendo 'Entity' en código, rutas y BD.
+
 "use client";
 import { useState } from "react";
 import Link from "next/link";
@@ -50,5 +52,5 @@ import { UploadButton } from "@/lib/uploadthing";
 /** Recoge los datos de la nueva entidad y coordina su alta con el flujo de imágenes del perfil. */
 export function CreateEntity() {
     const [entity, setEntity] = useState<Row | null>(null), [error, setError] = useState("");
-    return entity ? <><p className="notice">Entidad creada. Personaliza sus imágenes.</p><h3>Logotipo</h3><UploadButton endpoint="entityLogoUploader" input={{ entityId: entity.id }} onUploadError={e => setError(e.message)}/><h3>Portada</h3><UploadButton endpoint="entityCoverUploader" input={{ entityId: entity.id }} onUploadError={e => setError(e.message)}/>{error && <p role="alert">{error}</p>}<Link className="btn" href={href("entity", { entity: entity.id })}>Abrir mi entidad →</Link></> : <Form fields={entityFields} url="/api/entities" onDone={d => setEntity(d.entity)} submit="Crear entidad"/>;
+    return entity ? <><p className="notice">Círculo creado. Personaliza sus imágenes.</p><h3>Logotipo</h3><UploadButton endpoint="entityLogoUploader" input={{ entityId: entity.id }} onUploadError={e => setError(e.message)}/><h3>Portada</h3><UploadButton endpoint="entityCoverUploader" input={{ entityId: entity.id }} onUploadError={e => setError(e.message)}/>{error && <p role="alert">{error}</p>}<Link className="btn" href={href("entity", { entity: entity.id })}>Abrir mi círculo →</Link></> : <Form fields={entityFields} url="/api/entities" onDone={d => setEntity(d.entity)} submit="Crear círculo"/>;
 }

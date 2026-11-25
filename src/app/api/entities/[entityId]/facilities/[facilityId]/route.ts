@@ -42,6 +42,8 @@
  * ==============================================================================
  */
 
+// Refactorización Parte 12 (UI-Only): Se muestra 'Círculo/Círculos' al usuario manteniendo 'Entity' en código, rutas y BD.
+
 import { validFacilityIcon } from "@/lib/facility-icons";
 import { prisma } from "@/lib/prisma";
 import { requireAuth } from "@/lib/auth/auth";
@@ -74,7 +76,7 @@ export async function GET(
       return NextResponse.json(
         {
           success: false,
-          message: "No perteneces a esta entidad",
+          message: "No perteneces a este círculo",
         },
         { status: 403 }
       );
@@ -155,7 +157,7 @@ export async function PATCH(
         {
           success: false,
           message:
-            "No tienes permisos para editar instalaciones de esta entidad",
+            "No tienes permisos para editar instalaciones de este círculo",
         },
         { status: 403 }
       );
@@ -319,7 +321,7 @@ export async function DELETE(
         {
           success: false,
           message:
-            "No tienes permisos para desactivar instalaciones de esta entidad",
+            "No tienes permisos para desactivar instalaciones de este círculo",
         },
         { status: 403 }
       );

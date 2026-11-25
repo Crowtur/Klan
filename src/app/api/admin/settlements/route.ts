@@ -42,6 +42,8 @@
  * ==============================================================================
  */
 
+// Refactorización Parte 12 (UI-Only): Se muestra 'Círculo/Círculos' al usuario manteniendo 'Entity' en código, rutas y BD.
+
 import { prisma } from "@/lib/prisma";
 import { requireAuth } from "@/lib/auth/auth";
 import { NextResponse } from "next/server";
@@ -106,7 +108,7 @@ export async function POST(request: Request) {
       return NextResponse.json(
         {
           success: false,
-          message: "Entidad no encontrada",
+          message: "Círculo no encontrado",
         },
         { status: 404 }
       );
@@ -126,7 +128,7 @@ export async function POST(request: Request) {
       return NextResponse.json(
         {
           success: false,
-          message: "Ya existe una liquidación para esta entidad y período",
+          message: "Ya existe una liquidación para este círculo y período",
           settlementId: existingSettlement.id,
         },
         { status: 409 }

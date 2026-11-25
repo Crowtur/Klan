@@ -42,6 +42,8 @@
  * ==============================================================================
  */
 
+// Refactorización Parte 12 (UI-Only): Se muestra 'Círculo/Círculos' al usuario manteniendo 'Entity' en código, rutas y BD.
+
 import {paymentCsv} from "@/lib/entities/payment-csv";
 import { prisma } from "@/lib/prisma";
 import { requireAuth } from "@/lib/auth/auth";
@@ -160,7 +162,7 @@ export async function GET(
         return NextResponse.json(
           {
             success: false,
-            message: "No tienes permisos para ver los pagos de esta entidad",
+            message: "No tienes permisos para ver los pagos de este círculo",
           },
           { status: 403 }
         );

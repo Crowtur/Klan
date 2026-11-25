@@ -42,6 +42,8 @@
  * ==============================================================================
  */
 
+// Refactorización Parte 12 (UI-Only): Se muestra 'Círculo/Círculos' al usuario manteniendo 'Entity' en código, rutas y BD.
+
 // Refactorización Parte 11: entityId identifica la organización; targetType y targetId identifican el recurso del aviso.
 
 type Notice={type:string;entityId?:string|null;targetPath?:string|null};
@@ -54,7 +56,11 @@ export function notificationDestination(n:Notice){
  return {scope:"personal",tab:"memberships",path:n.targetPath||"/app?view=memberships"};
 }
 /** Adapta los títulos de las solicitudes recibidas para distinguirlas de los trámites propios. */
-export function notificationTitle(n:Notice & {title:string}){return n.type==="DOCUMENTS_SUBMITTED" && n.title==="Documentación enviada"?"Documentación recibida para revisión":n.type==="APPLICATION_SUBMITTED"?"Nueva solicitud de ingreso recibida":n.title;}
+export function notificationTitle(n:Notice & {title:string}){
+ // Traduce únicamente el título histórico del sistema al mostrarlo; no modifica registros ni contenido del usuario.
+ if(["MEMBER_LEFT","MEMBER_REMOVED"].includes(n.type) && n.title==="Retiro de la entidad")return "Retiro del círculo";
+ return n.type==="DOCUMENTS_SUBMITTED" && n.title==="Documentación enviada"?"Documentación recibida para revisión":n.type==="APPLICATION_SUBMITTED"?"Nueva solicitud de ingreso recibida":n.title;
+}
 /** Calcula la antigüedad respecto al instante de referencia y elige una unidad legible. */
 export function relativeTime(value:string,now=Date.now()){
  const seconds=Math.max(0,Math.floor((now-Date.parse(value))/1000));

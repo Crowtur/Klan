@@ -42,6 +42,8 @@
  * ==============================================================================
  */
 
+// Refactorización Parte 12 (UI-Only): Se muestra 'Círculo/Círculos' al usuario manteniendo 'Entity' en código, rutas y BD.
+
 import {activeMember} from "@/lib/entities/active";
 
 import { NextResponse } from "next/server";
@@ -128,7 +130,7 @@ export async function GET(
       return NextResponse.json(
         {
           success: false,
-          message: "Entidad no encontrada o inactiva",
+          message: "Círculo no encontrado o inactivo",
         },
         { status: 404 }
       );

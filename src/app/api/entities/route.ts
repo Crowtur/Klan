@@ -42,6 +42,8 @@
  * ==============================================================================
  */
 
+// Refactorización Parte 12 (UI-Only): Se muestra 'Círculo/Círculos' al usuario manteniendo 'Entity' en código, rutas y BD.
+
 // Refactorización Parte 11: altas y consultas mediante Entity y EntityMembership; ENTITY_ADMIN conserva el alcance de los permisos anteriores.
 
 import {activeMember} from "@/lib/entities/active";
@@ -144,7 +146,7 @@ export async function POST(request: Request) {
       return NextResponse.json(
         {
           success: false,
-          message: "El slug de la entidad ya está registrado",
+          message: "El slug del círculo ya está registrado",
         },
         { status: 409 }
       );
@@ -170,7 +172,7 @@ export async function POST(request: Request) {
     return NextResponse.json(
       {
         success: true,
-        message: "Entidad creada correctamente",
+        message: "Círculo creado correctamente",
         entity,
       },
       { status: 201 }

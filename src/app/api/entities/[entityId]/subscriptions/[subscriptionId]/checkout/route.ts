@@ -42,6 +42,8 @@
  * ==============================================================================
  */
 
+// Refactorización Parte 12 (UI-Only): Se muestra 'Círculo/Círculos' al usuario manteniendo 'Entity' en código, rutas y BD.
+
 // Refactorización Parte 11: los nuevos metadatos de Stripe usan entityId; se conservan paymentId, subscriptionId y las claves de idempotencia.
 
 import { prisma } from "@/lib/prisma";
@@ -93,7 +95,7 @@ export async function POST(
       return NextResponse.json(
         {
           success: false,
-          message: "La suscripción no pertenece a esta entidad",
+          message: "La suscripción no pertenece a este círculo",
         },
         { status: 403 }
       );
@@ -104,7 +106,7 @@ export async function POST(
         {
           success: false,
           message:
-            "No se pueden iniciar pagos porque la entidad no está activa",
+            "No se pueden iniciar pagos porque el círculo no está activo",
         },
         { status: 409 }
       );

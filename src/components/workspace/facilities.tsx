@@ -42,6 +42,8 @@
  * ==============================================================================
  */
 
+// Refactorización Parte 12 (UI-Only): Se muestra 'Círculo/Círculos' al usuario manteniendo 'Entity' en código, rutas y BD.
+
 "use client";
 import {AvatarImage} from "@/components/avatar-image";
 import {Icon} from "@/components/ui";
@@ -78,7 +80,7 @@ export function Facilities({ entity, admin }: {
     const base = `/api/entities/${entity}/facilities`;
     const state = useData(base, v);
     return (<>
-      <div className="list-heading"><div><h2>Instalaciones <small>{state.data?.facilities.length}</small></h2><p>Explora los espacios de la entidad y encuentra el lugar para tu próxima actividad.</p></div>
+      <div className="list-heading"><div><h2>Instalaciones <small>{state.data?.facilities.length}</small></h2><p>Explora los espacios del círculo y encuentra el lugar para tu próxima actividad.</p></div>
       {admin && (<EditorModal title="Crear instalación">
           <Form fields={facilityFields} url={base} onDone={() => setV(v + 1)}/>
         </EditorModal>)}</div>
@@ -161,7 +163,7 @@ export function Facility({ entity, id, admin, }: {
     const f = state.data?.facility;
     return (<>
       <Link className="btn btn-outline back-button" href={href("entity", { entity, tab: "facilities" })}>
-        Volver a la entidad
+        Volver al círculo
       </Link>
       {identity.data?.entity&&<div className="entity-identity"><span className="avatar">{safeUrl(identity.data.entity.logoUrl)&&<AvatarImage src={safeUrl(identity.data.entity.logoUrl)} alt=""/>}</span><div><h2>{identity.data.entity.name}</h2><p>{identity.data.entity.description}</p></div></div>}
       <h1>{f?.name || "Instalación"}</h1>

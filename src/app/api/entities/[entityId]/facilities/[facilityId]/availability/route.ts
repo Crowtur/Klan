@@ -42,6 +42,8 @@
  * ==============================================================================
  */
 
+// Refactorización Parte 12 (UI-Only): Se muestra 'Círculo/Círculos' al usuario manteniendo 'Entity' en código, rutas y BD.
+
 import { NextResponse } from "next/server";
 import { DayOfWeek } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
@@ -608,7 +610,7 @@ export async function GET(
           {
             success: false,
             message:
-              "No tienes una membresía activa en esta entidad",
+              "No tienes una membresía activa en este círculo",
           },
           { status: 403 }
         );

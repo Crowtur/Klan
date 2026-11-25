@@ -42,6 +42,8 @@
  * ==============================================================================
  */
 
+// Refactorización Parte 12 (UI-Only): Se muestra 'Círculo/Círculos' al usuario manteniendo 'Entity' en código, rutas y BD.
+
 "use client";
 import {AvatarImage} from "@/components/avatar-image";
 import { ThemeToggle } from "./theme-toggle";
@@ -184,7 +186,7 @@ function GuestNavigation() {
     }, []);
     // Los estilos presentan una sola navegación por ancho; details funciona también antes de hidratar.
     const links = <nav className={s.actions}>
-          <Link href="/entities">Explorar entidades</Link>
+          <Link href="/entities">Explorar círculos</Link>
           <Link className="btn btn-outline" href="/login">Iniciar sesión</Link>
           <Link className={s.button} href="/register">
             Registrarse

@@ -42,6 +42,8 @@
  * ==============================================================================
  */
 
+// Refactorización Parte 12 (UI-Only): Se muestra 'Círculo/Círculos' al usuario manteniendo 'Entity' en código, rutas y BD.
+
 "use client";
 import {AvatarImage} from "@/components/avatar-image";
 import { Location } from "./location";
@@ -57,7 +59,7 @@ export function EntityCard({ entity, destination }: {
     entity: Row;
     destination: string;
 }) {
-    return <article className={entity.role ? "entity-card joined-entity" : "entity-card"}><img className="entity-cover" src={safeUrl(entity.coverUrl) || PLACEHOLDER_IMAGE} alt="" loading="lazy"/><div className="entity-card-body"><div className="row"><span className="avatar">{safeUrl(entity.logoUrl) ? <AvatarImage src={safeUrl(entity.logoUrl)} alt=""/> : <Icon name="users" size={25}/>}</span><h2>{entity.name}</h2>{entity.role && <NoticeCount entity={entity.id}/>}</div><p>{entity.description || "Conoce esta entidad y encuentra tu próxima comunidad."}</p><p className="entity-meta"><Location value={entity.address}/><span>{entity.memberCount ?? entity._count?.memberships ?? "—"} {(entity.memberCount ?? entity._count?.memberships) === 1 ? "miembro" : "miembros"}</span></p>{entity.role === "ENTITY_ADMIN" ? <small>Administrador</small> : entity.planName && <small>{entity.planName}</small>}<Link className="btn btn-outline" href={destination}>Ver entidad <Icon name="arrow" size={17}/></Link></div></article>;
+    return <article className={entity.role ? "entity-card joined-entity" : "entity-card"}><img className="entity-cover" src={safeUrl(entity.coverUrl) || PLACEHOLDER_IMAGE} alt="" loading="lazy"/><div className="entity-card-body"><div className="row"><span className="avatar">{safeUrl(entity.logoUrl) ? <AvatarImage src={safeUrl(entity.logoUrl)} alt=""/> : <Icon name="users" size={25}/>}</span><h2>{entity.name}</h2>{entity.role && <NoticeCount entity={entity.id}/>}</div><p>{entity.description || "Conoce este círculo y encuentra tu próxima comunidad."}</p><p className="entity-meta"><Location value={entity.address}/><span>{entity.memberCount ?? entity._count?.memberships ?? "—"} {(entity.memberCount ?? entity._count?.memberships) === 1 ? "miembro" : "miembros"}</span></p>{entity.role === "ENTITY_ADMIN" ? <small>Administrador</small> : entity.planName && <small>{entity.planName}</small>}<Link className="btn btn-outline" href={destination}>Ver círculo <Icon name="arrow" size={17}/></Link></div></article>;
 }
 /** Gestiona la búsqueda y la paginación del catálogo a partir de los filtros elegidos. */
 export function BrowseEntities({ authenticated = false, initialQuery = "" }: {
@@ -71,9 +73,9 @@ export function BrowseEntities({ authenticated = false, initialQuery = "" }: {
     const memberships = useData(authenticated ? "/api/me/memberships" : null);
     const subscriptions = useData(authenticated ? "/api/me/subscriptions" : null);
     const entities: Row[] = state.data?.entities || [];
-    return <><PageHeading eyebrow="Encuentra tu comunidad" title="Hay una entidad para cada pasión." description="Explora, conecta y encuentra tu próximo lugar favorito."/>
- <form className="search-bar" role="search" onSubmit={e => { e.preventDefault(); setQ(text.trim()); setPage(1); }}><label><Icon name="search"/><span className="sr-only">Buscar entidad por nombre o descripción</span><input type="search" maxLength={100} value={text} onChange={e => setText(e.target.value)} placeholder={mobile ? "Nombre o descripción…" : "Buscar entidad por nombre o descripción…"}/></label><button type="submit">Buscar</button>{q && <button type="button" className="secondary" onClick={() => { setText(""); setQ(""); setPage(1); }}>Limpiar</button>}</form>
- <div className="list-heading"><h2>Descubre nuestras entidades</h2>{state.data && <span>{state.data.pagination.total} entidades</span>}</div><Status state={state}>{!entities.length && <div className="empty-state"><span className="icon-tile"><Icon name="search" size={28}/></span><h2>{q ? "No encontramos entidades con esa búsqueda" : "Pronto habrá nuevas comunidades"}</h2><p>{q ? "Prueba con otro nombre o una descripción más corta." : "Vuelve más adelante para explorar las entidades disponibles."}</p></div>}<div className="entity-grid">{entities.map(c => {
+    return <><PageHeading eyebrow="Encuentra tu comunidad" title="Hay un círculo para cada pasión." description="Explora, conecta y encuentra tu próximo lugar favorito."/>
+ <form className="search-bar" role="search" onSubmit={e => { e.preventDefault(); setQ(text.trim()); setPage(1); }}><label><Icon name="search"/><span className="sr-only">Buscar círculo por nombre o descripción</span><input type="search" maxLength={100} value={text} onChange={e => setText(e.target.value)} placeholder={mobile ? "Nombre o descripción…" : "Buscar círculo por nombre o descripción…"}/></label><button type="submit">Buscar</button>{q && <button type="button" className="secondary" onClick={() => { setText(""); setQ(""); setPage(1); }}>Limpiar</button>}</form>
+ <div className="list-heading"><h2>Descubre nuestros círculos</h2>{state.data && <span>{state.data.pagination.total} círculos</span>}</div><Status state={state}>{!entities.length && <div className="empty-state"><span className="icon-tile"><Icon name="search" size={28}/></span><h2>{q ? "No encontramos círculos con esa búsqueda" : "Pronto habrá nuevas comunidades"}</h2><p>{q ? "Prueba con otro nombre o una descripción más corta." : "Vuelve más adelante para explorar los círculos disponibles."}</p></div>}<div className="entity-grid">{entities.map(c => {
     const member = memberships.data?.memberships.find((m:Row) => m.entity.id===c.id && m.status==="ACTIVE" && m.entity.status==="ACTIVE");
     const planName = subscriptions.data?.subscriptions.filter((s:Row)=>s.entityMembership.entity.id===c.id && s.status==="ACTIVE").map((s:Row)=>s.plan.name).join(", ");
     return <EntityCard key={c.id} entity={{...c, role:member?.role, planName}} destination={authenticated ? href(member ? "entity" : "publicEntity",{entity:c.id}) : `/entity/${c.id}`}/>;

@@ -42,6 +42,8 @@
  * ==============================================================================
  */
 
+// Refactorización Parte 12 (UI-Only): Se muestra 'Círculo/Círculos' al usuario manteniendo 'Entity' en código, rutas y BD.
+
 "use client";
 import { useEffect, useState, useRef, type ReactNode, type FormEvent } from "react";
 import {FacilityIcon} from "./facility-icon";
@@ -331,7 +333,7 @@ export function Form({ fields, url, method = "POST", initial = {}, onDone, submi
                 input.value = input.value.toLowerCase().replace(/[^a-z0-9-]/g, "");
                 setSlug(input.value);
             } }} type={f.type || "text"} name={f.name} defaultValue={Array.isArray(initial[f.name]) ? initial[f.name].join("\n") : initial[f.name] ?? ""} required={f.required} min={f.min} max={f.max} step={f.step} maxLength={f.type !== "number" ? f.max : undefined}/>)}
-            {f.name === "slug" && <small>Slug · {slug || "tu-entidad"}</small>}
+            {f.name === "slug" && <small>Slug · {slug || "tu-circulo"}</small>}
           </label>))}
       </fieldset>
       <button className={method === "DELETE" || decision === "REJECTED" ? "outline-destructive" : undefined} disabled={busy}>{busy ? "Guardando…" : submit}</button>
@@ -350,11 +352,11 @@ export const entityFields: Field[] = [
     { name: "name", label: "Nombre", required: true, max: 50 },
     {
         name: "slug",
-        label: "Slug de la entidad",
+        label: "Slug del círculo",
         required: true,
     },
     { name: "description", label: "Descripción", type: "textarea", max: 200 },
-    { name: "address", label: "Dirección de la entidad" }, { name: "googleMapsUrl", label: "Enlace de Google Maps", type: "url" },
+    { name: "address", label: "Dirección del círculo" }, { name: "googleMapsUrl", label: "Enlace de Google Maps", type: "url" },
 ];
 export const facilityFields: Field[] = [
     {name:"icon",label:"Icono de la instalación",options:facilityIcons},
@@ -421,6 +423,7 @@ export const postFields: Field[] = [
     },
 ];
 /** Traduce el estado visible y conserva su valor original como atributo para aplicar los estilos. */
-export function Badge({ value }: {
+export function Badge({ value, children }: {
     value: unknown;
-}) { return <span className="badge" data-status={String(value)}>{label(value)}</span>; }
+    children?: ReactNode;
+}) { return <span className="badge" data-status={String(value)}>{children ?? label(value)}</span>; }

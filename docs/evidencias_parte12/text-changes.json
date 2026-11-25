@@ -1,0 +1,1214 @@
+[
+  {
+    "file": "src/app/api/admin/settlements/route.ts",
+    "line": 109,
+    "before": "Entidad no encontrada",
+    "after": "Círculo no encontrado"
+  },
+  {
+    "file": "src/app/api/admin/settlements/route.ts",
+    "line": 129,
+    "before": "Ya existe una liquidación para esta entidad y período",
+    "after": "Ya existe una liquidación para este círculo y período"
+  },
+  {
+    "file": "src/app/api/catalog/entities/[entityId]/route.ts",
+    "line": 67,
+    "before": "Entidad no disponible",
+    "after": "Círculo no disponible"
+  },
+  {
+    "file": "src/app/api/catalog/entities/[entityId]/route.ts",
+    "line": 92,
+    "before": "No se pudo consultar la entidad",
+    "after": "No se pudo consultar el círculo"
+  },
+  {
+    "file": "src/app/api/entities/[entityId]/dashboard/alerts/route.ts",
+    "line": 109,
+    "before": "Entidad no encontrada o inactiva",
+    "after": "Círculo no encontrado o inactivo"
+  },
+  {
+    "file": "src/app/api/entities/[entityId]/dashboard/finances/route.ts",
+    "line": 203,
+    "before": "Entidad no encontrada o inactiva",
+    "after": "Círculo no encontrado o inactivo"
+  },
+  {
+    "file": "src/app/api/entities/[entityId]/dashboard/members/route.ts",
+    "line": 131,
+    "before": "Entidad no encontrada o inactiva",
+    "after": "Círculo no encontrado o inactivo"
+  },
+  {
+    "file": "src/app/api/entities/[entityId]/dashboard/overview/route.ts",
+    "line": 102,
+    "before": "Entidad no encontrada o inactiva",
+    "after": "Círculo no encontrado o inactivo"
+  },
+  {
+    "file": "src/app/api/entities/[entityId]/dashboard/reservations/route.ts",
+    "line": 169,
+    "before": "Entidad no encontrada o inactiva",
+    "after": "Círculo no encontrado o inactivo"
+  },
+  {
+    "file": "src/app/api/entities/[entityId]/dashboard/subscriptions/route.ts",
+    "line": 147,
+    "before": "Entidad no encontrada o inactiva",
+    "after": "Círculo no encontrado o inactivo"
+  },
+  {
+    "file": "src/app/api/entities/[entityId]/facilities/[facilityId]/availability/route.ts",
+    "line": 611,
+    "before": "No tienes una membresía activa en esta entidad",
+    "after": "No tienes una membresía activa en este círculo"
+  },
+  {
+    "file": "src/app/api/entities/[entityId]/facilities/[facilityId]/plan-access/route.ts",
+    "line": 177,
+    "before": "Uno o más planes no existen o no pertenecen a esta entidad",
+    "after": "Uno o más planes no existen o no pertenecen a este círculo"
+  },
+  {
+    "file": "src/app/api/entities/[entityId]/facilities/[facilityId]/plan-access/route.ts",
+    "line": 279,
+    "before": "No perteneces a esta entidad",
+    "after": "No perteneces a este círculo"
+  },
+  {
+    "file": "src/app/api/entities/[entityId]/facilities/[facilityId]/reservations/[reservationId]/route.ts",
+    "line": 155,
+    "before": "No tienes permisos para consultar reservas de esta entidad",
+    "after": "No tienes permisos para consultar reservas de este círculo"
+  },
+  {
+    "file": "src/app/api/entities/[entityId]/facilities/[facilityId]/reservations/[reservationId]/route.ts",
+    "line": 346,
+    "before": "No tienes permisos para cancelar reservas de esta entidad",
+    "after": "No tienes permisos para cancelar reservas de este círculo"
+  },
+  {
+    "file": "src/app/api/entities/[entityId]/facilities/[facilityId]/reservations/route.ts",
+    "line": 258,
+    "before": "No tienes permisos para consultar reservas de esta entidad",
+    "after": "No tienes permisos para consultar reservas de este círculo"
+  },
+  {
+    "file": "src/app/api/entities/[entityId]/facilities/[facilityId]/reservations/route.ts",
+    "line": 864,
+    "before": "No tienes permisos para realizar acciones en esta entidad",
+    "after": "No tienes permisos para realizar acciones en este círculo"
+  },
+  {
+    "file": "src/app/api/entities/[entityId]/facilities/[facilityId]/route.ts",
+    "line": 77,
+    "before": "No perteneces a esta entidad",
+    "after": "No perteneces a este círculo"
+  },
+  {
+    "file": "src/app/api/entities/[entityId]/facilities/[facilityId]/route.ts",
+    "line": 158,
+    "before": "No tienes permisos para editar instalaciones de esta entidad",
+    "after": "No tienes permisos para editar instalaciones de este círculo"
+  },
+  {
+    "file": "src/app/api/entities/[entityId]/facilities/[facilityId]/route.ts",
+    "line": 322,
+    "before": "No tienes permisos para desactivar instalaciones de esta entidad",
+    "after": "No tienes permisos para desactivar instalaciones de este círculo"
+  },
+  {
+    "file": "src/app/api/entities/[entityId]/facilities/[facilityId]/schedule/route.ts",
+    "line": 319,
+    "before": "No perteneces a esta entidad",
+    "after": "No perteneces a este círculo"
+  },
+  {
+    "file": "src/app/api/entities/[entityId]/facilities/route.ts",
+    "line": 74,
+    "before": "No tienes permisos para crear instalaciones en esta entidad",
+    "after": "No tienes permisos para crear instalaciones en este círculo"
+  },
+  {
+    "file": "src/app/api/entities/[entityId]/facilities/route.ts",
+    "line": 186,
+    "before": "No perteneces a esta entidad",
+    "after": "No perteneces a este círculo"
+  },
+  {
+    "file": "src/app/api/entities/[entityId]/members/[memberId]/route.ts",
+    "line": 107,
+    "before": "El usuario no pertenece a la entidad",
+    "after": "El usuario no pertenece al círculo"
+  },
+  {
+    "file": "src/app/api/entities/[entityId]/members/[memberId]/route.ts",
+    "line": 193,
+    "before": "Retiro de la entidad",
+    "after": "Retiro del círculo"
+  },
+  {
+    "file": "src/app/api/entities/[entityId]/members/[memberId]/route.ts",
+    "line": 249,
+    "before": "Miembro expulsado de la entidad",
+    "after": "Miembro expulsado del círculo"
+  },
+  {
+    "file": "src/app/api/entities/[entityId]/members/[memberId]/route.ts",
+    "line": 263,
+    "before": "No tienes permisos para expulsar miembros de esta entidad",
+    "after": "No tienes permisos para expulsar miembros de este círculo"
+  },
+  {
+    "file": "src/app/api/entities/[entityId]/members/route.ts",
+    "line": 113,
+    "before": "No tienes permisos para ver los miembros de esta entidad",
+    "after": "No tienes permisos para ver los miembros de este círculo"
+  },
+  {
+    "file": "src/app/api/entities/[entityId]/membership-applications/[applicationId]/review/route.ts",
+    "line": 511,
+    "before": "No tienes permisos para revisar solicitudes de esta entidad",
+    "after": "No tienes permisos para revisar solicitudes de este círculo"
+  },
+  {
+    "file": "src/app/api/entities/[entityId]/membership-applications/[applicationId]/review/route.ts",
+    "line": 532,
+    "before": "El usuario ya tiene una suscripción vigente en esta entidad",
+    "after": "El usuario ya tiene una suscripción vigente en este círculo"
+  },
+  {
+    "file": "src/app/api/entities/[entityId]/membership-applications/route.ts",
+    "line": 103,
+    "before": "El plan no existe, no pertenece a esta entidad o no está activo",
+    "after": "El plan no existe, no pertenece a este círculo o no está activo"
+  },
+  {
+    "file": "src/app/api/entities/[entityId]/membership-applications/route.ts",
+    "line": 123,
+    "before": "El usuario ya pertenece a esta entidad",
+    "after": "El usuario ya pertenece a este círculo"
+  },
+  {
+    "file": "src/app/api/entities/[entityId]/membership-applications/route.ts",
+    "line": 147,
+    "before": "Ya tienes una solicitud de membresía pendiente para esta entidad",
+    "after": "Ya tienes una solicitud de membresía pendiente para este círculo"
+  },
+  {
+    "file": "src/app/api/entities/[entityId]/membership-applications/route.ts",
+    "line": 299,
+    "before": "No tienes permisos para revisar las solicitudes de esta entidad",
+    "after": "No tienes permisos para revisar las solicitudes de este círculo"
+  },
+  {
+    "file": "src/app/api/entities/[entityId]/membership-plans/[planId]/document-requirements/[requirementId]/route.ts",
+    "line": 94,
+    "before": "El plan no existe en esta entidad",
+    "after": "El plan no existe en este círculo"
+  },
+  {
+    "file": "src/app/api/entities/[entityId]/membership-plans/[planId]/document-requirements/[requirementId]/route.ts",
+    "line": 228,
+    "before": "No tienes permisos para administrar los requisitos de esta entidad",
+    "after": "No tienes permisos para administrar los requisitos de este círculo"
+  },
+  {
+    "file": "src/app/api/entities/[entityId]/membership-plans/[planId]/document-requirements/[requirementId]/route.ts",
+    "line": 281,
+    "before": "El plan no existe en esta entidad",
+    "after": "El plan no existe en este círculo"
+  },
+  {
+    "file": "src/app/api/entities/[entityId]/membership-plans/[planId]/document-requirements/[requirementId]/route.ts",
+    "line": 354,
+    "before": "No tienes permisos para administrar los requisitos de esta entidad",
+    "after": "No tienes permisos para administrar los requisitos de este círculo"
+  },
+  {
+    "file": "src/app/api/entities/[entityId]/membership-plans/[planId]/document-requirements/route.ts",
+    "line": 117,
+    "before": "El plan no existe en esta entidad",
+    "after": "El plan no existe en este círculo"
+  },
+  {
+    "file": "src/app/api/entities/[entityId]/membership-plans/[planId]/document-requirements/route.ts",
+    "line": 173,
+    "before": "No tienes permisos para administrar los requisitos de esta entidad",
+    "after": "No tienes permisos para administrar los requisitos de este círculo"
+  },
+  {
+    "file": "src/app/api/entities/[entityId]/membership-plans/[planId]/document-requirements/route.ts",
+    "line": 220,
+    "before": "El plan no existe en esta entidad",
+    "after": "El plan no existe en este círculo"
+  },
+  {
+    "file": "src/app/api/entities/[entityId]/membership-plans/[planId]/document-requirements/route.ts",
+    "line": 262,
+    "before": "No tienes permisos para ver los requisitos de esta entidad",
+    "after": "No tienes permisos para ver los requisitos de este círculo"
+  },
+  {
+    "file": "src/app/api/entities/[entityId]/membership-plans/route.ts",
+    "line": 250,
+    "before": "No tienes permisos para administrar los planes de esta entidad",
+    "after": "No tienes permisos para administrar los planes de este círculo"
+  },
+  {
+    "file": "src/app/api/entities/[entityId]/membership-plans/route.ts",
+    "line": 328,
+    "before": "No tienes permisos para ver los planes de esta entidad",
+    "after": "No tienes permisos para ver los planes de este círculo"
+  },
+  {
+    "file": "src/app/api/entities/[entityId]/my-reservations/route.ts",
+    "line": 219,
+    "before": "No tienes una membresía activa en esta entidad",
+    "after": "No tienes una membresía activa en este círculo"
+  },
+  {
+    "file": "src/app/api/entities/[entityId]/payments/route.ts",
+    "line": 163,
+    "before": "No tienes permisos para ver los pagos de esta entidad",
+    "after": "No tienes permisos para ver los pagos de este círculo"
+  },
+  {
+    "file": "src/app/api/entities/[entityId]/payments/summary/route.ts",
+    "line": 162,
+    "before": "No tienes permisos para ver el resumen financiero de esta entidad",
+    "after": "No tienes permisos para ver el resumen financiero de este círculo"
+  },
+  {
+    "file": "src/app/api/entities/[entityId]/posts/[postId]/route.ts",
+    "line": 80,
+    "before": "Entidad no encontrada",
+    "after": "Círculo no encontrado"
+  },
+  {
+    "file": "src/app/api/entities/[entityId]/posts/[postId]/route.ts",
+    "line": 90,
+    "before": "No se pueden editar publicaciones de una entidad inactiva o suspendida",
+    "after": "No se pueden editar publicaciones de un círculo inactivo o suspendido"
+  },
+  {
+    "file": "src/app/api/entities/[entityId]/posts/[postId]/route.ts",
+    "line": 112,
+    "before": "No tienes permisos para editar publicaciones de esta entidad",
+    "after": "No tienes permisos para editar publicaciones de este círculo"
+  },
+  {
+    "file": "src/app/api/entities/[entityId]/posts/[postId]/route.ts",
+    "line": 132,
+    "before": "Publicación no encontrada en esta entidad",
+    "after": "Publicación no encontrada en este círculo"
+  },
+  {
+    "file": "src/app/api/entities/[entityId]/posts/[postId]/route.ts",
+    "line": 341,
+    "before": "Entidad no encontrada",
+    "after": "Círculo no encontrado"
+  },
+  {
+    "file": "src/app/api/entities/[entityId]/posts/[postId]/route.ts",
+    "line": 352,
+    "before": "No se pueden eliminar publicaciones de una entidad inactiva o suspendida",
+    "after": "No se pueden eliminar publicaciones de un círculo inactivo o suspendido"
+  },
+  {
+    "file": "src/app/api/entities/[entityId]/posts/[postId]/route.ts",
+    "line": 375,
+    "before": "No tienes permisos para eliminar publicaciones de esta entidad",
+    "after": "No tienes permisos para eliminar publicaciones de este círculo"
+  },
+  {
+    "file": "src/app/api/entities/[entityId]/posts/[postId]/route.ts",
+    "line": 398,
+    "before": "Publicación no encontrada en esta entidad",
+    "after": "Publicación no encontrada en este círculo"
+  },
+  {
+    "file": "src/app/api/entities/[entityId]/posts/route.ts",
+    "line": 72,
+    "before": "Entidad no encontrada",
+    "after": "Círculo no encontrado"
+  },
+  {
+    "file": "src/app/api/entities/[entityId]/posts/route.ts",
+    "line": 82,
+    "before": "No se puede publicar en una entidad inactiva o suspendida",
+    "after": "No se puede publicar en un círculo inactivo o suspendido"
+  },
+  {
+    "file": "src/app/api/entities/[entityId]/posts/route.ts",
+    "line": 103,
+    "before": "No tienes permisos para publicar en esta entidad",
+    "after": "No tienes permisos para publicar en este círculo"
+  },
+  {
+    "file": "src/app/api/entities/[entityId]/posts/route.ts",
+    "line": 278,
+    "before": "Entidad no encontrada",
+    "after": "Círculo no encontrado"
+  },
+  {
+    "file": "src/app/api/entities/[entityId]/posts/route.ts",
+    "line": 288,
+    "before": "Las publicaciones de esta entidad no están disponibles",
+    "after": "Las publicaciones de este círculo no están disponibles"
+  },
+  {
+    "file": "src/app/api/entities/[entityId]/reactivate/route.ts",
+    "line": 76,
+    "before": "Entidad no encontrada",
+    "after": "Círculo no encontrado"
+  },
+  {
+    "file": "src/app/api/entities/[entityId]/reactivate/route.ts",
+    "line": 86,
+    "before": "Solo se pueden reactivar entidades suspendidas",
+    "after": "Solo se pueden reactivar círculos suspendidos"
+  },
+  {
+    "file": "src/app/api/entities/[entityId]/reactivate/route.ts",
+    "line": 122,
+    "before": "Entidad reactivada correctamente",
+    "after": "Círculo reactivado correctamente"
+  },
+  {
+    "file": "src/app/api/entities/[entityId]/reactivate/route.ts",
+    "line": 144,
+    "before": "Solo el SUPER_ADMIN puede reactivar entidades",
+    "after": "Solo el SUPER_ADMIN puede reactivar círculos"
+  },
+  {
+    "file": "src/app/api/entities/[entityId]/reactivate/route.ts",
+    "line": 154,
+    "before": "El estado de la entidad cambió antes de procesar la solicitud",
+    "after": "El estado del círculo cambió antes de procesar la solicitud"
+  },
+  {
+    "file": "src/app/api/entities/[entityId]/route.ts",
+    "line": 94,
+    "before": "No tienes acceso a esta entidad",
+    "after": "No tienes acceso a este círculo"
+  },
+  {
+    "file": "src/app/api/entities/[entityId]/route.ts",
+    "line": 261,
+    "before": "La entidad no existe o está suspendida",
+    "after": "El círculo no existe o está suspendido"
+  },
+  {
+    "file": "src/app/api/entities/[entityId]/route.ts",
+    "line": 273,
+    "before": "Entidad actualizada correctamente",
+    "after": "Círculo actualizado correctamente"
+  },
+  {
+    "file": "src/app/api/entities/[entityId]/route.ts",
+    "line": 305,
+    "before": "El slug ya está siendo utilizado por otra entidad",
+    "after": "El slug ya está siendo utilizado por otro círculo"
+  },
+  {
+    "file": "src/app/api/entities/[entityId]/subscriptions/[subscriptionId]/checkout/route.ts",
+    "line": 96,
+    "before": "La suscripción no pertenece a esta entidad",
+    "after": "La suscripción no pertenece a este círculo"
+  },
+  {
+    "file": "src/app/api/entities/[entityId]/subscriptions/[subscriptionId]/checkout/route.ts",
+    "line": 107,
+    "before": "No se pueden iniciar pagos porque la entidad no está activa",
+    "after": "No se pueden iniciar pagos porque el círculo no está activo"
+  },
+  {
+    "file": "src/app/api/entities/[entityId]/suspend/route.ts",
+    "line": 72,
+    "before": "Entidad no encontrada",
+    "after": "Círculo no encontrado"
+  },
+  {
+    "file": "src/app/api/entities/[entityId]/suspend/route.ts",
+    "line": 130,
+    "before": "Entidad y membresías suspendidas correctamente",
+    "after": "Círculo y membresías suspendidos correctamente"
+  },
+  {
+    "file": "src/app/api/entities/[entityId]/suspend/route.ts",
+    "line": 131,
+    "before": "Entidad y membresías suspendidas. Algunas cancelaciones de Stripe requieren revisión o reintento.",
+    "after": "Círculo y membresías suspendidos. Algunas cancelaciones de Stripe requieren revisión o reintento."
+  },
+  {
+    "file": "src/app/api/entities/route.ts",
+    "line": 147,
+    "before": "El slug de la entidad ya está registrado",
+    "after": "El slug del círculo ya está registrado"
+  },
+  {
+    "file": "src/app/api/entities/route.ts",
+    "line": 173,
+    "before": "Entidad creada correctamente",
+    "after": "Círculo creado correctamente"
+  },
+  {
+    "file": "src/app/api/uploadthing/core.ts",
+    "line": 83,
+    "before": "No tienes permisos para subir archivos a esta entidad",
+    "after": "No tienes permisos para subir archivos a este círculo"
+  },
+  {
+    "file": "src/app/api/uploadthing/core.ts",
+    "line": 185,
+    "before": "La entidad no está activa",
+    "after": "El círculo no está activo"
+  },
+  {
+    "file": "src/app/api/uploadthing/core.ts",
+    "line": 309,
+    "before": "La entidad ya no existe",
+    "after": "El círculo ya no existe"
+  },
+  {
+    "file": "src/app/api/uploadthing/core.ts",
+    "line": 380,
+    "before": "La entidad ya no existe",
+    "after": "El círculo ya no existe"
+  },
+  {
+    "file": "src/app/api/uploadthing/core.ts",
+    "line": 704,
+    "before": "La publicación no existe en esta entidad activa",
+    "after": "La publicación no existe en este círculo activo"
+  },
+  {
+    "file": "src/app/layout.tsx",
+    "line": 56,
+    "before": "Klan: entidades, membresías, reservas y pagos en un solo lugar",
+    "after": "Klan: círculos, membresías, reservas y pagos en un solo lugar"
+  },
+  {
+    "file": "src/app/layout.tsx",
+    "line": 60,
+    "before": "Klan: entidades, membresías, reservas y pagos en un solo lugar",
+    "after": "Klan: círculos, membresías, reservas y pagos en un solo lugar"
+  },
+  {
+    "file": "src/app/page.tsx",
+    "line": 52,
+    "before": "Entidades",
+    "after": "Círculos"
+  },
+  {
+    "file": "src/app/page.tsx",
+    "line": 52,
+    "before": "Toda la información de tu entidad y tu comunidad, siempre conectada.",
+    "after": "Toda la información de tu círculo y tu comunidad, siempre conectada."
+  },
+  {
+    "file": "src/app/page.tsx",
+    "line": 62,
+    "before": "Tu entidad. Tu comunidad. Todo conectado.",
+    "after": "Tu círculo. Tu comunidad. Todo conectado."
+  },
+  {
+    "file": "src/app/page.tsx",
+    "line": 62,
+    "before": "Gestiona tu entidad",
+    "after": "Gestiona tu círculo"
+  },
+  {
+    "file": "src/app/page.tsx",
+    "line": 63,
+    "before": "Todo lo que tu entidad necesita",
+    "after": "Todo lo que tu círculo necesita"
+  },
+  {
+    "file": "src/app/page.tsx",
+    "line": 64,
+    "before": "Tu entidad en marcha, en tres pasos",
+    "after": "Tu círculo en marcha, en tres pasos"
+  },
+  {
+    "file": "src/app/page.tsx",
+    "line": 64,
+    "before": "Configura tu entidad",
+    "after": "Configura tu círculo"
+  },
+  {
+    "file": "src/components/auth-form.tsx",
+    "line": 115,
+    "before": "Un espacio para conectar con tus entidades, organizar tus reservas y disfrutar de lo que te une.",
+    "after": "Un espacio para conectar con tus círculos, organizar tus reservas y disfrutar de lo que te une."
+  },
+  {
+    "file": "src/components/entity-bubbles.tsx",
+    "line": 133,
+    "before": "Explorar entidades",
+    "after": "Explorar círculos"
+  },
+  {
+    "file": "src/components/entity-bubbles.tsx",
+    "line": 134,
+    "before": "Entidad ",
+    "after": "Círculo "
+  },
+  {
+    "file": "src/components/member-header.tsx",
+    "line": 187,
+    "before": "Explorar entidades",
+    "after": "Explorar círculos"
+  },
+  {
+    "file": "src/components/workspace/activity.tsx",
+    "line": 209,
+    "before": "Resumen de la entidad",
+    "after": "Resumen del círculo"
+  },
+  {
+    "file": "src/components/workspace/activity.tsx",
+    "line": 233,
+    "before": "Tu entidad en cifras",
+    "after": "Tu círculo en cifras"
+  },
+  {
+    "file": "src/components/workspace/activity.tsx",
+    "line": 237,
+    "before": "Alertas de la entidad",
+    "after": "Alertas del círculo"
+  },
+  {
+    "file": "src/components/workspace/common.tsx",
+    "line": 334,
+    "before": "tu-entidad",
+    "after": "tu-circulo"
+  },
+  {
+    "file": "src/components/workspace/common.tsx",
+    "line": 353,
+    "before": "Slug de la entidad",
+    "after": "Slug del círculo"
+  },
+  {
+    "file": "src/components/workspace/common.tsx",
+    "line": 357,
+    "before": "Dirección de la entidad",
+    "after": "Dirección del círculo"
+  },
+  {
+    "file": "src/components/workspace/create-entity.tsx",
+    "line": 53,
+    "before": "Entidad creada. Personaliza sus imágenes.",
+    "after": "Círculo creado. Personaliza sus imágenes."
+  },
+  {
+    "file": "src/components/workspace/create-entity.tsx",
+    "line": 53,
+    "before": "Abrir mi entidad →",
+    "after": "Abrir mi círculo →"
+  },
+  {
+    "file": "src/components/workspace/create-entity.tsx",
+    "line": 53,
+    "before": "Crear entidad",
+    "after": "Crear círculo"
+  },
+  {
+    "file": "src/components/workspace/dashboard.tsx",
+    "line": 117,
+    "before": "Neto estimado de la entidad",
+    "after": "Neto estimado del círculo"
+  },
+  {
+    "file": "src/components/workspace/dashboard.tsx",
+    "line": 149,
+    "before": "Entidad",
+    "after": "Círculo"
+  },
+  {
+    "file": "src/components/workspace/dashboard.tsx",
+    "line": 158,
+    "before": "Entidades",
+    "after": "Círculos"
+  },
+  {
+    "file": "src/components/workspace/dashboard.tsx",
+    "line": 162,
+    "before": "Finanzas por entidad",
+    "after": "Finanzas por círculo"
+  },
+  {
+    "file": "src/components/workspace/dashboard.tsx",
+    "line": 175,
+    "before": "Total de entidades",
+    "after": "Total de círculos"
+  },
+  {
+    "file": "src/components/workspace/dashboard.tsx",
+    "line": 176,
+    "before": "Entidades con actividad",
+    "after": "Círculos con actividad"
+  },
+  {
+    "file": "src/components/workspace/dashboard.tsx",
+    "line": 177,
+    "before": "Entidades sin actividad",
+    "after": "Círculos sin actividad"
+  },
+  {
+    "file": "src/components/workspace/dashboard.tsx",
+    "line": 183,
+    "before": "Nuevas entidades",
+    "after": "Nuevos círculos"
+  },
+  {
+    "file": "src/components/workspace/dashboard.tsx",
+    "line": 295,
+    "before": "Tu entidad, de un vistazo",
+    "after": "Tu círculo, de un vistazo"
+  },
+  {
+    "file": "src/components/workspace/dashboard.tsx",
+    "line": 351,
+    "before": "Entidades de la plataforma",
+    "after": "Círculos de la plataforma"
+  },
+  {
+    "file": "src/components/workspace/dashboard.tsx",
+    "line": 353,
+    "before": "Entidades registradas",
+    "after": "Círculos registrados"
+  },
+  {
+    "file": "src/components/workspace/dashboard.tsx",
+    "line": 357,
+    "before": "Buscar entidad",
+    "after": "Buscar círculo"
+  },
+  {
+    "file": "src/components/workspace/dashboard.tsx",
+    "line": 357,
+    "before": "Buscar entidad por nombre...",
+    "after": "Buscar círculo por nombre..."
+  },
+  {
+    "file": "src/components/workspace/dashboard.tsx",
+    "line": 358,
+    "before": "Estado de las entidades",
+    "after": "Estado de los círculos"
+  },
+  {
+    "file": "src/components/workspace/dashboard.tsx",
+    "line": 359,
+    "before": " entidades",
+    "after": " círculos"
+  },
+  {
+    "file": "src/components/workspace/dashboard.tsx",
+    "line": 360,
+    "before": "No se encontraron entidades.",
+    "after": "No se encontraron círculos."
+  },
+  {
+    "file": "src/components/workspace/dashboard.tsx",
+    "line": 367,
+    "before": "Acceso a la entidad suspendido",
+    "after": "Acceso al círculo suspendido"
+  },
+  {
+    "file": "src/components/workspace/dashboard.tsx",
+    "line": 367,
+    "before": "¿Suspender la entidad y sus membresías?",
+    "after": "¿Suspender el círculo y sus membresías?"
+  },
+  {
+    "file": "src/components/workspace/dashboard.tsx",
+    "line": 367,
+    "before": "¿Reactivar la entidad?",
+    "after": "¿Reactivar el círculo?"
+  },
+  {
+    "file": "src/components/workspace/dashboard.tsx",
+    "line": 368,
+    "before": "Visitar entidad",
+    "after": "Visitar círculo"
+  },
+  {
+    "file": "src/components/workspace/dashboard.tsx",
+    "line": 381,
+    "before": "Importes y seguimiento de transferencias de la entidad en USD.",
+    "after": "Importes y seguimiento de transferencias del círculo en USD."
+  },
+  {
+    "file": "src/components/workspace/dashboard.tsx",
+    "line": 399,
+    "before": "Entidades",
+    "after": "Círculos"
+  },
+  {
+    "file": "src/components/workspace/dashboard.tsx",
+    "line": 399,
+    "before": "Nuevas entidades",
+    "after": "Nuevos círculos"
+  },
+  {
+    "file": "src/components/workspace/entity-hero.tsx",
+    "line": 130,
+    "before": "Cargando entidad",
+    "after": "Cargando círculo"
+  },
+  {
+    "file": "src/components/workspace/entity-sidebar.tsx",
+    "line": 64,
+    "before": "Tu espacio en la entidad",
+    "after": "Tu espacio en el círculo"
+  },
+  {
+    "file": "src/components/workspace/entity-sidebar.tsx",
+    "line": 71,
+    "before": " La entidad aún no tiene instalaciones.",
+    "after": " El círculo aún no tiene instalaciones."
+  },
+  {
+    "file": "src/components/workspace/entity.tsx",
+    "line": 115,
+    "before": "Secciones de la entidad",
+    "after": "Secciones del círculo"
+  },
+  {
+    "file": "src/components/workspace/entity.tsx",
+    "line": 121,
+    "before": "Secciones de la entidad",
+    "after": "Secciones del círculo"
+  },
+  {
+    "file": "src/components/workspace/entity.tsx",
+    "line": 131,
+    "before": "Sección de la entidad: ",
+    "after": "Sección del círculo: "
+  },
+  {
+    "file": "src/components/workspace/entity.tsx",
+    "line": 173,
+    "before": "Editar perfil de la entidad",
+    "after": "Editar perfil del círculo"
+  },
+  {
+    "file": "src/components/workspace/entity.tsx",
+    "line": 176,
+    "before": "¿Suspender la entidad y sus membresías? Se intentará cancelar las suscripciones recurrentes. Solo la administración global puede reactivarla.",
+    "after": "¿Suspender el círculo y sus membresías? Se intentará cancelar las suscripciones recurrentes. Solo la administración global puede reactivarlo."
+  },
+  {
+    "file": "src/components/workspace/entity.tsx",
+    "line": 177,
+    "before": "\n              Suspender entidad\n            ",
+    "after": "\n              Suspender círculo\n            "
+  },
+  {
+    "file": "src/components/workspace/entity.tsx",
+    "line": 218,
+    "before": "✓ Estás al día con las novedades de la entidad",
+    "after": "✓ Estás al día con las novedades del círculo"
+  },
+  {
+    "file": "src/components/workspace/entity.tsx",
+    "line": 275,
+    "before": "Miembros de la entidad",
+    "after": "Miembros del círculo"
+  },
+  {
+    "file": "src/components/workspace/entity.tsx",
+    "line": 277,
+    "before": "Retirar de la entidad",
+    "after": "Retirar del círculo"
+  },
+  {
+    "file": "src/components/workspace/entity.tsx",
+    "line": 366,
+    "before": "Pagos de la entidad",
+    "after": "Pagos del círculo"
+  },
+  {
+    "file": "src/components/workspace/entity.tsx",
+    "line": 379,
+    "before": "Neto de la entidad",
+    "after": "Neto del círculo"
+  },
+  {
+    "file": "src/components/workspace/explore.tsx",
+    "line": 60,
+    "before": "Conoce esta entidad y encuentra tu próxima comunidad.",
+    "after": "Conoce este círculo y encuentra tu próxima comunidad."
+  },
+  {
+    "file": "src/components/workspace/explore.tsx",
+    "line": 60,
+    "before": "Ver entidad ",
+    "after": "Ver círculo "
+  },
+  {
+    "file": "src/components/workspace/explore.tsx",
+    "line": 74,
+    "before": "Hay una entidad para cada pasión.",
+    "after": "Hay un círculo para cada pasión."
+  },
+  {
+    "file": "src/components/workspace/explore.tsx",
+    "line": 75,
+    "before": "Buscar entidad por nombre o descripción",
+    "after": "Buscar círculo por nombre o descripción"
+  },
+  {
+    "file": "src/components/workspace/explore.tsx",
+    "line": 75,
+    "before": "Buscar entidad por nombre o descripción…",
+    "after": "Buscar círculo por nombre o descripción…"
+  },
+  {
+    "file": "src/components/workspace/explore.tsx",
+    "line": 76,
+    "before": "Descubre nuestras entidades",
+    "after": "Descubre nuestros círculos"
+  },
+  {
+    "file": "src/components/workspace/explore.tsx",
+    "line": 76,
+    "before": " entidades",
+    "after": " círculos"
+  },
+  {
+    "file": "src/components/workspace/explore.tsx",
+    "line": 76,
+    "before": "No encontramos entidades con esa búsqueda",
+    "after": "No encontramos círculos con esa búsqueda"
+  },
+  {
+    "file": "src/components/workspace/explore.tsx",
+    "line": 76,
+    "before": "Vuelve más adelante para explorar las entidades disponibles.",
+    "after": "Vuelve más adelante para explorar los círculos disponibles."
+  },
+  {
+    "file": "src/components/workspace/facilities.tsx",
+    "line": 81,
+    "before": "Explora los espacios de la entidad y encuentra el lugar para tu próxima actividad.",
+    "after": "Explora los espacios del círculo y encuentra el lugar para tu próxima actividad."
+  },
+  {
+    "file": "src/components/workspace/facilities.tsx",
+    "line": 164,
+    "before": "\n        Volver a la entidad\n      ",
+    "after": "\n        Volver al círculo\n      "
+  },
+  {
+    "file": "src/components/workspace/feed.tsx",
+    "line": 60,
+    "before": ". Esto es lo nuevo en tus entidades.",
+    "after": ". Esto es lo nuevo en tus círculos."
+  },
+  {
+    "file": "src/components/workspace/feed.tsx",
+    "line": 60,
+    "before": "Tu comunidad empieza con un primer encuentro. Explora entidades y únete para ver sus novedades aquí.",
+    "after": "Tu comunidad empieza con un primer encuentro. Explora círculos y únete para ver sus novedades aquí."
+  },
+  {
+    "file": "src/components/workspace/feed.tsx",
+    "line": 60,
+    "before": "Explora entidades ",
+    "after": "Explora círculos "
+  },
+  {
+    "file": "src/components/workspace/feed.tsx",
+    "line": 60,
+    "before": "Mis entidades",
+    "after": "Mis círculos"
+  },
+  {
+    "file": "src/components/workspace/feed.tsx",
+    "line": 60,
+    "before": "Tus entidades aparecerán aquí cuando tengas una membresía activa.",
+    "after": "Tus círculos aparecerán aquí cuando tengas una membresía activa."
+  },
+  {
+    "file": "src/components/workspace/feed.tsx",
+    "line": 60,
+    "before": "Hay una entidad para ti.",
+    "after": "Hay un círculo para ti."
+  },
+  {
+    "file": "src/components/workspace/feed.tsx",
+    "line": 60,
+    "before": "Explorar entidades ",
+    "after": "Explorar círculos "
+  },
+  {
+    "file": "src/components/workspace/finance-controls.tsx",
+    "line": 54,
+    "before": "Datos bancarios de la entidad",
+    "after": "Datos bancarios del círculo"
+  },
+  {
+    "file": "src/components/workspace/finance-controls.tsx",
+    "line": 61,
+    "before": "Los administradores de esta entidad y el superadministrador pueden consultar estos datos para gestionar las liquidaciones.",
+    "after": "Los administradores de este círculo y el superadministrador pueden consultar estos datos para gestionar las liquidaciones."
+  },
+  {
+    "file": "src/components/workspace/finance-controls.tsx",
+    "line": 93,
+    "before": "☷ Seleccionar entidades",
+    "after": "☷ Seleccionar círculos"
+  },
+  {
+    "file": "src/components/workspace/finance-controls.tsx",
+    "line": 94,
+    "before": "Finanzas · ingresos por entidad (USD)",
+    "after": "Finanzas · ingresos por círculo (USD)"
+  },
+  {
+    "file": "src/components/workspace/finance-controls.tsx",
+    "line": 95,
+    "before": "Seleccionar entidades",
+    "after": "Seleccionar círculos"
+  },
+  {
+    "file": "src/components/workspace/finance-controls.tsx",
+    "line": 95,
+    "before": "Buscar entidad",
+    "after": "Buscar círculo"
+  },
+  {
+    "file": "src/components/workspace/finance-controls.tsx",
+    "line": 95,
+    "before": "Buscar entidad...",
+    "after": "Buscar círculo..."
+  },
+  {
+    "file": "src/components/workspace/global-finances.tsx",
+    "line": 58,
+    "before": "Neto para entidades",
+    "after": "Neto para círculos"
+  },
+  {
+    "file": "src/components/workspace/global-finances.tsx",
+    "line": 58,
+    "before": "Finanzas por entidad",
+    "after": "Finanzas por círculo"
+  },
+  {
+    "file": "src/components/workspace/global-finances.tsx",
+    "line": 58,
+    "before": "Entidad",
+    "after": "Círculo"
+  },
+  {
+    "file": "src/components/workspace/global-finances.tsx",
+    "line": 58,
+    "before": "Entidad",
+    "after": "Círculo"
+  },
+  {
+    "file": "src/components/workspace/global-finances.tsx",
+    "line": 58,
+    "before": "Entidad",
+    "after": "Círculo"
+  },
+  {
+    "file": "src/components/workspace/global-finances.tsx",
+    "line": 58,
+    "before": "Entidad",
+    "after": "Círculo"
+  },
+  {
+    "file": "src/components/workspace/global-finances.tsx",
+    "line": 58,
+    "before": "Entidad",
+    "after": "Círculo"
+  },
+  {
+    "file": "src/components/workspace/global-finances.tsx",
+    "line": 58,
+    "before": "Entidad",
+    "after": "Círculo"
+  },
+  {
+    "file": "src/components/workspace/index.tsx",
+    "line": 73,
+    "before": "Explorar entidades",
+    "after": "Explorar círculos"
+  },
+  {
+    "file": "src/components/workspace/index.tsx",
+    "line": 73,
+    "before": "Mis entidades",
+    "after": "Mis círculos"
+  },
+  {
+    "file": "src/components/workspace/index.tsx",
+    "line": 73,
+    "before": "Gestionar entidades",
+    "after": "Gestionar círculos"
+  },
+  {
+    "file": "src/components/workspace/index.tsx",
+    "line": 78,
+    "before": "\n              No tienes una membresía habilitada en esta entidad.",
+    "after": "\n              No tienes una membresía habilitada en este círculo."
+  },
+  {
+    "file": "src/components/workspace/payment-history.tsx",
+    "line": 57,
+    "before": "Consulta cada cobro y accede al detalle de tus pagos en las entidades.",
+    "after": "Consulta cada cobro y accede al detalle de tus pagos en los círculos."
+  },
+  {
+    "file": "src/components/workspace/payment-history.tsx",
+    "line": 59,
+    "before": "Entidad",
+    "after": "Círculo"
+  },
+  {
+    "file": "src/components/workspace/payment-history.tsx",
+    "line": 60,
+    "before": "Entidad",
+    "after": "Círculo"
+  },
+  {
+    "file": "src/components/workspace/payment-history.tsx",
+    "line": 60,
+    "before": "Todas las entidades",
+    "after": "Todos los círculos"
+  },
+  {
+    "file": "src/components/workspace/payment-history.tsx",
+    "line": 61,
+    "before": "Entidad",
+    "after": "Círculo"
+  },
+  {
+    "file": "src/components/workspace/payment-history.tsx",
+    "line": 61,
+    "before": "Entidad",
+    "after": "Círculo"
+  },
+  {
+    "file": "src/components/workspace/personal.tsx",
+    "line": 74,
+    "before": "Explorar entidades",
+    "after": "Explorar círculos"
+  },
+  {
+    "file": "src/components/workspace/personal.tsx",
+    "line": 75,
+    "before": "Mis entidades",
+    "after": "Mis círculos"
+  },
+  {
+    "file": "src/components/workspace/personal.tsx",
+    "line": 119,
+    "before": "Tu participación y tu historia en cada entidad.",
+    "after": "Tu participación y tu historia en cada círculo."
+  },
+  {
+    "file": "src/components/workspace/personal.tsx",
+    "line": 128,
+    "before": "\n            Buscar entidades\n            ",
+    "after": "\n            Buscar círculos\n            "
+  },
+  {
+    "file": "src/components/workspace/personal.tsx",
+    "line": 133,
+    "before": "Crear una entidad",
+    "after": "Crear un círculo"
+  },
+  {
+    "file": "src/components/workspace/personal.tsx",
+    "line": 140,
+    "before": "\n            Las publicaciones aparecerán cuando pertenezcas a una entidad con\n            actividad. ",
+    "after": "\n            Las publicaciones aparecerán cuando pertenezcas a un círculo con\n            actividad. "
+  },
+  {
+    "file": "src/components/workspace/personal.tsx",
+    "line": 141,
+    "before": "Explora entidades",
+    "after": "Explora círculos"
+  },
+  {
+    "file": "src/components/workspace/personal.tsx",
+    "line": 151,
+    "before": "Publicación de la entidad",
+    "after": "Publicación del círculo"
+  },
+  {
+    "file": "src/components/workspace/personal.tsx",
+    "line": 168,
+    "before": "\n                  Ver entidad\n                ",
+    "after": "\n                  Ver círculo\n                "
+  },
+  {
+    "file": "src/components/workspace/personal.tsx",
+    "line": 170,
+    "before": "Ir a la entidad",
+    "after": "Ir al círculo"
+  },
+  {
+    "file": "src/components/workspace/personal.tsx",
+    "line": 174,
+    "before": "\n                    Abrir entidad\n                  ",
+    "after": "\n                    Abrir círculo\n                  "
+  },
+  {
+    "file": "src/components/workspace/personal.tsx",
+    "line": 220,
+    "before": "✓ Estás al día con las novedades de la entidad",
+    "after": "✓ Estás al día con las novedades del círculo"
+  },
+  {
+    "file": "src/components/workspace/personal.tsx",
+    "line": 221,
+    "before": "Tu próximo entidad empieza aquí",
+    "after": "Tu próximo círculo empieza aquí"
+  },
+  {
+    "file": "src/components/workspace/post-card.tsx",
+    "line": 82,
+    "before": "Publicación de la entidad",
+    "after": "Publicación del círculo"
+  },
+  {
+    "file": "src/components/workspace/post-card.tsx",
+    "line": 85,
+    "before": "Publicación de la entidad",
+    "after": "Publicación del círculo"
+  },
+  {
+    "file": "src/lib/entities/payment-csv.ts",
+    "line": 52,
+    "before": "Entidad",
+    "after": "Círculo"
+  },
+  {
+    "file": "src/lib/reservations/authorize-facility-reservation.ts",
+    "line": 109,
+    "before": "La entidad no existe o no está activa.",
+    "after": "El círculo no existe o no está activo."
+  },
+  {
+    "file": "src/lib/reservations/authorize-facility-reservation.ts",
+    "line": 116,
+    "before": "La instalación no existe en esta entidad.",
+    "after": "La instalación no existe en este círculo."
+  },
+  {
+    "file": "src/lib/reservations/authorize-facility-reservation.ts",
+    "line": 160,
+    "before": "Necesitas una membresía activa en esta entidad para reservar.",
+    "after": "Necesitas una membresía activa en este círculo para reservar."
+  }
+]
