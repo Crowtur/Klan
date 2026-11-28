@@ -42,12 +42,15 @@
  * ==============================================================================
  */
 
+// La interfaz incorpora los nuevos flujos conservando rutas Entity y textos visibles de Círculo.
+
 // Refactorización Parte 12 (UI-Only): Se muestra 'Círculo/Círculos' al usuario manteniendo 'Entity' en código, rutas y BD.
 
 "use client";
 import {useMobile} from "../use-mobile";
 import {AvatarImage} from "@/components/avatar-image";
 import {PublicPlans} from "./public-plans";
+import {EntityRules} from "./entity-rules";
 import { Location } from "./location";
 import { CreateEntity } from "./create-entity";
 import { EditorModal } from "./modal";
@@ -188,7 +191,7 @@ export function Personal({ view, q = "" }: {
                   </Action>)}
             </div>
             {view === "applications" && (<>
-                <div className="step-progress">{["Documentos", "Revisión", "Ingreso"].map((step, i) => <span className={(r.status === "APPROVED" || i === 0 || i === 1 && r.status === "DOCUMENTATION_REVIEW") ? "done" : ""} key={step}>{i + 1}. {step}</span>)}</div>
+                <div className="step-progress">{[(r.plan.documentRequirements?.length ? "Documentos" : "Solicitud"), "Revisión", "Ingreso"].map((step, i) => <span className={(r.status === "APPROVED" || i === 0 || i === 1 && r.status === "DOCUMENTATION_REVIEW") ? "done" : ""} key={step}>{i + 1}. {step}</span>)}</div>
                 <p>{r.rejectionReason}</p>
                 {["PENDING", "DOCUMENTATION_REVIEW"].includes(r.status)&&<><ApplicationDocuments application={r} onDone={()=>refresh(v=>v+1)}/><Action variant="destructive" url={`/api/entities/${r.plan.entityId}/membership-applications/${r.id}`} method="PATCH" confirm="¿Cancelar esta solicitud?" onDone={()=>refresh(v=>v+1)}>Cancelar solicitud</Action></>}
                 {r.status === "APPROVED" && (<Link className="btn btn-outline" href={href("subscriptions")}>
@@ -202,12 +205,12 @@ export function Personal({ view, q = "" }: {
     </>);
 }
 /** Comparte la ficha pública entre exploración y espacio privado y resuelve publicaciones enlazadas por identificador. */
-export function PublicEntity({entity,target=""}:{entity:string;target?:string}){
+export function PublicEntity({entity,target="",tab="posts",workspace=false}:{entity:string;target?:string;tab?:string;workspace?:boolean}){
   const state=useData(`/api/catalog/entities/${entity}`);
   const [page,setPage]=useState<number|null>(null);
   const query=new URLSearchParams({limit:"10",page:String(page||1)});
   if(target && page===null)query.set("anchor",target);
-  const posts=useData(`/api/entities/${entity}/posts?${query}`);
+  const posts=useData(tab==="rules"?null:`/api/entities/${entity}/posts?${query}`);
   useEffect(()=>{
     if(target && page===null && posts.data && state.data)
       document.getElementById("post-"+target)?.scrollIntoView({block:"start",behavior:"instant"});
@@ -222,9 +225,9 @@ export function PublicEntity({entity,target=""}:{entity:string;target?:string}){
     <Pager data={posts.data} page={posts.data?.pagination.page||1} onPage={setPage}/>{!!posts.data?.posts.length&&!posts.data.pagination.hasNextPage&&<p className="feed-end">✓ Estás al día con las novedades del círculo</p>}</Status></div></section>;
   const offer = <aside key="plans" className="public-plans"><small>Tu próximo círculo empieza aquí</small><div><Status state={state}><PublicPlans entity={entity} plans={plans}/></Status></div></aside>;
   // En el perfil público móvil se ofrecen los planes antes del feed. Escritorio conserva las columnas originales.
-  return <>{!state.error && <EntityHero entity={state.data?.entity?.id===entity ? state.data.entity : undefined}/>}<div className="public-columns">
+  return <>{!state.error && <EntityHero entity={state.data?.entity?.id===entity ? state.data.entity : undefined}/>}<nav className="tabs public-entity-sections" aria-label="Secciones públicas del círculo">{[["posts","Publicaciones"],["rules","Reglas"]].map(([key,title])=><Link key={key} aria-current={tab===key?"page":undefined} href={workspace?href("publicEntity",{entity,tab:key}):`/entity/${entity}?tab=${key}`}>{title}</Link>)}</nav>{tab==="rules"?<EntityRules entity={entity}/>:<div className="public-columns">
     {mobile ? [offer, publications] : [publications, offer]}
-  </div></>;
+  </div>}</>;
 }
 /** Solicita el detalle autorizado y presenta la confirmación y el importe del pago. */
 export function Payment({ id }: {
@@ -252,8 +255,8 @@ export function Payment({ id }: {
 function ApplicationDocuments({application:r,onDone}:{application:Row;onDone:()=>void}){
  const [error,setError]=useState("");
  const base=`/api/entities/${r.plan.entityId}/membership-applications/${r.id}`;
- const requirements:Row[]=r.plan.requiresDocumentation ? r.plan.documentRequirements||[] : [];
+ const requirements:Row[]=(r.plan.documentRequirements||[]).filter((requirement:Row)=>requirement.isActive!==false);
  const submit=<Action url={`${base}/submit`} onDone={onDone}>Enviar a revisión</Action>;
  if(!requirements.length)return submit;
- return <EditorModal title="Administrar documentos"><p>Adjunta los documentos solicitados. PDF · Máximo 8 MB por archivo.</p>{error&&<p role="alert">{error}</p>}{requirements.map(req=>{const doc=r.documents?.find((d:Row)=>d.requirementId===req.id&&!d.deletedAt);return <Panel key={req.id} title={req.name}><p>{req.description} · {req.isRequired?"Obligatorio":"Opcional"}</p>{doc&&<><p><Badge value={doc.status}/> {doc.rejectionReason}</p><small>{doc.fileName} · {doc.fileSizeBytes?Math.ceil(doc.fileSizeBytes/1024)+" KB":""}</small><div className="actions"><a className="btn btn-outline" href={safeUrl(doc.fileUrl)} target="_blank" rel="noreferrer">Ver documento</a>{doc.status!=="APPROVED"&&<Action url={`${base}/documents/${doc.id}?version=${doc.version}`} method="DELETE" confirm="¿Retirar este archivo?" onDone={onDone}>Retirar archivo</Action>}</div></>}{(!doc||["PENDING","REJECTED"].includes(doc.status))&&<UploadDropzone endpoint="membershipDocumentUploader" input={{entityId:r.plan.entityId,applicationId:r.id,requirementId:req.id}} content={{label:"Arrastra tu documento o haz clic para elegir",allowedContent:"PDF · Máximo 8 MB",button:"Subir documento"}} onClientUploadComplete={onDone} onUploadError={e=>setError(e.message)}/>}</Panel>})}{submit}</EditorModal>;
+ return <EditorModal title="Administrar documentos"><p>Adjunta los documentos solicitados. PDF · Máximo 8 MB por archivo.</p>{error&&<p role="alert">{error}</p>}{requirements.map(req=>{const doc=r.documents?.find((d:Row)=>d.requirementId===req.id&&!d.deletedAt);return <Panel key={req.id} title={req.name}><p>{req.description} · {req.isRequired?"Obligatorio":"Opcional"}</p>{doc&&<><p><Badge value={doc.status}/> {doc.rejectionReason}</p><small>{doc.fileName} · {doc.fileSizeBytes?Math.ceil(doc.fileSizeBytes/1024)+" KB":""}</small><div className="actions"><a className="btn btn-outline" href={safeUrl(doc.fileUrl)} target="_blank" rel="noreferrer">Ver documento</a>{doc.status!=="APPROVED"&&<Action url={`${base}/documents/${doc.id}?version=${doc.version}`} method="DELETE" confirm="¿Retirar este archivo?" onDone={onDone}>Retirar archivo</Action>}</div></>}{(!doc||["PENDING","REJECTED"].includes(doc.status))&&<UploadDropzone endpoint="membershipDocumentUploader" input={{entityId:r.plan.entityId,applicationId:r.id,requirementId:req.id}} content={{label:"Arrastra tu documento o haz clic para elegir",allowedContent:"PDF · Máximo 8 MB",button:"Subir documento"}} onClientUploadComplete={files=>{if(files[0]?.serverData?.persisted)onDone();else setError("No se confirmó el registro del documento.");}} onUploadError={e=>setError(e.message)}/>}</Panel>})}{submit}</EditorModal>;
 }

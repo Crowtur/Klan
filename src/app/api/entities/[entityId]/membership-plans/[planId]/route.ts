@@ -327,9 +327,7 @@ export async function PATCH(
         billingMode: durationUnit === "DAY" ? "ONE_TIME" : "RECURRING",
         }),
 
-        ...(requiresDocumentation !== undefined && {
-          requiresDocumentation,
-        }),
+        // El payload heredado se valida arriba, pero no puede sustituir los requisitos reales.
 
         ...(isActive !== undefined && {
           isActive,

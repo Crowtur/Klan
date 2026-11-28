@@ -42,6 +42,8 @@
  * ==============================================================================
  */
 
+// La X y Escape cierran el diálogo y devuelven el foco al control de apertura.
+
 "use client";
 import { useRef, useState, type ReactNode } from "react";
 /** Usa el diálogo nativo para mantener el foco dentro del editor y admite un disparador de retirada. */
@@ -56,6 +58,6 @@ export function EditorModal({ title, children, destructive = false, lazy = false
     return <><button className={destructive ? "outline-destructive" : "secondary"} onClick={() => { if (lazy) setOpen(true); dialog.current?.showModal(); }}>{title}</button><dialog className="editor-modal" ref={dialog} onClose={() => { if (lazy) setOpen(false); }} aria-label={title} onClick={e => { if (e.target === dialog.current)
         dialog.current.close(); }}>
  <header><h2>{title}</h2><button className="secondary" onClick={() => dialog.current?.close()} aria-label="Cerrar">×</button></header>
- {(!lazy || open) && children}<button className="outline-destructive" onClick={() => dialog.current?.close()}>Cancelar</button>
+ {(!lazy || open) && children}
  </dialog></>;
 }

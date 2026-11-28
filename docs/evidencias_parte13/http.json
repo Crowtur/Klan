@@ -1,0 +1,356 @@
+{
+  "result": "PASS",
+  "httpRequests": 70,
+  "checks": [
+    {
+      "method": "GET",
+      "path": "/api/entities/b2cd02f4-206a-4ca8-93c0-2645d36eb44d/rules",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/api/entities/b2cd02f4-206a-4ca8-93c0-2645d36eb44d/rules",
+      "status": 401
+    },
+    {
+      "method": "POST",
+      "path": "/api/entities/b2cd02f4-206a-4ca8-93c0-2645d36eb44d/rules",
+      "status": 403
+    },
+    {
+      "method": "POST",
+      "path": "/api/entities/b2cd02f4-206a-4ca8-93c0-2645d36eb44d/rules",
+      "status": 403
+    },
+    {
+      "method": "POST",
+      "path": "/api/entities/b2cd02f4-206a-4ca8-93c0-2645d36eb44d/rules",
+      "status": 400
+    },
+    {
+      "method": "POST",
+      "path": "/api/entities/b2cd02f4-206a-4ca8-93c0-2645d36eb44d/rules",
+      "status": 400
+    },
+    {
+      "method": "POST",
+      "path": "/api/entities/b2cd02f4-206a-4ca8-93c0-2645d36eb44d/rules",
+      "status": 400
+    },
+    {
+      "method": "POST",
+      "path": "/api/entities/b2cd02f4-206a-4ca8-93c0-2645d36eb44d/rules",
+      "status": 400
+    },
+    {
+      "method": "POST",
+      "path": "/api/entities/b2cd02f4-206a-4ca8-93c0-2645d36eb44d/rules",
+      "status": 201
+    },
+    {
+      "method": "POST",
+      "path": "/api/entities/b2cd02f4-206a-4ca8-93c0-2645d36eb44d/rules",
+      "status": 201
+    },
+    {
+      "method": "GET",
+      "path": "/api/entities/b2cd02f4-206a-4ca8-93c0-2645d36eb44d/rules",
+      "status": 200
+    },
+    {
+      "method": "PATCH",
+      "path": "/api/entities/127be107-67df-4648-afa5-57b0c80fd881/rules/c4a9afca-eed2-4dab-97d5-6e579cef20a5",
+      "status": 404
+    },
+    {
+      "method": "PATCH",
+      "path": "/api/entities/b2cd02f4-206a-4ca8-93c0-2645d36eb44d/rules/c4a9afca-eed2-4dab-97d5-6e579cef20a5",
+      "status": 200
+    },
+    {
+      "method": "PATCH",
+      "path": "/api/entities/b2cd02f4-206a-4ca8-93c0-2645d36eb44d/rules/c4a9afca-eed2-4dab-97d5-6e579cef20a5",
+      "status": 409
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/entities/b2cd02f4-206a-4ca8-93c0-2645d36eb44d/rules/c4a9afca-eed2-4dab-97d5-6e579cef20a5",
+      "status": 409
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/entities/b2cd02f4-206a-4ca8-93c0-2645d36eb44d/rules/c4a9afca-eed2-4dab-97d5-6e579cef20a5",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/entities/888bfb0d-d1f9-426b-b044-e91602b3e8e2/rules",
+      "status": 404
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/entities/b2cd02f4-206a-4ca8-93c0-2645d36eb44d/rules/document",
+      "status": 403
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/entities/b2cd02f4-206a-4ca8-93c0-2645d36eb44d/rules/document",
+      "status": 409
+    },
+    {
+      "method": "GET",
+      "path": "/api/entities/b2cd02f4-206a-4ca8-93c0-2645d36eb44d/rules",
+      "status": 200
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/entities/b2cd02f4-206a-4ca8-93c0-2645d36eb44d/rules/document",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/entities/b2cd02f4-206a-4ca8-93c0-2645d36eb44d/rules",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/posts/hashtags?tag=M%C3%9ASICA73453ad0&entityId=b2cd02f4-206a-4ca8-93c0-2645d36eb44d",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/posts/hashtags?tag=M%C3%9ASICA73453ad0&entityId=b2cd02f4-206a-4ca8-93c0-2645d36eb44d&scope=all",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/posts/hashtags?tag=M%C3%9ASICA73453ad0&entityId=b2cd02f4-206a-4ca8-93c0-2645d36eb44d&scope=all&limit=1",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/posts/hashtags?tag=M%C3%9ASICA73453ad0&entityId=b2cd02f4-206a-4ca8-93c0-2645d36eb44d&scope=private",
+      "status": 400
+    },
+    {
+      "method": "GET",
+      "path": "/api/posts/hashtags?tag=bad%23tag&entityId=b2cd02f4-206a-4ca8-93c0-2645d36eb44d",
+      "status": 400
+    },
+    {
+      "method": "GET",
+      "path": "/api/posts/hashtags?tag=hola&entityId=888bfb0d-d1f9-426b-b044-e91602b3e8e2",
+      "status": 404
+    },
+    {
+      "method": "POST",
+      "path": "/api/entities/b2cd02f4-206a-4ca8-93c0-2645d36eb44d/posts",
+      "status": 201
+    },
+    {
+      "method": "PATCH",
+      "path": "/api/entities/b2cd02f4-206a-4ca8-93c0-2645d36eb44d/posts/de64554e-88e3-4d5b-a551-e6427d1f0526",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/posts/hashtags?tag=M%C3%9ASICA73453ad0&entityId=b2cd02f4-206a-4ca8-93c0-2645d36eb44d",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/link-preview?url=http%3A%2F%2F127.0.0.1%2F",
+      "status": 400
+    },
+    {
+      "method": "GET",
+      "path": "/api/link-preview?url=javascript%3Aalert(1)",
+      "status": 400
+    },
+    {
+      "method": "POST",
+      "path": "/api/locations/resolve",
+      "status": 401
+    },
+    {
+      "method": "POST",
+      "path": "/api/locations/resolve",
+      "status": 400
+    },
+    {
+      "method": "POST",
+      "path": "/api/locations/resolve",
+      "status": 400
+    },
+    {
+      "method": "POST",
+      "path": "/api/entities",
+      "status": 400
+    },
+    {
+      "method": "PATCH",
+      "path": "/api/entities/b2cd02f4-206a-4ca8-93c0-2645d36eb44d",
+      "status": 400
+    },
+    {
+      "method": "PATCH",
+      "path": "/api/entities/b2cd02f4-206a-4ca8-93c0-2645d36eb44d",
+      "status": 400
+    },
+    {
+      "method": "PATCH",
+      "path": "/api/entities/b2cd02f4-206a-4ca8-93c0-2645d36eb44d",
+      "status": 200
+    },
+    {
+      "method": "PATCH",
+      "path": "/api/entities/127be107-67df-4648-afa5-57b0c80fd881",
+      "status": 400
+    },
+    {
+      "method": "POST",
+      "path": "/api/entities/b2cd02f4-206a-4ca8-93c0-2645d36eb44d/membership-plans",
+      "status": 400
+    },
+    {
+      "method": "POST",
+      "path": "/api/entities/b2cd02f4-206a-4ca8-93c0-2645d36eb44d/membership-plans",
+      "status": 400
+    },
+    {
+      "method": "POST",
+      "path": "/api/entities/b2cd02f4-206a-4ca8-93c0-2645d36eb44d/membership-plans",
+      "status": 400
+    },
+    {
+      "method": "POST",
+      "path": "/api/entities/b2cd02f4-206a-4ca8-93c0-2645d36eb44d/membership-plans",
+      "status": 400
+    },
+    {
+      "method": "POST",
+      "path": "/api/entities/b2cd02f4-206a-4ca8-93c0-2645d36eb44d/membership-plans",
+      "status": 403
+    },
+    {
+      "method": "POST",
+      "path": "/api/entities/b2cd02f4-206a-4ca8-93c0-2645d36eb44d/membership-plans",
+      "status": 201
+    },
+    {
+      "method": "POST",
+      "path": "/api/entities/b2cd02f4-206a-4ca8-93c0-2645d36eb44d/membership-plans",
+      "status": 201
+    },
+    {
+      "method": "POST",
+      "path": "/api/entities/b2cd02f4-206a-4ca8-93c0-2645d36eb44d/membership-plans/fbb83e12-6c5a-412e-a776-cd5367e2a964/document-requirements",
+      "status": 201
+    },
+    {
+      "method": "POST",
+      "path": "/api/entities/b2cd02f4-206a-4ca8-93c0-2645d36eb44d/membership-applications",
+      "status": 201
+    },
+    {
+      "method": "POST",
+      "path": "/api/entities/b2cd02f4-206a-4ca8-93c0-2645d36eb44d/membership-applications/be0e43c8-ec8b-4c04-8a8d-3b9ff424a0d2/submit",
+      "status": 200
+    },
+    {
+      "method": "PATCH",
+      "path": "/api/entities/b2cd02f4-206a-4ca8-93c0-2645d36eb44d/membership-applications/be0e43c8-ec8b-4c04-8a8d-3b9ff424a0d2/review",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/api/entities/b2cd02f4-206a-4ca8-93c0-2645d36eb44d/membership-plans",
+      "status": 201
+    },
+    {
+      "method": "POST",
+      "path": "/api/entities/b2cd02f4-206a-4ca8-93c0-2645d36eb44d/membership-plans/78161a4a-e82f-4a15-b6be-65ebf8ab6793/document-requirements",
+      "status": 201
+    },
+    {
+      "method": "PATCH",
+      "path": "/api/entities/b2cd02f4-206a-4ca8-93c0-2645d36eb44d/membership-plans/78161a4a-e82f-4a15-b6be-65ebf8ab6793",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/api/entities/b2cd02f4-206a-4ca8-93c0-2645d36eb44d/membership-applications",
+      "status": 201
+    },
+    {
+      "method": "POST",
+      "path": "/api/entities/b2cd02f4-206a-4ca8-93c0-2645d36eb44d/membership-applications/0a3cb74d-3db2-46f1-8567-1a86b9a8475e/submit",
+      "status": 409
+    },
+    {
+      "method": "PATCH",
+      "path": "/api/entities/b2cd02f4-206a-4ca8-93c0-2645d36eb44d/membership-applications/0a3cb74d-3db2-46f1-8567-1a86b9a8475e/review",
+      "status": 400
+    },
+    {
+      "method": "POST",
+      "path": "/api/entities/b2cd02f4-206a-4ca8-93c0-2645d36eb44d/membership-applications/0a3cb74d-3db2-46f1-8567-1a86b9a8475e/submit",
+      "status": 200
+    },
+    {
+      "method": "PATCH",
+      "path": "/api/entities/b2cd02f4-206a-4ca8-93c0-2645d36eb44d/membership-applications/0a3cb74d-3db2-46f1-8567-1a86b9a8475e/review",
+      "status": 400
+    },
+    {
+      "method": "PATCH",
+      "path": "/api/entities/b2cd02f4-206a-4ca8-93c0-2645d36eb44d/membership-applications/0a3cb74d-3db2-46f1-8567-1a86b9a8475e/review",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/api/entities/b2cd02f4-206a-4ca8-93c0-2645d36eb44d/membership-applications",
+      "status": 201
+    },
+    {
+      "method": "POST",
+      "path": "/api/entities/b2cd02f4-206a-4ca8-93c0-2645d36eb44d/membership-applications/8244c602-e292-4fed-bde2-9c4c1a0bbc63/submit",
+      "status": 200
+    },
+    {
+      "method": "PATCH",
+      "path": "/api/entities/b2cd02f4-206a-4ca8-93c0-2645d36eb44d/membership-applications/8244c602-e292-4fed-bde2-9c4c1a0bbc63/review",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/test-db",
+      "status": 404
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/entities/b2cd02f4-206a-4ca8-93c0-2645d36eb44d/members/fd94e302-7f35-4956-a98f-44c559bc1ea3",
+      "status": 403
+    },
+    {
+      "method": "GET",
+      "path": "/",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/entities",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/entity/b2cd02f4-206a-4ca8-93c0-2645d36eb44d?tab=rules",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/hashtags?entity=b2cd02f4-206a-4ca8-93c0-2645d36eb44d&tag=música13",
+      "status": 200
+    }
+  ]
+}

@@ -42,21 +42,26 @@
  * ==============================================================================
  */
 
+// La interfaz incorpora los nuevos flujos conservando rutas Entity y textos visibles de Círculo.
+
 "use client";
 import {useEffect,useRef,useState} from "react";
 import {generateReactHelpers} from "@uploadthing/react";
 import type {OurFileRouter} from "@/app/api/uploadthing/core";
 import {Icon} from "@/components/ui";
+import {ImageCropDialog} from "@/components/image-crop-dialog";
+import {PostText} from "./post-content";
 import {api,safeUrl,type Row} from "./common";
 const {useUploadThing}=generateReactHelpers<OurFileRouter>();
 /** Coordina texto e imagen en el mismo envío. Al editar distingue conservar, sustituir y retirar la imagen. */
 export function PostComposer({entity,post,onDone}:{entity:string;post?:Row;onDone:()=>void}){
  const [title,setTitle]=useState(post?.title||""),[content,setContent]=useState(post?.content||""),[file,setFile]=useState<File|null>(null),[preview,setPreview]=useState<string>(),[remove,setRemove]=useState(false),[drag,setDrag]=useState(false),[busy,setBusy]=useState(false),[error,setError]=useState("");
+ const [selected,setSelected]=useState<File|null>(null);
  const input=useRef<HTMLInputElement>(null),form=useRef<HTMLFormElement>(null),requestKey=useRef<string>("");
  const {startUpload}=useUploadThing("postComposerUploader");
  useEffect(()=>{if(!file){setPreview(undefined);return}const url=URL.createObjectURL(file);setPreview(url);return()=>URL.revokeObjectURL(url)},[file]);
- function choose(next?:File){if(!next)return;if(!next.type.startsWith("image/")||next.size>4*1024*1024){setError("Elige una imagen de hasta 4 MB.");return}setError("");setFile(next);setRemove(false)}
- return <form className="post-composer" ref={form} onSubmit={async e=>{e.preventDefault();setBusy(true);setError("");try{
+ function choose(next?:File){if(!next)return;if(!next.type.startsWith("image/")||next.size>32*1024*1024){setError("Elige una imagen de hasta 32 MB para recortarla.");return}setError("");setSelected(next)}
+ return <><form className="post-composer" ref={form} onSubmit={async e=>{e.preventDefault();setBusy(true);setError("");try{
  if(file){requestKey.current ||= crypto.randomUUID();const result=await startUpload([file],{entityId:entity,postId:post?.id,requestKey:requestKey.current,title,content});if(!result?.[0]?.serverData?.persisted)throw Error("No se pudo guardar la publicación. Intenta nuevamente.")}
  else await api(`/api/entities/${entity}/posts${post?"/"+post.id:""}`,post?"PATCH":"POST",{title,content,...(remove?{removeImage:true}:{})});
  onDone();form.current?.closest("dialog")?.close();if(!post){setTitle("");setContent("")}setFile(null);requestKey.current="";
@@ -64,9 +69,10 @@ export function PostComposer({entity,post,onDone}:{entity:string;post?:Row;onDon
  <fieldset disabled={busy}>
  <label>Título<input maxLength={150} value={title} onChange={e=>setTitle(e.target.value)}/></label><label>Contenido<textarea required maxLength={5000} value={content} onChange={e=>setContent(e.target.value)}/></label>
  {(preview||!remove&&safeUrl(post?.imageUrl))&&<img className="composer-preview" src={preview||safeUrl(post?.imageUrl)} alt="Vista previa de la publicación"/>}
- <div className={drag?"file-drop dragging":"file-drop"} onDragOver={e=>{e.preventDefault();setDrag(true)}} onDragLeave={()=>setDrag(false)} onDrop={e=>{e.preventDefault();setDrag(false);choose(e.dataTransfer.files[0])}}><Icon name="camera" size={28}/><strong>{file?.name||"Arrastra una imagen aquí"}</strong><small>Imagen opcional · Máximo 4 MB</small><button type="button" className="secondary" onClick={()=>input.current?.click()}>Elegir imagen</button><input ref={input} type="file" hidden accept="image/*" onChange={e=>{choose(e.target.files?.[0]);e.target.value=""}}/></div>
+ <div className={drag?"file-drop dragging":"file-drop"} onDragOver={e=>{e.preventDefault();setDrag(true)}} onDragLeave={()=>setDrag(false)} onDrop={e=>{e.preventDefault();setDrag(false);choose(e.dataTransfer.files[0])}}><Icon name="camera" size={28}/><strong>{file?.name||"Arrastra una imagen aquí"}</strong><small>Se admiten todos los formatos de imagen<br/>Imagen opcional · Máximo 4 MB después del recorte</small><button type="button" className="secondary" onClick={()=>input.current?.click()}>Elegir imagen</button><input ref={input} type="file" hidden accept="image/*" onChange={e=>{choose(e.target.files?.[0]);e.target.value=""}}/></div>
  {(file||post?.imageUrl&&!remove)&&<button type="button" className="outline-destructive" onClick={()=>{setFile(null);setRemove(true)}}>Quitar imagen</button>}
 
+ {(title||content)&&<details className="post-text-draft"><summary>Vista previa del texto y etiquetas</summary><strong><PostText text={title} entityId={entity}/></strong><p><PostText text={content} entityId={entity}/></p></details>}
  </fieldset>{error&&<p className="error" role="alert">{error}</p>}<div className="actions"><button disabled={busy}>{busy?"Guardando publicación…":post?"Guardar cambios":"Publicar"}</button></div>
- </form>
+ </form>{selected&&<ImageCropDialog file={selected} maxBytes={4*1024*1024} onCancel={()=>setSelected(null)} onConfirm={next=>{setFile(next);setSelected(null);setRemove(false);requestKey.current="";}}/>}</>
 }

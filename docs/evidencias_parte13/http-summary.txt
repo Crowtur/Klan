@@ -1,0 +1,12 @@
+{
+  "result": "PASS",
+  "httpRequests": 70,
+  "groups": [
+    "Reglas: CRUD, orden, permisos, aislamiento y concurrencia",
+    "PDF: lectura y eliminación por versión",
+    "Hashtags: ámbito, Unicode, paginación y edición",
+    "Ubicación: territorio, token y ciudad",
+    "Admisión: obligatorios, opcionales y requisitos inactivos",
+    "Regresión HTTP 400/401/403/404 y rutas públicas"
+  ]
+}

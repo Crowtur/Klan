@@ -1,0 +1,89 @@
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+
+> entity-saas@0.1.0 test
+> node --import tsx --test scripts/*.tsx scripts/*.cjs
+
+Pago fallido para Subscription sub_local. Periodo de gracia hasta 2027-01-22T08:00:00.000Z
+Pago fallido para Subscription sub_local. Periodo de gracia hasta 2027-01-22T08:00:00.000Z
+Factura in_test procesada como PAID para Subscription sub_local
+Invoice in_test ya fue pagada. Se ignora el fallo.
+Subscription sub_local sincronizada con Stripe: active
+Factura in_test procesada como PAID para Subscription sub_local
+✔ a processed event exits before touching a payment (182.60167ms)
+✔ confirmed one-time checkout uses the contracted day count (60.038989ms)
+✔ expired pass is FINISHED and another valid access protects the membership (11.435614ms)
+✔ recupera una factura en gracia sin duplicar deuda ni retroceder el período (234.279906ms)
+[UploadThing] Archivo anterior eliminado: previous
+✔ recipient routing distinguishes administrative applications from personal applications (2.060293ms)
+✔ relative timestamps cover seconds, hours, days, weeks, months, years (0.773966ms)
+✔ reading a notification only mutates its authenticated recipient (72.498555ms)
+✔ unread counter does not discard resolved but unread notifications (15.369379ms)
+✔ pending settlement can be paid directly; conditional transition prevents concurrent overwrite (30.128369ms)
+✔ settlement requires payment reference and reports concurrent changes (56.781983ms)
+✔ next charge falls back to expiry for legacy active recurring subscriptions only (10.431852ms)
+✔ global administrative access does not create or borrow another user membership (10.771053ms)
+✔ ordinary member without membership cannot access entidad administration (16.947616ms)
+✔ historical membership counts apply each member transition rather than summing event totals (5.531982ms)
+✔ post upload commits text and image together and retry does not duplicate the post (128.500765ms)
+✔ post completion revalidates admin permission after an upload (24.420691ms)
+✔ receipt upload forbids regular users before any settlement write (18.877653ms)
+✔ receipt callback validates admin again and persists only server-issued file URL/key (20.336721ms)
+✔ membership history excludes unpaid or expired access but includes administrators (3.518799ms)
+✔ reading a entidad tab scopes the update to its actor, entidad and event types (5.413063ms)
+✔ withdrawal persists the deletion key and reopens review only when no documents are pending (8.688677ms)
+✔ cleanup retries failed files and acknowledges only successful storage deletes (2.978397ms)
+✔ approving the last pending document after a rejection sends the application back to Documentos (6.813492ms)
+✔ los datos bancarios se escriben únicamente para la entidad autorizada y no se devuelven al remitente (8.567694ms)
+✔ un enlace público a una publicación anterior recupera su página dentro de la entidad (7.530142ms)
+✔ la limpieza diaria requiere el secreto y conserva las notificaciones sin leer (15.78822ms)
+✔ solo administradores autorizados pueden recuperar los últimos datos bancarios de la entidad (4.700099ms)
+✔ completed payment opens its hosted invoice without caching the private redirect (3.374983ms)
+✔ legacy checkout-only payment resolves its successful charge receipt (3.15395ms)
+✔ ineligible payment does not contact Stripe or redirect (3.099047ms)
+✔ enlaces de entidad, rutas globales y administradores respetan el destino de entrada (2.475899ms)
+✔ notification badges only read unread groups for the signed-in recipient (4.091462ms)
+✔ availability counts only the member’s own minutes while blocking every confirmed reservation (24.075421ms)
+✔ la ruta de diagnóstico que enumeraba usuarios queda fuera de la aplicación (0.095343ms)
+✔ expulsión distingue sesión ausente y permisos insuficientes en la entidad solicitada (11.000288ms)
+✔ crear planes rechaza JSON inválido o incompleto antes de escribir y admite un plan válido (8.557249ms)
+✔ el PDF público respeta la versión y un callback repetido no borra el archivo publicado (18.896651ms)
+✔ la revocación de permisos durante una carga de PDF impide publicarlo y limpia el archivo nuevo (48.049ms)
+✔ los requisitos opcionales permiten carga sin el booleano antiguo y se comprueba el plan real (16.340982ms)
+✔ un DNS mixto público/privado bloquea el enlace antes de abrir conexiones (124.729464ms)
+✔ la conexión usa el DNS fijado y rechaza redirecciones a una red privada (43.144002ms)
+✔ metadatos públicos y límite de tamaño comparten la misma conexión validada (42.200691ms)
+✔ la portada comienza con siete burbujas genéricas sin enlaces (12.387778ms)
+✔ las miniaturas del servidor son WebP cuadrados de 128 y 300 píxeles (115.091047ms)
+✔ las imágenes nuevas y anteriores ofrecen variantes de densidad (1.990018ms)
+✔ los datos bancarios se presentan cerrados y conservan los ceros de la cuenta (1.712129ms)
+✔ las liquidaciones terminales no ofrecen transiciones y las notas comienzan cerradas (1.035529ms)
+✔ la dona selecciona inicialmente los cinco mayores importes (4.179905ms)
+✔ un lector puede compartir sin ver controles de edición (13.812504ms)
+✔ la variante destructiva distingue una baja, una cancelación y la suspensión global (17.132564ms)
+✔ las etiquetas conservan Unicode, límites de palabra y todos los caracteres del texto (7.022888ms)
+✔ enlaces con paréntesis y puntuación no alteran el contenido ni habilitan protocolos ejecutables (1.048129ms)
+✔ sólo el primer enlace en orden de lectura produce una vista previa y precede a la foto (70.181105ms)
+✔ los cinco proveedores sólo generan iframes para hosts e identificadores conocidos (0.664311ms)
+✔ las vistas previas bloquean direcciones privadas, numéricas alternativas, IPv6 y credenciales (8.961798ms)
+✔ los metadatos son texto limitado, con URL relativa resuelta y sin HTML devuelto (1.06873ms)
+✔ Ecuador incluye Galápagos y la ciudad se toma sin calles, provincias ni país (0.685293ms)
+✔ un punto extranjero dentro del rectángulo también se rechaza por su país real (0.404289ms)
+✔ la selección de mapa está firmada, vinculada al usuario y separada del token de sesión (13.904403ms)
+✔ el recorte centrado y sus extremos permanecen dentro de la imagen original (1.86563ms)
+✔ el formulario elimina la casilla y la entrada manual; los requisitos opcionales siguen visibles (5.76304ms)
+✔ la administración de reglas rechaza usuarios y círculos inactivos y roles de otro contexto (0.839244ms)
+✔ plan cards render the contracted duration, USD, multiline benefits and actual counts (9.128209ms)
+✔ daily chart groups adjacent months and identifies a single month in its heading (2.734608ms)
+✔ public catalog limits entidad and plans to active records and public fields (74.53366ms)
+✔ unavailable entidad returns 404 without exposing any plans (26.601406ms)
+✔ personal applications always use authenticated user, not supplied userId (33.642102ms)
+✔ unauthenticated requests do not reach the application query (9.183833ms)
+✔ database errors return controlled errors without exception details (10.793967ms)
+ℹ tests 69
+ℹ suites 0
+ℹ pass 69
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1470.734222

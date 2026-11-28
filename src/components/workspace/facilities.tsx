@@ -182,10 +182,9 @@ export function Facility({ entity, id, admin, }: {
                             { value: "INACTIVE", label: "Inactiva" },
                         ],
                     },
-                ]} initial={f} method="PATCH" url={base} onDone={() => setV(v + 1)}/>
-                <Action url={base} method="DELETE" confirm="¿Desactivar esta instalación?" onDone={() => setV(v + 1)}>
-                  Desactivar
-                </Action>
+                ]} initial={f} method="PATCH" url={base} onDone={() => setV(v + 1)} trailingAction={<Action url={base} method="DELETE" confirm="¿Desactivar esta instalación?" onDone={() => setV(v + 1)}>
+                  Deshabilitar
+                </Action>}/>
               </EditorModal>)}</div>
           </>)}
       </Status>

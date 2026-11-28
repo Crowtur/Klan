@@ -155,7 +155,7 @@ export async function PATCH(
           select: {
             id: true,
             name: true,
-            requiresDocumentation: true,
+
             type: true,
             price: true,
             durationValue: true,
@@ -241,45 +241,17 @@ export async function PATCH(
       }
     }
 
-    // Si se aprueba y el plan requiere documentos, verificar que estén todos los obligatorios aprobados
-    if (status === "APPROVED" && application.plan.requiresDocumentation) {
-      const requiredRequirements =
-        await prisma.planDocumentRequirement.findMany({
-          where: {
-            planId: application.plan.id,
-            isActive: true,
-            isRequired: true,
-          },
-        });
-
-      const approvedDocumentIds = new Set(
-        application.documents
-          .filter((document) => document.status === "APPROVED")
-          .map((document) => document.requirementId)
-      );
-
-      const missingDocuments = requiredRequirements.filter(
-        (requirement) => !approvedDocumentIds.has(requirement.id)
-      );
-
-      if (missingDocuments.length > 0) {
-        return NextResponse.json(
-          {
-            success: false,
-            message:
-              "No se puede aprobar la solicitud porque existen documentos obligatorios pendientes o no aprobados",
-            missingDocuments: missingDocuments.map((requirement) => ({
-              id: requirement.id,
-              name: requirement.name,
-            })),
-          },
-          { status: 400 }
-        );
-      }
-    }
-
     // Ejecutamos todo dentro de una transacción para asegurar consistencia
     const result = await prisma.$transaction(async (tx) => {
+      // Los documentos opcionales no bloquean el ingreso; cada requisito obligatorio activo debe estar aprobado.
+      if (status === "APPROVED") {
+        const requiredRequirements = await tx.planDocumentRequirement.findMany({where:{planId:application.plan.id,isActive:true,isRequired:true},select:{id:true,name:true}});
+        const approvedDocuments = await tx.membershipDocument.findMany({where:{applicationId,deletedAt:null,status:"APPROVED"},select:{requirementId:true}});
+        const approvedIds = new Set(approvedDocuments.map(document=>document.requirementId));
+        const missingDocuments = requiredRequirements.filter(requirement=>!approvedIds.has(requirement.id));
+        if(missingDocuments.length)throw Object.assign(new Error("REQUIRED_DOCUMENTS_MISSING"),{missingDocuments});
+      }
+
       // Evitar que dos administradores revisen la misma solicitud simultáneamente
       const updatedCount =
         await tx.membershipApplication.updateMany({
@@ -475,7 +447,7 @@ export async function PATCH(
         application: updatedApp,
         subscriptionId,
       };
-    });
+    }, {isolationLevel:"Serializable"});
 
     return NextResponse.json({
       success: true,
@@ -493,8 +465,10 @@ export async function PATCH(
     });
   } catch (error) {
     console.error("Review membership application error:", error);
+    if ((error as {code?:string})?.code === "P2034") return NextResponse.json({success:false,message:"La solicitud cambió durante la revisión. Actualiza e intenta nuevamente."},{status:409});
 
     if (error instanceof Error) {
+      if (error.message === "REQUIRED_DOCUMENTS_MISSING") return NextResponse.json({success:false,message:"No se puede aprobar la solicitud porque existen documentos obligatorios pendientes o no aprobados",missingDocuments:(error as Error & {missingDocuments:unknown}).missingDocuments},{status:400});
       if (error.message === "UNAUTHORIZED") {
         return NextResponse.json(
           {

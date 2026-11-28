@@ -42,6 +42,8 @@
  * ==============================================================================
  */
 
+// La interfaz incorpora los nuevos flujos conservando rutas Entity y textos visibles de Círculo.
+
 // Refactorización Parte 12 (UI-Only): Se muestra 'Círculo/Círculos' al usuario manteniendo 'Entity' en código, rutas y BD.
 
 "use client";
@@ -50,6 +52,7 @@ import { useRef,useState } from "react";
 import Link from "next/link";
 import {Icon} from "@/components/ui";
 import {PostComposer} from "./post-composer";
+import {PostText,PostLinkPreview} from "./post-content";
 import {ActionDropdown} from "./action-dropdown";
 import {api,date,safeUrl,type Row} from "./common";
 
@@ -79,7 +82,8 @@ export function PostCard({post,admin=false,onChanged=()=>{}}:{post:Row;admin?:bo
         <button type="button" onClick={()=>{close();editor.current?.showModal()}}>Editar</button>
         <button type="button" className="outline-destructive" onClick={()=>{close();setDeleteError("");removal.current?.showModal()}}>Eliminar</button>
       </>}</ActionDropdown>}
-    </header><div className="feed-copy">{post.title&&<h2>{post.title}</h2>}<p>{post.content}</p></div>
+    </header><div className="feed-copy">{post.title&&<h2><PostText text={post.title} entityId={post.entity.id}/></h2>}<p><PostText text={post.content} entityId={post.entity.id}/></p></div>
+    <PostLinkPreview title={post.title} content={post.content}/>
     {safeUrl(post.imageUrl)&&<><button type="button" className="photo-opener" aria-label="Ver imagen completa" onClick={()=>photo.current?.showModal()}>
       <img className="feed-image" src={safeUrl(post.imageUrl)} alt={post.title||"Publicación del círculo"} loading="lazy"/></button>
       <dialog className="editor-modal photo-viewer" ref={photo} aria-label="Imagen completa" onClick={e=>{if(e.target===photo.current)photo.current.close()}}>

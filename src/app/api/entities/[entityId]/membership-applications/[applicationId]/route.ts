@@ -42,6 +42,8 @@
  * ==============================================================================
  */
 
+// Los requisitos documentales activos son la fuente de verdad; se conserva el contrato Entity y los permisos existentes.
+
 import { prisma } from "@/lib/prisma";
 import { requireAuth } from "@/lib/auth/auth";
 import { requireEntityAdmin } from "@/lib/auth/authorization";
@@ -91,7 +93,7 @@ export async function GET(
             price: true,
             durationValue: true,
             durationUnit: true,
-            requiresDocumentation: true,
+
             benefits: true,
           },
         },

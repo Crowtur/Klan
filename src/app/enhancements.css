@@ -1,0 +1,147 @@
+/**
+ * ==============================================================================
+ * PONTIFICIA UNIVERSIDAD CATÓLICA DEL ECUADOR
+ * Facultad Internacional de Innovación (PUCE - Icam)
+ * ==============================================================================
+ * 
+ * PROYECTO DE TITULACIÓN - INGENIERÍA INTEGRAL
+ * Autor: Diego Alexis Tipán Zambrano
+ * Director del Proyecto: PhD. Rafael Melgarejo
+ * Promoción: Primera Promoción (Año 2026)
+ * 
+ * ------------------------------------------------------------------------------
+ * DECLARACIÓN SOBRE EL USO DE INTELIGENCIA ARTIFICIAL
+ * ------------------------------------------------------------------------------
+ * Se declara formalmente el uso de herramientas de Inteligencia Artificial como
+ * soporte y asistente técnico para el desarrollo de este proyecto, destacando su
+ * aplicación en:
+ * 
+ * - Generación y optimización de bloques de código repetitivos y extensos.
+ * - Desarrollos de endpoints complejos con variabilidad de permisos y roles.
+ * - Integración de nuevas funciones y sugerencias de arquitectura de software.
+ * - Depuración ágil, corrección de errores y optimización de rendimiento.
+ * - Creación, maquetación e integración de diseños UI/UX de formato visual a código.
+ * - Automatización de documentación técnica y estructuración de comentarios.
+ * 
+ * Herramientas de IA utilizadas:
+ * - GPT-5.6 Luna
+ * - GPT-6 Astra
+ * - Gemini 3.6 Flash
+ * - Figma AI (Visual Engine / Make Real)
+ * 
+ * ------------------------------------------------------------------------------
+ * DERECHOS DE AUTOR Y PROPIEDAD INTELECTUAL
+ * ------------------------------------------------------------------------------
+ * Los derechos del presente proyecto corresponden a la Pontificia Universidad
+ * Católica del Ecuador junto al autor y al director del proyecto, en estricto
+ * cumplimiento del reglamento institucional sobre patentes, tesis y titulación.
+ * 
+ * ALCANCE: Dichos derechos aplican exclusivamente al código fuente desarrollado
+ * en este proyecto, excluyendo la idea de negocio global y futuras versiones 
+ * o derivados sustanciales que puedan desarrollarse sobre el sistema.
+ * ==============================================================================
+ */
+
+/* Recorte compartido: el diálogo nativo centra la imagen y mantiene el foco también en el perfil. */
+.image-crop-modal { position:fixed; inset:0; margin:auto; padding:24px; width:min(720px,calc(100vw - 24px)); max-height:calc(100dvh - 24px); border:1px solid var(--line); border-radius:16px; background:var(--surface); color:var(--foreground); overflow:auto; }
+.image-crop-modal::backdrop { background:#0f172ab3; }
+.image-crop-modal header { display:flex; justify-content:space-between; align-items:center; gap:16px; margin-bottom:16px; }
+.image-crop-modal h2 { margin:0; }
+.image-crop-modal button { border:1px solid #136336; background:#136336; color:white; padding:9px 15px; border-radius:8px; font-weight:600; }
+.image-crop-modal button:hover { background:#0D4525; }
+.image-crop-modal .crop-secondary { color:var(--primary); background:var(--surface); border-color:var(--line); }
+.crop-preview { min-height:100px; display:flex; align-items:center; justify-content:center; background:repeating-conic-gradient(#e2e8f0 0% 25%,#fff 0% 50%) 50% / 20px 20px; border:1px solid var(--line); border-radius:8px; overflow:hidden; }
+.crop-preview canvas { display:block; max-width:100%; max-height:34dvh; object-fit:contain; }
+.crop-controls { margin:18px 0; padding:0; border:0; display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }
+.crop-controls label { display:flex; flex-direction:column; gap:5px; font-size:14px; }
+.crop-controls input { width:100%; accent-color:#136336; }
+.crop-controls select { width:100%; padding:8px; border:1px solid var(--line); border-radius:6px; background:var(--surface); }
+.crop-actions { display:flex; align-items:center; justify-content:space-between; gap:10px; }
+.crop-help,.image-picker small,.image-picker-compact small { color:var(--muted); font-size:12px; display:block; }
+.image-picker-compact { max-width:100%; }
+.image-picker-compact small { line-height:1.4; margin-top:5px; }
+.image-picker [role="status"] { margin:8px 0; }
+/* Texto enriquecido: mantiene la distribución de la tarjeta y reserva una sola vista previa. */
+.post-hashtag { font-weight:700; color:var(--primary); text-decoration:underline; text-underline-offset:3px; }
+.feed-copy a,.post-text-draft a { overflow-wrap:anywhere; }
+.post-link-preview { margin:0 20px 20px; border:1px solid var(--line); border-radius:12px; overflow:hidden; background:var(--surface); }
+.post-link-preview>a:not(.link-preview-card) { display:inline-block; margin:0 14px 14px; font-weight:600; }
+.link-preview-card { display:flex; align-items:stretch; color:var(--foreground); min-width:0; }
+.link-preview-card>img { width:130px; object-fit:cover; }
+.link-preview-card>span:last-child { padding:14px; display:flex; flex-direction:column; gap:5px; min-width:0; }
+.link-preview-card strong,.link-preview-card span { overflow-wrap:anywhere; }
+.link-preview-card small,.link-preview-card span>span { font-size:13px; color:var(--muted); }
+.link-preview-icon { display:grid; place-items:center; min-width:80px; font-size:32px; background:var(--soft); color:var(--primary); }
+.video-poster { width:100%; min-height:220px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:14px; padding:24px; background:#0D4525; color:#fff; border:0; border-radius:0; position:relative; overflow:hidden; }
+.video-poster>img { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; opacity:.3; }
+.video-poster>span,.video-poster>strong { position:relative; z-index:1; }
+.video-poster>span { font-size:40px; }
+.post-video { display:block; width:100%; min-height:260px; aspect-ratio:16/9; border:0; background:#0f172a; }
+.embed-help { margin:12px 14px; color:var(--muted); font-size:13px; }
+.post-text-draft { padding:12px; border:1px solid var(--line); border-radius:8px; }
+.post-text-draft p { white-space:pre-wrap; margin:8px 0 0; }
+.hashtag-results { max-width:850px; margin:auto; }
+.hashtag-results .feed-card { margin-top:20px; }
+.hashtag-scope { display:flex; align-items:center; gap:10px; margin:16px 0; }
+.hashtag-scope input { width:auto; accent-color:#136336; }
+/* Las reglas comparten los colores de Klan y respetan la numeración incluso con títulos largos. */
+.rule-list { margin:20px 0; padding:0; list-style:none; display:grid; gap:14px; }
+.rule-card { display:flex; align-items:flex-start; gap:14px; padding:22px; background:var(--surface); border:1px solid var(--line); border-radius:12px; }
+.rule-card>div { min-width:0; flex:1; }
+.rule-card h3 { color:var(--foreground); margin:0 0 10px; }
+.rule-card p { white-space:pre-wrap; overflow-wrap:anywhere; color:var(--muted); }
+.rule-number { display:grid; place-items:center; flex-shrink:0; min-width:34px; height:34px; padding:0 6px; border-radius:50%; background:#34D399; color:#0D4525; font-weight:700; }
+.rule-document { display:flex; align-items:flex-start; flex-wrap:wrap; gap:18px; padding:22px; border:1px solid var(--line); border-radius:12px; background:var(--surface); }
+.rule-document>div { min-width:0; flex:1; }
+.rule-document p { overflow-wrap:anywhere; }
+.rule-upload { margin-top:24px; }
+.public-entity-sections { margin:20px 0; }
+/* Guardar y cancelar ocupan una misma fila. Los campos de ubicación son informativos, sin edición manual. */
+.form-actions { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-top:16px; width:100%; }
+.form-actions>button:last-child:not(:first-child) { margin-left:auto; }
+.location-picker { display:flex; flex-direction:column; gap:8px; }
+.location-picker>button { align-self:flex-start; }
+.location-summary { display:flex; flex-direction:column; gap:4px; padding:12px; border:1px solid var(--line); border-radius:8px; color:var(--muted); }
+dialog.editor-modal.map-modal { width:min(850px,calc(100vw - 24px)); }
+.map-search { display:flex; align-items:flex-end; gap:10px; margin-bottom:12px; }
+.map-search label { flex:1; min-width:0; }
+.map-shortcuts { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:10px; }
+.location-map { height:360px; min-height:220px; width:100%; border:1px solid var(--line); border-radius:8px; }
+@media (width < 768px) {
+  .image-crop-modal { padding:16px; }
+  .crop-controls { grid-template-columns:1fr; gap:8px; }
+  .crop-preview canvas { max-height:28dvh; }
+  .crop-actions button { padding:9px 10px; font-size:13px; }
+  .post-link-preview { margin:0 12px 14px; }
+  .link-preview-card>img { width:90px; }
+  .link-preview-card>span:last-child { padding:10px; }
+  .post-video { min-height:240px; }
+  .rule-card,.rule-document { padding:16px; gap:10px; }
+  .rule-card .actions { flex-wrap:wrap; }
+  .location-map { height:38dvh; }
+  .map-shortcuts button { font-size:12px; padding:8px; }
+  .form-actions>button { min-width:0; }
+}
+
+/* El marco conserva su proporción incluso con imágenes pequeñas. La cuadrícula no intercepta gestos. */
+.crop-preview {position:relative;min-height:0;margin-inline:auto;touch-action:none;cursor:grab}
+.crop-preview:active {cursor:grabbing}
+.crop-preview canvas {width:100%;height:100%;max-height:none;object-fit:fill}
+.crop-preview::after {content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(90deg,transparent 33%,#fff9 33.3%,transparent 33.7%,transparent 66%,#fff9 66.6%,transparent 67%),linear-gradient(transparent 33%,#fff9 33.3%,transparent 33.7%,transparent 66%,#fff9 66.6%,transparent 67%)}
+.image-crop-modal .vertical-zoom input {writing-mode:vertical-lr;direction:rtl;width:24px;height:90px}
+.image-picker-compact svg {color:#136336}
+/* Marcador local visible incluso antes de recibir las teselas. */
+.klan-map-pin {color:#136336;background:#fff;border:2px solid #136336;border-radius:50%;text-align:center;line-height:20px}
+
+/* Mantiene el retorno antes del filtro y los controles secundarios junto al encuadre. */
+.workspace .hashtag-results label.hashtag-scope {display:flex;flex-direction:row;align-items:center;line-height:1.25;font-size:clamp(.8rem,3vw,1rem)}
+.workspace .hashtag-scope input[type=checkbox] {width:1rem;min-width:1rem;height:1rem;min-height:0;margin:0;flex:none}
+.crop-stage {position:relative;margin-block:12px}
+.image-crop-modal .crop-zoom {position:absolute;right:4px;top:12%;height:76%;width:24px;writing-mode:vertical-lr;direction:rtl;accent-color:#136336;touch-action:none}
+.crop-tools {display:flex;align-items:center;gap:5px;margin-left:auto}
+/* Las tres superficies tienen la misma altura y anchura incluso en el editor móvil. */
+.image-crop-modal .crop-actions {--crop-width:min(6.5rem,25vw);gap:4px;}
+.image-crop-modal .crop-actions :is(button,select) {
+  box-sizing:border-box;width:var(--crop-width);height:44px;min-height:44px;
+  margin:0;padding:0 6px;font:inherit;font-size:14px;border-radius:8px;
+}

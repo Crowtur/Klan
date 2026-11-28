@@ -42,6 +42,8 @@
  * ==============================================================================
  */
 
+// La interfaz incorpora los nuevos flujos conservando rutas Entity y textos visibles de Círculo.
+
 // Refactorización Parte 12 (UI-Only): Se muestra 'Círculo/Círculos' al usuario manteniendo 'Entity' en código, rutas y BD.
 
 // Refactorización Parte 11: gestión de la entidad con las mismas reglas de permisos, distribución y comportamiento móvil.
@@ -51,6 +53,7 @@ import {useMobile} from "../use-mobile";
 import {AvatarImage} from "@/components/avatar-image";
 import {EntityBankForm} from "./finance-controls";
 import {EntityHero} from "./entity-hero";
+import {EntityRules} from "./entity-rules";
 import {PostCard} from "./post-card";
 import { PlanCard } from "./plan-card";
 import { EntitySidebar } from "./entity-sidebar";
@@ -63,7 +66,10 @@ import { EditorModal } from "./modal";
 import { Icon, PLACEHOLDER_IMAGE } from "@/components/ui";
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { UploadDropzone } from "@/lib/uploadthing";
+import { ImageFilePicker } from "@/components/image-file-picker";
+import {generateReactHelpers} from "@uploadthing/react";
+import type {OurFileRouter} from "@/app/api/uploadthing/core";
+const {useUploadThing}=generateReactHelpers<OurFileRouter>();
 import { api, Badge, useData, Panel, Status, Form, Action, Empty, Pager, href, label, date, money, safeUrl, entityFields, planFields, requirementFields, postFields, type Row, } from "./common";
 import { Facilities, Reservations } from "./facilities";
 import { Dashboard } from "./dashboard";
@@ -102,6 +108,7 @@ function EntitySections({entity,tab,admin,readTab}:{
   const sections=[
             ["posts", "Publicaciones"],
             ["facilities", "Instalaciones"],
+            ["rules", "Reglas"],
             ["reservations", "Mis reservas"],
             ...(admin
                 ? [
@@ -166,6 +173,7 @@ export function Entity({ entity, tab = "posts", admin, }: {
         {noticeError && <p role="alert">{noticeError}</p>}
         {tab === "posts" && <div className="entity-post-layout"><section><Posts entity={entity} admin={admin}/></section><EntitySidebar entity={entity} admin={admin}/></div>}
         {tab === "facilities" && <Facilities entity={entity} admin={admin}/>}
+        {tab === "rules" && <EntityRules entity={entity} admin={admin}/>}
         {tab === "reservations" && <Reservations entity={entity}/>}
         {admin && tab === "plans" && <Plans entity={entity}/>}
         {admin && tab === "members" && <Members entity={entity}/>}
@@ -191,17 +199,8 @@ export function UploadFeedback({ endpoint, input, onDone, }: {
     };
     onDone?: () => void;
 }) {
-    const [msg, setMsg] = useState("");
-    return (<>
-      <UploadDropzone content={{label:"Arrastra una imagen o haz clic para elegir",allowedContent:"Imagen · Máximo 4 MB",button:"Guardar imagen"}} config={{mode:"auto"}} endpoint={endpoint} input={input as {
-            entityId: string;
-            postId: string;
-        }} onClientUploadComplete={() => {
-            setMsg("Imagen guardada.");
-            onDone?.();
-        }} onUploadError={(e) => setMsg(e.message)}/>
-      <p role="status">{msg}</p>
-    </>);
+    const {startUpload}=useUploadThing(endpoint);
+    return <ImageFilePicker aspect={endpoint==="entityLogoUploader"?1:endpoint==="entityCoverUploader"?3:undefined} onFile={async file=>{const result=await startUpload([file],input as {entityId:string;postId:string});if(!result?.[0]?.serverData?.persisted)throw Error("No se pudo guardar la imagen");onDone?.();}}/>;
 }
 /** Pagina publicaciones de la entidad y refresca la lista cuando cambia una publicación. */
 export function Posts({ entity, admin, canUpload = admin, }: {
@@ -238,7 +237,7 @@ function Plans({ entity }: {
         <div className="bounded-cards">
         {state.data?.plans.map((p: Row) => (<PlanCard key={p.id} plan={p}>
             <EditorModal title="Editar plan">
-              <Form key={String(p.updatedAt)+String(p.requiresDocumentation)} fields={planFields} initial={p} url={`${base}/${p.id}`} method="PATCH" onDone={() => setV(v + 1)}/>
+              <Form key={String(p.updatedAt)} fields={planFields} initial={p} url={`${base}/${p.id}`} method="PATCH" onDone={() => setV(v + 1)}/>
             </EditorModal>
             {p.isActive && (<Action url={`${base}/${p.id}`} method="DELETE" confirm="¿Desactivar este plan?" onDone={() => setV(v + 1)}>
                 Desactivar

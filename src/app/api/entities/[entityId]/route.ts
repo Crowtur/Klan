@@ -45,6 +45,7 @@
 // Refactorización Parte 12 (UI-Only): Se muestra 'Círculo/Círculos' al usuario manteniendo 'Entity' en código, rutas y BD.
 
 import { prisma } from "@/lib/prisma";
+import { verifiedLocation } from "@/lib/locations/verified-location";
 import { requireAuth } from "@/lib/auth/auth";
 import { requireEntityAdmin, requireEntityMembership } from "@/lib/auth/authorization";
 import { NextResponse } from "next/server";
@@ -138,7 +139,7 @@ export async function PATCH(
 
     const data = body as Record<string, unknown>;
 
-    const allowedFields = ["name", "description", "slug","address","googleMapsUrl","clearCover","clearLogo","timeZone"];
+    const allowedFields = ["name", "description", "slug","locationToken","clearCover","clearLogo","timeZone"];
 
     const invalidFields = Object.keys(data).filter(
       (field) => !allowedFields.includes(field)
@@ -158,18 +159,17 @@ export async function PATCH(
     const updateData: {
       name?: string;
       description?: string | null;
-      timeZone?:string;slug?: string; address?:string|null; googleMapsUrl?:string|null; coverUrl?:null;coverFileKey?:null;logoUrl?:null;logoFileKey?:null;
+      timeZone?:string;slug?: string; address?:string|null; googleMapsUrl?:string|null; latitude?:number; longitude?:number; coverUrl?:null;coverFileKey?:null;logoUrl?:null;logoFileKey?:null;
     } = {};
 
     if("timeZone" in data){
       if(data.timeZone!=="America/Guayaquil"&&data.timeZone!=="Pacific/Galapagos")return NextResponse.json({error:"Zona de Ecuador inválida"},{status:400});
       updateData.timeZone=data.timeZone;
     }
-    for(const key of ["address","googleMapsUrl"] as const){
-      if(!(key in data))continue;
-      const value=data[key];
-      if(value!==null && (typeof value!=="string" || value.length>2048 || (key==="googleMapsUrl" && !/^https:\/\//i.test(value)))) return NextResponse.json({error:"Dirección inválida"},{status:400});
-      updateData[key]=typeof value==="string"?value.trim()||null:null;
+    // La ciudad y el enlace proceden exclusivamente de la selección firmada por el servidor.
+    if (data.locationToken !== undefined) {
+      try { Object.assign(updateData, verifiedLocation(data.locationToken, user.id)); }
+      catch { return NextResponse.json({error:"La ubicación no es válida o ha caducado. Elígela nuevamente en el mapa."},{status:400}); }
     }
     if(data.clearCover===true) Object.assign(updateData,{coverUrl:null,coverFileKey:null});
     if(data.clearLogo===true) Object.assign(updateData,{logoUrl:null,logoFileKey:null});

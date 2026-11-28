@@ -42,6 +42,8 @@
  * ==============================================================================
  */
 
+// La pestaña Reglas se conserva al navegar entre la vista pública y el espacio del círculo.
+
 // Refactorización Parte 12 (UI-Only): Se muestra 'Círculo/Círculos' al usuario manteniendo 'Entity' en código, rutas y BD.
 
 // Refactorización Parte 11: vistas, parámetros y componentes del dominio Entity; textos visibles en español con concordancia femenina.
@@ -94,7 +96,7 @@ export default function Workspace({user}: {user: {id: string; firstName: string;
               {view === "payments" && <PaymentHistory />}
               {view === "feed" && <Feed user={user} memberships={memberships.data?.memberships || []}/>}
               {view === "search" && <BrowseEntities authenticated initialQuery={q.get("q") || ""}/>}
-              {view === "publicEntity" && <PublicEntity key={entity+q.get("post")} entity={entity} target={q.get("post")||""}/>}
+              {view === "publicEntity" && <PublicEntity key={entity+q.get("post")} entity={entity} target={q.get("post")||""} tab={tab} workspace/>}
               {view === "entity" && <Entity entity={entity} tab={tab} admin={admin}/>}
               {view === "facility" && (<Facility entity={entity} id={id} admin={admin}/>)}
               {view === "payment" && <Payment id={id}/>}

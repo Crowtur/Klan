@@ -57,6 +57,8 @@ import { requireAuth } from "@/lib/auth/auth";
 import { requireEntityAdmin } from "@/lib/auth/authorization";
 import { deleteUploadThingFile } from "@/lib/uploadthing-server";
 
+import { requireEntityContentAdmin } from "@/lib/entities/content-access";
+
 const f = createUploadthing();
 
 const entityUploadInput = z.object({
@@ -100,7 +102,7 @@ async function isFileReferenced(fileKey: string) {
     }),
 
     prisma.entity.count({
-      where: { OR: [{ logoFileKey: fileKey }, { coverFileKey: fileKey }] },
+      where: { OR: [{ logoFileKey: fileKey }, { coverFileKey: fileKey }, { rulesDocumentFileKey: fileKey }] },
     }),
 
     prisma.membershipDocument.count({
@@ -149,8 +151,8 @@ async function cleanupOldFile(
       oldFileKey
     );
   } catch (error) {
-    console.error(
-      "[UploadThing] Error al eliminar archivo anterior:",
+    console.warn(
+      "[UploadThing] Nuevo archivo guardado; no se pudo retirar el anterior:", oldFileKey,
       error
     );
   }
@@ -177,6 +179,25 @@ async function cleanupFailedUpload(fileKey: string) {
 }
 
 export const ourFileRouter = {
+  // El estatuto se publica sólo después de revalidar permisos y la versión que vio el administrador.
+  entityRulesDocumentUploader: f({ pdf: { maxFileSize: "8MB", maxFileCount: 1 } })
+    .input(z.object({entityId:z.string().uuid(),version:z.number().int().min(0)}))
+    .middleware(async ({req,input})=>{const user=await getAuthenticatedUser(req);await requireEntityContentAdmin(user.id,input.entityId);return {...input,userId:user.id};})
+    .onUploadComplete(async ({metadata,file})=>{
+      try {
+        if(file.type!=="application/pdf")throw new UploadThingError("Sólo se admiten documentos PDF");
+        const oldKey=await prisma.$transaction(async tx=>{
+          await requireEntityContentAdmin(metadata.userId,metadata.entityId,tx);
+          const old=await tx.entity.findUniqueOrThrow({where:{id:metadata.entityId},select:{rulesDocumentFileKey:true}});
+          if(old.rulesDocumentFileKey===file.key)return null;
+          const saved=await tx.entity.updateMany({where:{id:metadata.entityId,rulesDocumentVersion:metadata.version},data:{rulesDocumentUrl:file.ufsUrl,rulesDocumentFileKey:file.key,rulesDocumentFileName:file.name,rulesDocumentVersion:{increment:1}}});
+          if(saved.count!==1)throw new UploadThingError("El documento cambió durante la carga. Actualiza e intenta nuevamente.");
+          return old.rulesDocumentFileKey;
+        },{isolationLevel:"Serializable"});
+        await cleanupOldFile(oldKey,file.key);
+        return {persisted:true};
+      }catch(error){await cleanupFailedUpload(file.key);throw error;}
+    }),
   postComposerUploader: f({ image: { maxFileSize: "4MB", maxFileCount: 1 } })
     .input(z.object({ entityId: z.string().uuid(), postId: z.string().uuid().optional(), requestKey: z.string().uuid(), title: z.string().max(150), content: z.string().trim().min(1).max(5000) }))
     .middleware(async ({ req, input }) => { const user = await getAuthenticatedUser(req); await verifyEntityAdmin(user.id, input.entityId); return { ...input, userId: user.id }; })
@@ -188,7 +209,7 @@ export const ourFileRouter = {
         const previous = metadata.postId ? await prisma.post.findFirst({ where: { id: metadata.postId, entityId: metadata.entityId } }) : null;
         if (metadata.postId && !previous) throw new UploadThingError("Publicación no encontrada");
         const data = { title: metadata.title.trim() || null, content: metadata.content, imageUrl: file.ufsUrl, imageFileKey: file.key };
-        const post = metadata.postId ? await prisma.post.update({ where: { id: metadata.postId, entityId: metadata.entityId }, data }) : await prisma.post.upsert({ where: { id: metadata.requestKey }, create: { id: metadata.requestKey, entityId: metadata.entityId, authorId: metadata.userId, ...data }, update: {} });
+        const post = metadata.postId ? await prisma.post.update({ where: { id: metadata.postId, entityId: metadata.entityId, imageFileKey: previous!.imageFileKey }, data }) : await prisma.post.upsert({ where: { id: metadata.requestKey }, create: { id: metadata.requestKey, entityId: metadata.entityId, authorId: metadata.userId, ...data }, update: {} });
         if (post.entityId !== metadata.entityId || (!metadata.postId && post.authorId !== metadata.userId)) throw new UploadThingError("Identificador de publicación no válido");
         if (previous) await cleanupOldFile(previous.imageFileKey, file.key);
         if (post.imageFileKey !== file.key) await cleanupFailedUpload(file.key);
@@ -241,17 +262,19 @@ export const ourFileRouter = {
       }
 
       // Actualizar la fotografía en PostgreSQL.
-      const imageUrl = "/api/avatars/" + encodeURIComponent(file.key);
+      let imageUrl = "/api/avatars/" + encodeURIComponent(file.key);
       try {
         const { downloadAvatars } = await import("@/lib/thumbnails");
-        const sizes = await downloadAvatars(file.ufsUrl);
+        // Si el CDN aún no sirve los bytes, se conserva la imagen original ya aceptada.
+        const sizes = await downloadAvatars(file.ufsUrl).catch(() => null);
+        if (!sizes) imageUrl = file.ufsUrl;
         await prisma.$transaction(async tx => {
           const saved = await tx.user.updateMany({
             where: {id:metadata.userId,status:"ACTIVE",avatarFileKey:previousUser.avatarFileKey},
             data: {avatarUrl:imageUrl,avatarFileKey:file.key}
           });
           if (!saved.count) throw new UploadThingError("La imagen cambió. Vuelve a intentarlo.");
-          await tx.avatarThumbnail.upsert({where:{key:file.key},create:{key:file.key,...sizes},update:sizes});
+          if (sizes) await tx.avatarThumbnail.upsert({where:{key:file.key},create:{key:file.key,...sizes},update:sizes});
           if (previousUser.avatarFileKey && previousUser.avatarFileKey !== file.key)
             await tx.avatarThumbnail.deleteMany({where:{key:previousUser.avatarFileKey}});
         });
@@ -313,17 +336,19 @@ export const ourFileRouter = {
       }
 
       // Guardar el nuevo logotipo.
-      const imageUrl = "/api/avatars/" + encodeURIComponent(file.key);
+      let imageUrl = "/api/avatars/" + encodeURIComponent(file.key);
       try {
         const { downloadAvatars } = await import("@/lib/thumbnails");
-        const sizes = await downloadAvatars(file.ufsUrl);
+        // Si el CDN aún no sirve los bytes, se conserva la imagen original ya aceptada.
+        const sizes = await downloadAvatars(file.ufsUrl).catch(() => null);
+        if (!sizes) imageUrl = file.ufsUrl;
         await prisma.$transaction(async tx => {
           const saved = await tx.entity.updateMany({
             where: {id:metadata.entityId,status:"ACTIVE",logoFileKey:previousEntity.logoFileKey},
             data: {logoUrl:imageUrl,logoFileKey:file.key}
           });
           if (!saved.count) throw new UploadThingError("La imagen cambió. Vuelve a intentarlo.");
-          await tx.avatarThumbnail.upsert({where:{key:file.key},create:{key:file.key,...sizes},update:sizes});
+          if (sizes) await tx.avatarThumbnail.upsert({where:{key:file.key},create:{key:file.key,...sizes},update:sizes});
           if (previousEntity.logoFileKey && previousEntity.logoFileKey !== file.key)
             await tx.avatarThumbnail.deleteMany({where:{key:previousEntity.logoFileKey}});
         });
@@ -383,19 +408,17 @@ export const ourFileRouter = {
         });
       }
 
-      // Guardar el nuevo logotipo.
-      await prisma.entity.update({
-        where: {
-          id: metadata.entityId,
-          status: "ACTIVE",
-        },
-        data: {
-          coverUrl: file.ufsUrl,
-          coverFileKey: file.key,
-        },
-      });
-
-      // Intentar eliminar el logotipo anterior.
+      // La comparación con la clave leída impide dejar una portada intermedia huérfana.
+      try {
+        const saved = await prisma.entity.updateMany({
+          where: { id: metadata.entityId, status: "ACTIVE", coverFileKey: previousEntity.coverFileKey },
+          data: { coverUrl: file.ufsUrl, coverFileKey: file.key },
+        });
+        if (!saved.count) throw new UploadThingError("La portada cambió durante la carga.");
+      } catch (error) {
+        await cleanupFailedUpload(file.key);
+        throw error;
+      }
       await cleanupOldFile(
         previousEntity.coverFileKey,
         file.key
@@ -437,7 +460,7 @@ export const ourFileRouter = {
           },
           plan: {
             entityId: input.entityId,
-            requiresDocumentation: true,
+            isActive: true, entity: { status: "ACTIVE" },
           },
         },
         select: {
@@ -517,8 +540,8 @@ export const ourFileRouter = {
               },
               plan: {
                 entityId: metadata.entityId,
-                requiresDocumentation: true,
-              },
+            isActive: true, entity: { status: "ACTIVE" },
+          },
             },
             select: {
               id: true,
@@ -622,8 +645,8 @@ export const ourFileRouter = {
                   },
                   plan: {
                     entityId: metadata.entityId,
-                    requiresDocumentation: true,
-                  },
+            isActive: true, entity: { status: "ACTIVE" },
+          },
                 },
                 requirement: {
                   planId: application.planId,
@@ -651,8 +674,12 @@ export const ourFileRouter = {
           }
 
           const { id, applicationId, requirementId, deletedAt, ...snapshot } = existing;
-          if (!deletedAt) await tx.membershipDocumentVersion.create({ data: { ...snapshot, documentId: id } });
+          // El historial conserva nombre, tamaño, revisión y fecha; sólo el documento vigente necesita el binario.
+          if (!deletedAt) await tx.membershipDocumentVersion.create({
+            data: { ...snapshot, documentId: id, fileKey: null, fileUrl: "" },
+          });
         });
+        await cleanupOldFile(existing.fileKey, file.key);
         return {
           persisted: true,
           replaced: true,

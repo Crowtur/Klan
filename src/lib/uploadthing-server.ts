@@ -73,6 +73,10 @@ export async function deleteUploadThingFile(
 
   const result = await utapi.deleteFiles(fileKey);
 
+  // Una clave ya ausente no invalida el archivo nuevo que ya se guardó.
+  if (result.success && result.deletedCount === 0) {
+    console.warn("[UploadThing] Ningún archivo eliminado para la clave anterior", fileKey);
+  }
   if (!result.success) {
     throw new Error(
       "UploadThing no pudo eliminar el archivo"

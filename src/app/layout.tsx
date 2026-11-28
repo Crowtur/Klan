@@ -42,6 +42,8 @@
  * ==============================================================================
  */
 
+// Los estilos nuevos se cargan aparte para conservar las adaptaciones móviles existentes.
+
 // Refactorización Parte 12 (UI-Only): Se muestra 'Círculo/Círculos' al usuario manteniendo 'Entity' en código, rutas y BD.
 
 // Refactorización Parte 11: metadatos inclusivos para entidades; se conserva la identidad Klan.
@@ -51,6 +53,8 @@ import MemberHeader from "@/components/member-header";
 import "@uploadthing/react/styles.css";
 import type { Metadata } from "next";
 import "./globals.css";
+import "leaflet/dist/leaflet.css";
+import "./enhancements.css";
 // Parte 10.4: La identidad compartida también se publica en las tarjetas sociales.
 export const metadata: Metadata = {
     title: { default: "Klan", template: "%s | Klan" },

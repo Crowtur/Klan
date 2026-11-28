@@ -48,6 +48,7 @@
 
 import {activeMember} from "@/lib/entities/active";
 import { prisma } from "@/lib/prisma";
+import { verifiedLocation } from "@/lib/locations/verified-location";
 import { requireAuth } from "@/lib/auth/auth";
 import { NextResponse } from "next/server";
 
@@ -134,8 +135,13 @@ export async function POST(request: Request) {
       );
     }
 
-    const {address,googleMapsUrl}=body;
-    if((address!=null && (typeof address!=="string"||address.length>2048))||(googleMapsUrl!=null && (typeof googleMapsUrl!=="string"||googleMapsUrl.length>2048||!/^https:\/\//i.test(googleMapsUrl))))return NextResponse.json({error:"Dirección inválida"},{status:400});
+    // Sólo se aceptan ubicaciones verificadas; los campos visibles no son una fuente de datos confiable.
+    if ("address" in body || "googleMapsUrl" in body || "latitude" in body || "longitude" in body) return NextResponse.json({error:"Elige la ubicación en el mapa"},{status:400});
+    let location = {};
+    if (body.locationToken !== undefined) {
+      try { location = verifiedLocation(body.locationToken, user.id); }
+      catch { return NextResponse.json({error:"La ubicación no es válida o ha caducado. Elígela nuevamente en el mapa."},{status:400}); }
+    }
     const existingEntity = await prisma.entity.findUnique({
       where: {
         slug,
@@ -154,7 +160,7 @@ export async function POST(request: Request) {
 
     const entity = await prisma.entity.create({
       data: {
-        name: name.trim(),address,googleMapsUrl,
+        name: name.trim(),...location,
         slug,
         description,
         memberships: {

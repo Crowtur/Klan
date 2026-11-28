@@ -42,6 +42,8 @@
  * ==============================================================================
  */
 
+// Se muestran los requisitos activos del plan, incluidos los opcionales, sin depender de la bandera heredada.
+
 import type { ReactNode } from "react";
 import { money, type Row } from "./common";
 
@@ -60,7 +62,7 @@ export function PlanCard({ plan, children, showRequirements = false }: {
   const benefits = raw.filter((v): v is string => typeof v === "string")
     .flatMap(value => value.split(/\r?\n/))
     .map(value => value.trim().replace(/^[-•✓]\s+/, "")).filter(Boolean);
-  const requirements: Row[] = plan.requiresDocumentation ? plan.documentRequirements || [] : [];
+  const requirements: Row[] = (plan.documentRequirements || []).filter((r: Row) => r.isActive !== false);
   return <article className="membership-plan">
     <header><span className={plan.type === "PAID" ? "plan-pill paid" : "plan-pill"}>{plan.type === "PAID" ? "De pago" : "Gratuito"}</span><small>{duration} {unit}</small></header>
     <h3>{plan.name}</h3><p>{plan.description}</p>

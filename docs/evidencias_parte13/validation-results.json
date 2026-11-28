@@ -1,0 +1,44 @@
+{
+  "result": "PASS",
+  "date": "2026-11-27",
+  "timezone": "America/Bogota",
+  "base": "Klan_Parte_12.zip",
+  "commands": [
+    {
+      "command": "npm ci",
+      "exitCode": 0
+    },
+    {
+      "command": "npx prisma generate",
+      "exitCode": 0
+    },
+    {
+      "command": "npx prisma validate",
+      "exitCode": 0
+    },
+    {
+      "command": "npm run build",
+      "exitCode": 0
+    },
+    {
+      "command": "npx tsc --noEmit",
+      "exitCode": 0
+    },
+    {
+      "command": "npm test",
+      "exitCode": 0
+    }
+  ],
+  "unitTests": 69,
+  "httpRequests": 70,
+  "browserChecks": 11,
+  "viewports": [
+    390,
+    767,
+    768,
+    1280
+  ],
+  "migrationCount": 27,
+  "liveExternalProvidersTested": false,
+  "deployedToVercel": false
+}

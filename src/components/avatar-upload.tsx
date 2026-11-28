@@ -43,18 +43,13 @@
  */
 
 "use client";
-import {Icon} from "./ui";
 import s from "./basic.module.css";
-import { useRef, useState } from "react";
-import { generateReactHelpers } from "@uploadthing/react";
-import type { OurFileRouter } from "@/app/api/uploadthing/core";
-const { useUploadThing } = generateReactHelpers<OurFileRouter>();
-/** Vincula la carga de la foto personal con la actualización del perfil una vez confirmado el archivo. */
-export function AvatarUpload({ onDone }: {
-    onDone: () => void;
-}) {
-    const input = useRef<HTMLInputElement>(null), [error, setError] = useState("");
-    const { startUpload, isUploading } = useUploadThing("userAvatarUploader", { onClientUploadComplete: onDone, onUploadError: e => setError(e.message) });
-    return <><button className={s.photoButton} disabled={isUploading} onClick={() => input.current?.click()}><Icon name="camera"/>{isUploading ? "Subiendo…" : "Cambiar foto"}</button><input hidden ref={input} type="file" accept="image/*" onChange={e => { const file = e.target.files?.[0]; if (file)
-        void startUpload([file]); e.target.value = ""; }}/>{error && <p role="alert">{error}</p>}</>;
+import {generateReactHelpers} from "@uploadthing/react";
+import type {OurFileRouter} from "@/app/api/uploadthing/core";
+import {ImageFilePicker} from "./image-file-picker";
+const {useUploadThing}=generateReactHelpers<OurFileRouter>();
+/** Conserva el uploader y su autorización; añade una vista previa cuadrada antes de guardar la foto personal. */
+export function AvatarUpload({onDone}:{onDone:()=>void}) {
+  const {startUpload}=useUploadThing('userAvatarUploader');
+  return <ImageFilePicker compact maxMB={2} aspect={1} button="Cambiar foto" className={s.photoButton} onFile={async file=>{const result=await startUpload([file]);if(!result?.[0]?.serverData?.persisted)throw Error('No se pudo subir la imagen');onDone();}}/>;
 }

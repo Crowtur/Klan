@@ -46,7 +46,7 @@
 // Run from project root: node scripts/test-feedback-part2.cjs
 // Tests exercise handlers with isolated repositories; no external services are contacted.
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm'),ts=require('typescript');
-function load(file,imports={},globals={}){const exports={};const js=ts.transpileModule(fs.readFileSync(file,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020}}).outputText;vm.runInNewContext(js,{...globals,exports,Date,URL,Response,Request,console,Error,SyntaxError,require:n=>{if(n in imports)return imports[n];if(n==='next/server')return {NextResponse:{json:(body,o)=>({body,status:o?.status||200})}};if(n==='@prisma/client')return {EntityRole:{ENTITY_ADMIN:'ENTITY_ADMIN'}};throw Error('Unexpected import '+n)}});return exports;}
+function load(file,imports={},globals={}){const exports={};const js=ts.transpileModule(fs.readFileSync(file,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020}}).outputText;vm.runInNewContext(js,{...globals,exports,Date,URL,Response,Request,console,Error,SyntaxError,require:n=>{if(n in imports)return imports[n];if(n==='next/server')return {NextResponse:{json:(body,o)=>({body,status:o?.status||200})}};if(n==='@/lib/entities/content-access')return load('src/lib/entities/content-access.ts',imports,globals);if(n==='@prisma/client')return {EntityRole:{ENTITY_ADMIN:'ENTITY_ADMIN'}};throw Error('Unexpected import '+n)}});return exports;}
 const routing=load('src/lib/notification-routing.ts');
 test('recipient routing distinguishes administrative applications from personal applications',()=>{
  for(const type of ['APPLICATION_SUBMITTED','DOCUMENTS_SUBMITTED']){const r=routing.notificationDestination({type,entityId:'c1'});assert.equal(r.scope,'entity');assert.equal(r.tab,'applications');assert.match(r.path,/tab=applications/)}
@@ -356,4 +356,54 @@ test('crear planes rechaza JSON inválido o incompleto antes de escribir y admit
   const valid = { name: 'Mensual', price: 5, type: 'PAID', durationValue: 1, durationUnit: 'MONTH' };
   assert.equal((await post(JSON.stringify(valid))).status, 201);
   assert.equal(writes.length, 1);
+});
+
+
+// Estatutos: se vuelven a comprobar permisos y versión después de transferir el archivo al proveedor.
+test('el PDF público respeta la versión y un callback repetido no borra el archivo publicado',async()=>{
+ const prisma=uploadPrisma(),deleted=[];let current={rulesDocumentFileKey:'previous',rulesDocumentVersion:1};
+ prisma.$transaction=fn=>fn(prisma);
+ prisma.entity.findUniqueOrThrow=async()=>current;
+ prisma.entity.count=async q=>q.where.OR?.some(item=>item.rulesDocumentFileKey===current.rulesDocumentFileKey)?1:0;
+ prisma.entity.updateMany=async q=>{if(q.where.rulesDocumentVersion!==current.rulesDocumentVersion)return{count:0};current={...q.data,rulesDocumentVersion:current.rulesDocumentVersion+1};return{count:1};};
+ const route=uploadRouter(prisma,undefined,undefined,deleted).entityRulesDocumentUploader;
+ const metadata={userId:'admin',entityId:'entity',version:1};
+ const file={key:'new-pdf',ufsUrl:'https://files.test/new.pdf',type:'application/pdf',name:'estatuto.pdf'};
+ assert.equal((await route.complete({metadata,file})).persisted,true);assert.equal(current.rulesDocumentVersion,2);assert.deepEqual(deleted,['previous']);
+ assert.equal((await route.complete({metadata,file})).persisted,true);assert.deepEqual(deleted,['previous']);
+ await assert.rejects(()=>route.complete({metadata,file:{...file,key:'stale-pdf'}}),/cambió/);assert.equal(current.rulesDocumentFileKey,'new-pdf');assert.deepEqual(deleted,['previous','stale-pdf']);
+});
+test('la revocación de permisos durante una carga de PDF impide publicarlo y limpia el archivo nuevo',async()=>{
+ const prisma=uploadPrisma(),deleted=[];prisma.$transaction=fn=>fn(prisma);prisma.user.findUnique=async()=>({globalRole:'SUPER_ADMIN',status:'SUSPENDED'});
+ const route=uploadRouter(prisma,undefined,undefined,deleted).entityRulesDocumentUploader;
+ await assert.rejects(()=>route.complete({metadata:{userId:'admin',entityId:'entity',version:0},file:{key:'unpublished',type:'application/pdf'}}),/FORBIDDEN/);
+ assert.deepEqual(deleted,['unpublished']);
+});
+test('los requisitos opcionales permiten carga sin el booleano antiguo y se comprueba el plan real',async()=>{
+ const prisma=uploadPrisma();let query;
+ prisma.membershipApplication={findFirst:async q=>{query=q;return{id:'app',planId:'plan'};}};
+ prisma.planDocumentRequirement={findFirst:async q=>{assert.equal(q.where.planId,'plan');assert.equal(q.where.isActive,true);return{id:'req'};}};
+ prisma.membershipDocument.findUnique=async()=>null;
+ const result=await uploadRouter(prisma,{id:'applicant',globalRole:'USER'}).membershipDocumentUploader.guard({req:{},input:{entityId:'entity',applicationId:'app',requirementId:'req'}});
+ assert.equal(result.requirementId,'req');assert.equal(query.where.plan.requiresDocumentation,undefined);assert.equal(query.where.plan.entity.status,'ACTIVE');
+});
+
+// La limpieza se solicita después de guardar la nueva versión y no revierte ese guardado.
+test('reemplazar un PDF conserva su historial de revisión y libera la clave anterior', async () => {
+  for (const failDeletion of [false,true]) {
+    const prisma=uploadPrisma(), calls=[];
+    let current={id:'document',version:1,fileKey:'anterior',fileUrl:'old',status:'REJECTED',fileName:'histórico.pdf'};
+    prisma.membershipApplication={findFirst:async()=>({id:'app',planId:'plan'})};
+    prisma.planDocumentRequirement={findFirst:async()=>({id:'req'})};
+    prisma.membershipDocument.findUnique=async()=>current;
+    prisma.membershipDocument.updateMany=async({data})=>{current={...current,...data,version:2};return {count:1};};
+    prisma.membershipDocumentVersion.create=async({data})=>{
+      assert.equal(data.fileKey,null);assert.equal(data.fileUrl,'');assert.equal(data.fileName,'histórico.pdf');
+    };
+    prisma.$transaction=async callback=>callback(prisma);
+    const deletion={push:key=>{assert.equal(current.fileKey,'nuevo');calls.push(key);if(failDeletion)throw Error('Proveedor temporalmente no disponible');}};
+    const route=uploadRouter(prisma,undefined,undefined,deletion).membershipDocumentUploader;
+    const result=await route.complete({metadata:{applicationId:'app',userId:'u',entityId:'e',requirementId:'req',expectedVersion:1},file:{key:'nuevo',ufsUrl:'https://files.test/nuevo',name:'nuevo.pdf',size:20}});
+    assert.equal(result.persisted,true);assert.deepEqual(calls,['anterior']);assert.equal(current.fileKey,'nuevo');
+  }
 });

@@ -42,11 +42,14 @@
  * ==============================================================================
  */
 
+// La interfaz incorpora los nuevos flujos conservando rutas Entity y textos visibles de Círculo.
+
 // Refactorización Parte 12 (UI-Only): Se muestra 'Círculo/Círculos' al usuario manteniendo 'Entity' en código, rutas y BD.
 
 "use client";
 import { useEffect, useState, useRef, type ReactNode, type FormEvent } from "react";
 import {FacilityIcon} from "./facility-icon";
+import {LocationPicker} from "./location-picker";
 import { facilityIcons } from "@/lib/facility-icons";
 import { Icon } from "@/components/ui";
 import Link from "next/link";
@@ -256,7 +259,7 @@ export function Action({ children, url, method = "POST", body, confirm, variant,
             setBusy(false);
         }
     }
-    return <span className="action"><button ref={trigger} className={buttonClass} disabled={busy} onClick={() => confirm ? setConfirming(true) : void run()}>{busy ? "Procesando…" : children}</button>{message && <span role="status">{message}</span>}{confirm && <dialog ref={dialog} className="confirm-dialog" aria-label="Confirmar operación" onCancel={close} onClose={() => setConfirming(false)}><h2>Confirma tu decisión</h2><p>{confirm}</p><div className="actions"><button className="secondary" onClick={close} autoFocus>Volver</button><button className={destructive ? "outline-destructive" : undefined} onClick={() => void run()}>Confirmar</button></div></dialog>}</span>;
+    return <span className="action"><button type="button" ref={trigger} className={buttonClass} disabled={busy} onClick={() => confirm ? setConfirming(true) : void run()}>{busy ? "Procesando…" : children}</button>{message && <span role="status">{message}</span>}{confirm && <dialog ref={dialog} className="confirm-dialog" aria-label="Confirmar operación" onCancel={close} onClose={() => setConfirming(false)}><h2>Confirma tu decisión</h2><p>{confirm}</p><div className="actions"><button type="button" className="secondary" onClick={close} autoFocus>Volver</button><button type="button" className={destructive ? "outline-destructive" : undefined} onClick={() => void run()}>Confirmar</button></div></dialog>}</span>;
 }
 export type Field = {
     name: string;
@@ -272,7 +275,7 @@ export type Field = {
     step?: string;
 };
 /** Construye el cuerpo a partir de los campos configurados y convierte números, casillas y listas antes del envío. */
-export function Form({ fields, url, method = "POST", initial = {}, onDone, submit = "Guardar", transform, }: {
+export function Form({ fields, url, method = "POST", initial = {}, onDone, submit = "Guardar", transform, trailingAction, }: {
     fields: Field[];
     url: string;
     method?: string;
@@ -280,8 +283,10 @@ export function Form({ fields, url, method = "POST", initial = {}, onDone, submi
     onDone?: (d: Row) => void;
     submit?: string;
     transform?: (d: Row) => unknown;
+    trailingAction?: ReactNode;
 }) {
     const [slug, setSlug] = useState(initial.slug || "");
+    const [locationToken, setLocationToken] = useState<string>();
     const [decision, setDecision] = useState(initial.status || "APPROVED");
     const [busy, setBusy] = useState(false), [error, setError] = useState("");
     async function send(e: FormEvent<HTMLFormElement>) {
@@ -293,6 +298,7 @@ export function Form({ fields, url, method = "POST", initial = {}, onDone, submi
         const body: Row = {};
         // FormData omite casillas desmarcadas y devuelve texto para números. La API espera booleanos y números reales.
         for (const f of fields) {
+            if (f.type === "location") { if (locationToken) body.locationToken = locationToken; continue; }
             const v = fd.get(f.name);
             body[f.name] =
                 f.type === "checkbox"
@@ -309,6 +315,7 @@ export function Form({ fields, url, method = "POST", initial = {}, onDone, submi
         try {
             const d = await api(url, method, transform ? transform(body) : body);
             setError(d.message || "Guardado correctamente.");
+            setLocationToken(undefined);
             onDone?.(d);
         }
         catch (e) {
@@ -320,7 +327,7 @@ export function Form({ fields, url, method = "POST", initial = {}, onDone, submi
     }
     return (<form className="editor" onSubmit={send}>
       <fieldset disabled={busy}>
-        {fields.filter(f => f.name !== "rejectionReason" || decision === "REJECTED").map((f) => f.name==="icon" ? <fieldset key={f.name} className="icon-picker"><legend>{f.label}</legend>{facilityIcons.map(icon=><label key={icon.value} title={icon.label}>
+        {fields.filter(f => f.name !== "rejectionReason" || decision === "REJECTED").map((f) => f.type==="location" ? <LocationPicker key={f.name} initial={initial} onChange={setLocationToken}/> : f.name==="icon" ? <fieldset key={f.name} className="icon-picker"><legend>{f.label}</legend>{facilityIcons.map(icon=><label key={icon.value} title={icon.label}>
           <input type="radio" aria-label={icon.label} name="icon" value={icon.value} defaultChecked={icon.value===(initial.icon||"building")}/><FacilityIcon value={icon.value}/></label>)}</fieldset> : (<label key={f.name}>
             {f.label}
             {f.type === "textarea" ? (<textarea name={f.name} defaultValue={Array.isArray(initial[f.name]) ? initial[f.name].join("\n") : initial[f.name] ?? ""} required={f.required} maxLength={f.max}/>) : f.options ? (<select onChange={e => { if (f.name === "status")
@@ -336,7 +343,7 @@ export function Form({ fields, url, method = "POST", initial = {}, onDone, submi
             {f.name === "slug" && <small>Slug · {slug || "tu-circulo"}</small>}
           </label>))}
       </fieldset>
-      <button className={method === "DELETE" || decision === "REJECTED" ? "outline-destructive" : undefined} disabled={busy}>{busy ? "Guardando…" : submit}</button>
+      <div className="form-actions"><button className={method === "DELETE" || decision === "REJECTED" ? "outline-destructive" : undefined} disabled={busy}>{busy ? "Guardando…" : submit}</button>{trailingAction}</div>
       {error && <p role="status">{error}</p>}
     </form>);
 }
@@ -356,7 +363,7 @@ export const entityFields: Field[] = [
         required: true,
     },
     { name: "description", label: "Descripción", type: "textarea", max: 200 },
-    { name: "address", label: "Dirección del círculo" }, { name: "googleMapsUrl", label: "Enlace de Google Maps", type: "url" },
+    { name: "locationToken", label: "Ubicación", type: "location" },
 ];
 export const facilityFields: Field[] = [
     {name:"icon",label:"Icono de la instalación",options:facilityIcons},
@@ -401,11 +408,7 @@ export const planFields: Field[] = [
             { value: "YEAR", label: "Años" },
         ],
     },
-    {
-        name: "requiresDocumentation",
-        label: "Requiere documentación",
-        type: "checkbox",
-    },
+
 ];
 export const requirementFields: Field[] = [
     { name: "name", label: "Documento requerido", required: true },

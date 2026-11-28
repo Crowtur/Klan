@@ -1,0 +1,24 @@
+{
+  "result": "PASS",
+  "viewports": [
+    390,
+    767,
+    768,
+    1280
+  ],
+  "checks": [
+    "Reglas públicas vacías y sin administración",
+    "Miembro lee reglas sin controles administrativos",
+    "CRUD y orden de reglas en navegador",
+    "Navegación móvil y Escape",
+    "Guardar y Cancelar alineados; formulario sin casilla a 390/767/768/1280 px",
+    "Una vista previa por publicación, antes de la imagen; video bajo demanda y tarjeta genérica",
+    "Recorte real: cancelar no adjunta; confirmar exporta el encuadre visible en WebP",
+    "Hashtag alterna círculo/global/círculo en vivo",
+    "Mapa sin clave muestra estado controlado e impide confirmar",
+    "Mapa con proveedor controlado: país exterior, Galápagos, búsqueda y ciudad confirmada",
+    "Logo y portada usan proporciones específicas; cancelar no envía archivos"
+  ],
+  "javascriptErrors": [],
+  "externalServices": "Metadatos, iframe y SDK/geocodificación de Maps controlados; sin transferencia real a UploadThing ni clave de Google Maps."
+}

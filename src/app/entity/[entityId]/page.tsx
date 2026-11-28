@@ -42,19 +42,21 @@
  * ==============================================================================
  */
 
+// La pestaña Reglas se conserva al navegar entre la vista pública y el espacio del círculo.
+
 import { PublicEntity } from "@/components/workspace/personal";
 import "@/components/workspace/workspace.css";
 /** Recupera el identificador de entidad y la publicación compartida antes de montar su ficha pública. */
 export default async function Page({
   params,searchParams,
 }: {
-  searchParams: Promise<{post?:string}>;
+  searchParams: Promise<{post?:string;tab?:string}>;
   params: Promise<{ entityId: string }>;
 }) {
   const { entityId } = await params;
   return (
     <main id="main-content" className="workspace">
-      <PublicEntity entity={entityId} target={(await searchParams).post}/>
+      <PublicEntity entity={entityId} target={(await searchParams).post} tab={(await searchParams).tab==="rules"?"rules":"posts"}/>
     </main>
   );
 }

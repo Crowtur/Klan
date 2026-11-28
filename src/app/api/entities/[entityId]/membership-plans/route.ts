@@ -218,7 +218,8 @@ export async function POST(
         durationValue,
         durationUnit,
         billingMode: durationUnit === "DAY" ? "ONE_TIME" : "RECURRING",
-        requiresDocumentation: requiresDocumentation ?? false,
+        // Compatibilidad: un plan nuevo todavía no tiene requisitos. La base mantiene este valor derivado.
+        requiresDocumentation: false,
         ...(benefits !== undefined && { benefits }),
       },
     });

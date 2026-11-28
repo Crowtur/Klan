@@ -1,0 +1,25 @@
+{
+  "result": "PASS",
+  "migrationCount": 27,
+  "preservedTables": [
+    "User",
+    "Entity",
+    "Post",
+    "MembershipPlan",
+    "PlanDocumentRequirement",
+    "MembershipApplication"
+  ],
+  "preservedRows": 7,
+  "checks": [
+    "actualización Parte 12 a 13",
+    "datos y fechas previos conservados",
+    "hashtags anteriores y nuevos",
+    "URL excluidas de etiquetas",
+    "bandera heredada derivada",
+    "opcional no cambia estado de solicitud",
+    "restricción de orden",
+    "despliegue repetido",
+    "instalación desde cero",
+    "Prisma sin diferencias en ambas bases"
+  ]
+}

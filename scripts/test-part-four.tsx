@@ -102,7 +102,7 @@ test("la variante destructiva distingue una baja, una cancelación y la suspensi
     assert.equal((html.match(/class="outline-destructive"/g)||[]).length,2);
   }
   const html=render(<Action url="/suspend" variant="entity-suspension" confirm="¿Suspender?">Suspender</Action>);
-  assert.match(html,/<button class="danger">Suspender/);
-  assert.match(html,/<button class="outline-destructive">Confirmar/);
+  assert.match(html,/<button[^>]*class="danger"[^>]*>Suspender/);
+  assert.match(html,/<button[^>]*class="outline-destructive"[^>]*>Confirmar/);
   assert.doesNotMatch(render(<Action url="/reservations">Reservar</Action>),/outline-destructive|class="danger"/);
 });

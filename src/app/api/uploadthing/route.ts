@@ -44,12 +44,31 @@
 
 /* Expone los manejadores de UploadThing en el entorno Node usando la política de carga definida en core.ts. */
 
+import { after, type NextRequest } from "next/server";
 import { createRouteHandler } from "uploadthing/next";
 
 import { ourFileRouter } from "./core";
 
 export const runtime = "nodejs";
 
-export const { GET, POST } = createRouteHandler({
-  router: ourFileRouter,
-});
+// La notificación firmada debe volver al mismo despliegue que inició la carga.
+export const maxDuration = 60;
+// Sin sobrescritura explícita el adaptador conserva el origen real de la petición,
+ // incluido el dominio personalizado. El SDK añade el slug al registrar cada archivo.
+const callbackUrl = process.env.UPLOADTHING_CALLBACK_URL?.trim() || undefined;
+// Una variable vacía también es legible para el SDK. Se pasa siempre una URL
+// completa para impedir que ese valor vacío anule la detección automática.
+function handler(request: NextRequest) {
+  return createRouteHandler({
+    router: ourFileRouter,
+    config: {
+      callbackUrl: callbackUrl || new URL("/api/uploadthing", request.url).href,
+      // Next mantiene activa la tarea que persiste el resultado después del acuse HTTP.
+      ...(process.env.NODE_ENV === "production"
+        ? { handleDaemonPromise: (work: Promise<unknown>) => after(async () => { await work; }) }
+        : {}),
+    },
+  });
+}
+export function GET(request: NextRequest) { return handler(request).GET(request); }
+export function POST(request: NextRequest) { return handler(request).POST(request); }

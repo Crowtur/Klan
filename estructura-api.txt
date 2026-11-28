@@ -1,4 +1,4 @@
-Klan — Parte 12
+Klan — Parte 13
 Inventario de rutas API desde src/app/api
 
 admin/dashboard/entities/route.ts
@@ -51,11 +51,16 @@ entities/[entityId]/posts/[postId]/route.ts
 entities/[entityId]/posts/route.ts
 entities/[entityId]/reactivate/route.ts
 entities/[entityId]/route.ts
+entities/[entityId]/rules/[ruleId]/route.ts
+entities/[entityId]/rules/document/route.ts
+entities/[entityId]/rules/route.ts
 entities/[entityId]/subscriptions/[subscriptionId]/cancel/route.ts
 entities/[entityId]/subscriptions/[subscriptionId]/checkout/route.ts
 entities/[entityId]/suspend/route.ts
 entities/route.ts
 feed/route.ts
+link-preview/route.ts
+locations/resolve/route.ts
 me/applications/route.ts
 me/memberships/route.ts
 me/notifications/route.ts
@@ -63,6 +68,7 @@ me/payments/route.ts
 me/subscriptions/route.ts
 payments/[paymentId]/receipt/route.ts
 payments/[paymentId]/route.ts
+posts/hashtags/route.ts
 search/entities/route.ts
 uploadthing/route.ts
 webhooks/stripe/route.ts

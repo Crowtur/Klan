@@ -42,6 +42,8 @@
  * ==============================================================================
  */
 
+// Los requisitos documentales activos son la fuente de verdad; se conserva el contrato Entity y los permisos existentes.
+
 // Refactorización Parte 12 (UI-Only): Se muestra 'Círculo/Círculos' al usuario manteniendo 'Entity' en código, rutas y BD.
 
 import { prisma } from "@/lib/prisma";
@@ -170,7 +172,7 @@ export async function POST(
             price: true,
             durationValue: true,
             durationUnit: true,
-            requiresDocumentation: true,
+
             benefits: true,
           },
         },
@@ -186,9 +188,7 @@ export async function POST(
         success: true,
         message: "Solicitud de membresía creada correctamente",
         application,
-        documentRequirements: plan.requiresDocumentation
-          ? plan.documentRequirements
-          : [],
+        documentRequirements: plan.documentRequirements,
       },
       { status: 201 }
     );
@@ -258,7 +258,7 @@ export async function GET(
             price: true,
             durationValue: true,
             durationUnit: true,
-            requiresDocumentation: true,
+
           },
         },
         documents: {

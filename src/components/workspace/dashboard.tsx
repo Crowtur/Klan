@@ -42,6 +42,8 @@
  * ==============================================================================
  */
 
+// El comprobante utiliza selección de formato y recorte previo antes de iniciar su carga.
+
 // Refactorización Parte 12 (UI-Only): Se muestra 'Círculo/Círculos' al usuario manteniendo 'Entity' en código, rutas y BD.
 
 "use client";
@@ -49,7 +51,7 @@ import {AvatarImage} from "@/components/avatar-image";
 import {ActionDropdown} from "./action-dropdown";
 import {BankDetails,FinanceChart,SettlementForm} from "./finance-controls";
 import {Bars,Pie} from "./activity";
-import {UploadDropzone} from "@/lib/uploadthing";
+import {ReceiptUpload} from "./receipt-upload";
 import { GlobalFinances } from "./global-finances";
 import { PageHeading, Icon } from "@/components/ui";
 import { useState } from "react";
@@ -386,7 +388,7 @@ export function Settlement({ id }: {
             <Panel title={state.data.settlement.entity?.name}>
               <div className="metrics-grid">{[["Bruto", state.data.settlement.grossAmount], ["Comisiones", state.data.settlement.totalFees], ["Neto a abonar", state.data.settlement.netAmount]].map(([k, v]) => <dl className="metric-card" key={k}><dt>{k}</dt><dd>{money(v)}</dd></dl>)}</div><p><Badge value={state.data.settlement.status}/> · {state.data.settlement.month}/{state.data.settlement.year}</p><p>Referencia: {state.data.settlement.paymentReference || "Pendiente de registrar"}</p><p>{state.data.settlement.notes}</p>
             </Panel>
-            <BankDetails data={state.data.settlement.entity.bankDetails}/><Panel title="Comprobante de pago">{safeUrl(state.data.settlement.receiptUrl)&&<a className="btn btn-outline" target="_blank" rel="noreferrer" href={safeUrl(state.data.settlement.receiptUrl)}>Ver comprobante: {state.data.settlement.receiptFileName}</a>}<UploadDropzone endpoint="settlementReceiptUploader" input={{settlementId:id}} config={{mode:"auto"}} content={{label:"Arrastra el comprobante o haz clic para elegir",allowedContent:"Un PDF o imagen · Máximo 8 MB",button:"Subir comprobante"}} onClientUploadComplete={()=>setV(v=>v+1)} onUploadError={e=>setUploadError(e.message)}/>{uploadError&&<p role="alert">{uploadError}</p>}</Panel>
+            <BankDetails data={state.data.settlement.entity.bankDetails}/><Panel title="Comprobante de pago">{safeUrl(state.data.settlement.receiptUrl)&&<a className="btn btn-outline" target="_blank" rel="noreferrer" href={safeUrl(state.data.settlement.receiptUrl)}>Ver comprobante: {state.data.settlement.receiptFileName}</a>}<ReceiptUpload settlementId={id} onDone={()=>setV(v=>v+1)}/>{uploadError&&<p role="alert">{uploadError}</p>}</Panel>
             <p>Registrar el estado no realiza una transferencia bancaria.</p>
             <SettlementForm settlement={state.data.settlement} onDone={()=>setV(v=>v+1)}/>
           </>)}

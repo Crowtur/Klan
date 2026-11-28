@@ -123,7 +123,7 @@ export async function POST(
     }
 
     const requirement = await prisma.$transaction(async tx=>{
-      await tx.membershipPlan.update({where:{id:planId},data:{requiresDocumentation:true}});
+      // El trigger mantiene el indicador heredado a partir de los requisitos activos.
       const created =
       await tx.planDocumentRequirement.create({
         data: {

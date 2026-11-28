@@ -232,6 +232,15 @@ model Entity {
   timeZone      String  @default("America/Guayaquil")
   address       String?
   googleMapsUrl String?
+  // Coordenadas verificadas mediante geocodificación; los registros anteriores siguen siendo válidos.
+  latitude      Float?
+  longitude     Float?
+  // Documento público del círculo. La versión evita reemplazos concurrentes desde un editor desactualizado.
+  rulesDocumentUrl       String?
+  rulesDocumentFileKey   String?
+  rulesDocumentFileName  String?
+  rulesDocumentVersion   Int @default(0)
+  rules                  EntityRule[]
   coverUrl      String?
   coverFileKey  String?
 
@@ -299,6 +308,7 @@ model MembershipPlan {
   durationValue Int
   durationUnit  DurationUnit
 
+  // Campo heredado de compatibilidad: refleja los requisitos activos, nunca decide la admisión.
   requiresDocumentation Boolean @default(false)
 
   benefits Json?
@@ -625,6 +635,8 @@ model Post {
 
   title   String?
   content String
+  // Etiquetas normalizadas para búsquedas exactas por círculo o plataforma.
+  hashtags String[] @default([])
 
   imageUrl     String?
   imageFileKey String?
@@ -637,6 +649,7 @@ model Post {
 
   @@index([entityId, createdAt])
   @@index([authorId])
+  @@index([hashtags], type: Gin)
 }
 
 // Historial desde la implementación; no reconstruir bajas o altas desconocidas.
@@ -778,4 +791,19 @@ model AvatarThumbnail {
   key String @id
   small Bytes
   large Bytes
+}
+
+/// Reglas públicas administradas por el círculo; el orden y la versión se validan en sus endpoints.
+model EntityRule {
+  id        String @id @default(uuid())
+  entityId  String
+  title     String
+  content   String
+  sortOrder Int @default(0)
+  version   Int @default(1)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  entity    Entity @relation(fields: [entityId], references: [id], onDelete: Cascade)
+
+  @@index([entityId, sortOrder, id])
 }
