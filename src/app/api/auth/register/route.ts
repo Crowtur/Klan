@@ -42,6 +42,7 @@
  * ==============================================================================
  */
 
+import { newPasswordError } from "@/lib/auth/password-change";
 import { prisma } from "@/lib/prisma";
 import { hashPassword } from "@/lib/auth/password";
 import { NextResponse } from "next/server";
@@ -61,6 +62,12 @@ export async function POST(request: Request) {
         },
         { status: 400 }
       );
+    }
+
+    // Validar con la misma función del modal antes de consultar la cuenta o generar el hash.
+    const passwordError = typeof password === "string" ? newPasswordError(password) : "La contraseña debe ser texto.";
+    if (passwordError) {
+      return NextResponse.json({success:false,message:passwordError},{status:400});
     }
 
     const existingUser = await prisma.user.findUnique({

@@ -329,3 +329,12 @@
   /* Redondear ambos botones manteniendo el contraste de los dos temas. */
   .guestMenu .actions > a:not(:first-child) { padding:10px 12px; border-radius:12px; }
 }
+
+/* La llave y los demás iconos del perfil comparten el verde institucional y las dimensiones de Icon. */
+.profileNav svg {color:#136336}
+.passwordDialog {position:fixed;inset:0;margin:auto;width:min(440px,calc(100vw - 32px));max-height:calc(100dvh - 32px);overflow:auto;padding:24px;border:1px solid var(--line);border-radius:16px;background:var(--background);color:var(--foreground)}
+.passwordDialog::backdrop {background:#101a1588}
+.passwordHeading {display:flex;align-items:center;justify-content:space-between;gap:12px}
+.passwordHeading h2 {margin:0}
+.passwordHeading button {border:0;background:transparent;color:inherit;font-size:1.5rem;width:44px;height:44px;cursor:pointer}
+.passwordDialog .form {margin:20px 0 0}

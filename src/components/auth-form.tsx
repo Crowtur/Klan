@@ -45,6 +45,7 @@
 // Refactorización Parte 12 (UI-Only): Se muestra 'Círculo/Círculos' al usuario manteniendo 'Entity' en código, rutas y BD.
 
 "use client";
+import { newPasswordError } from "@/lib/auth/password-change";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
@@ -72,6 +73,12 @@ export default function AuthForm({ mode }: Props) {
         const lastName = String(form.get("lastName") ?? "").trim();
         if (isRegister && (!firstName || !lastName)) {
             setError("Escribe tu nombre y apellido.");
+            return;
+        }
+        // El ingreso sigue admitiendo credenciales anteriores a esta regla.
+        const passwordError = isRegister ? newPasswordError(password) : null;
+        if (passwordError) {
+            setError(passwordError);
             return;
         }
         if (isRegister &&

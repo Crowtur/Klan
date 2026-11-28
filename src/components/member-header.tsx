@@ -47,6 +47,7 @@
 "use client";
 import {AvatarImage} from "@/components/avatar-image";
 import { ThemeToggle } from "./theme-toggle";
+import { PasswordDialog } from "./password-dialog";
 import { AvatarUpload } from "./avatar-upload";
 import { Notifications } from "./workspace/notifications";
 import Link from "next/link";
@@ -64,6 +65,7 @@ type User = {
 /** Sincroniza el perfil de la cabecera con la sesión y controla la apertura, el foco y el cierre del menú personal. */
 export default function MemberHeader() {
     const [user, setUser] = useState<User | null>(null), [open, setOpen] = useState(false), [photo, setPhoto] = useState(false), [error, setError] = useState(""), [busy, setBusy] = useState(false);
+    const [passwordOpen,setPasswordOpen]=useState(false);
     const box = useRef<HTMLDivElement>(null), button = useRef<HTMLButtonElement>(null);
     const path = usePathname(), router = useRouter();
     async function refresh() {
@@ -155,6 +157,10 @@ export default function MemberHeader() {
                 ].map(([v, label]) => (<Link className={s.photoButton} key={v} href={"/app?view=" + v} onClick={() => setOpen(false)}>
                       <Icon name={v === "memberships" ? "shield" : v === "subscriptions" ? "refresh" : v === "payments" ? "wallet" : "document"}/> {label}
                     </Link>))}
+                  {/* El cambio de contraseña cierra el menú y abre su propio diálogo modal. */}
+                  <button type="button" className={s.photoButton} onClick={()=>{setOpen(false);setPasswordOpen(true);}}>
+                    <Icon name="key"/> Cambiar contraseña
+                  </button>
                 </nav>
                 <p>
                   <button disabled={busy} className={s.logout} onClick={logout}>
@@ -164,6 +170,7 @@ export default function MemberHeader() {
                 {error && <p role="alert">{error}</p>}
               </section>)}
           </div>
+            {passwordOpen&&<PasswordDialog onClose={()=>{setPasswordOpen(false);button.current?.focus();}}/>}
         </>) : (<GuestNavigation/>)}
       </div>
     </header>);
