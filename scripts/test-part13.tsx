@@ -48,6 +48,7 @@ import {renderToStaticMarkup} from "react-dom/server";
 import jwt from "jsonwebtoken";
 import {tokenizePost,extractHashtags,firstPostLink,videoEmbed} from "../src/lib/posts/content";
 import {isPublicAddress,previewUrl,parseLinkMetadata} from "../src/lib/posts/link-preview";
+import {cityCatalog,searchCities,nearestCity} from "../src/lib/locations/city-catalog";
 import {cityInEcuador,possibleEcuador,OUTSIDE_ECUADOR} from "../src/lib/locations/ecuador";
 import {resolveLocation,verifiedLocation} from "../src/lib/locations/verified-location";
 import {cropRectangle} from "../src/lib/image-crop";
@@ -98,7 +99,15 @@ test('Ecuador incluye Galápagos y la ciudad se toma sin calles, provincias ni p
   assert.equal(possibleEcuador({latitude:-.744,longitude:-90.313}),true);
   assert.equal(cityInEcuador([result('EC','Puerto Ayora')]),'Puerto Ayora');
   assert.equal(cityInEcuador([result('EC','Quito')]),'Quito');
-  assert.throws(()=>cityInEcuador([result('EC')]),/identificar la ciudad/);
+  assert.equal(cityInEcuador([result('EC')]),'');
+  assert.equal(cityInEcuador([result('EC','El Comité del Pueblo')]),'Quito');
+});
+test('una parroquia identificada como sector cede prioridad al cantón y una localidad explícita tiene preferencia',()=>{
+  const components=result('EC','Sector Norte');
+  const component=(name:string,type:string)=>({long_name:name,short_name:name,types:[type]});
+  components.address_components.push(component('Sector Norte','sublocality_level_1'),component('Cantón Quito','administrative_area_level_2'));
+  assert.equal(cityInEcuador([components]),'Quito');
+  assert.equal(cityInEcuador([components,{...result('EC','Puerto Ayora'),types:['locality']}]),'Puerto Ayora');
 });
 test('un punto extranjero dentro del rectángulo también se rechaza por su país real',()=>{
   assert.equal(possibleEcuador({latitude:-4,longitude:-79}),true);
@@ -113,6 +122,8 @@ test('la selección de mapa está firmada, vinculada al usuario y separada del t
   try {
     const selected=await resolveLocation({latitude:-.18,longitude:-78.47},'user-one');
     assert.equal(verifiedLocation(selected.token,'user-one').address,'Quito');
+    assert.equal(verifiedLocation(selected.token,'user-one',' Ciudad corregida ').address,'Ciudad corregida');
+    assert.throws(()=>verifiedLocation(selected.token,'user-one','  '),/INVALID_LOCATION/);
     assert.throws(()=>verifiedLocation(selected.token,'user-two'),/INVALID_LOCATION/);
     assert.throws(()=>verifiedLocation(selected.token+'x','user-one'),/INVALID_LOCATION/);
     assert.throws(()=>jwt.verify(selected.token,process.env.JWT_SECRET!));
@@ -138,4 +149,43 @@ test('la administración de reglas rechaza usuarios y círculos inactivos y role
   await requireEntityContentAdmin('user','entity',db('SUPER_ADMIN'));
   await assert.rejects(()=>requireEntityContentAdmin('user','entity',db('SUPER_ADMIN','SUSPENDED')),/FORBIDDEN/);
   await assert.rejects(()=>requireEntityContentAdmin('user','entity',db('SUPER_ADMIN','ACTIVE','SUSPENDED')),/FORBIDDEN/);
+});
+
+test("el catálogo cubre las provincias y resuelve todas sus cabeceras y alias", async()=>{
+  assert.equal(new Set(cityCatalog.map(c=>c.province)).size,24);
+  assert.equal(cityCatalog.length,223);
+  const key=process.env.GOOGLE_MAPS_SERVER_API_KEY, secret=process.env.JWT_SECRET;
+  delete process.env.GOOGLE_MAPS_SERVER_API_KEY;
+  process.env.JWT_SECRET="test-location";
+  try{
+    for(const city of cityCatalog){
+      const point={latitude:city.lat,longitude:city.lng};
+      assert.equal((await resolveLocation(point,"prueba")).address,city.name);
+      for(const name of [city.name,...city.aliases]){
+        assert.ok(searchCities(name+", "+city.province,false).includes(city),name);
+      }
+    }
+    assert.equal(searchCities("Olmedo",false).length,2);
+    assert.equal(searchCities("Chinchipe",false)[0].name,"Zumba");
+    assert.equal(searchCities("Quininde",false)[0].name,"Rosa Zárate");
+  }finally{
+    if(key===undefined)delete process.env.GOOGLE_MAPS_SERVER_API_KEY;else process.env.GOOGLE_MAPS_SERVER_API_KEY=key;
+    if(secret===undefined)delete process.env.JWT_SECRET;else process.env.JWT_SECRET=secret;
+  }
+});
+test("un punto remoto conserva su ciudad más próxima ante barrios, cuota o caída del proveedor",async()=>{
+  const point={latitude:-1.2,longitude:-76.4};
+  const fetchOriginal=globalThis.fetch,key=process.env.GOOGLE_MAPS_SERVER_API_KEY,secret=process.env.JWT_SECRET;
+  process.env.JWT_SECRET="test-location";process.env.GOOGLE_MAPS_SERVER_API_KEY="fixture";
+  try{
+    for(const body of [{status:"OK",results:[result("EC","Barrio sin cabecera")]},{status:"OVER_QUERY_LIMIT"},{status:"ZERO_RESULTS"},null]){
+      globalThis.fetch=async()=>{if(!body)throw Error("sin conexión");return Response.json(body);};
+      assert.equal((await resolveLocation(point,"prueba")).address,nearestCity(point).name);
+      await assert.rejects(resolveLocation({latitude:0,longitude:-90},"prueba"),new RegExp(OUTSIDE_ECUADOR));
+    }
+  }finally{
+    globalThis.fetch=fetchOriginal;
+    if(key===undefined)delete process.env.GOOGLE_MAPS_SERVER_API_KEY;else process.env.GOOGLE_MAPS_SERVER_API_KEY=key;
+    if(secret===undefined)delete process.env.JWT_SECRET;else process.env.JWT_SECRET=secret;
+  }
 });

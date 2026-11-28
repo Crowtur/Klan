@@ -78,10 +78,18 @@ export function ImageCropDialog({file,aspect,maxBytes,onConfirm,onCancel}:{file:
       setZoom(value=>limit(value*Math.exp(-delta*.002)));
     };
     element.addEventListener("wheel",wheel,{passive:false});
-    return ()=>element.removeEventListener("wheel",wheel);
+    // En móviles se cancela la acción nativa sólo dentro del marco. Pointer Events sigue controlando el recorte.
+    const isolate=(event:Event)=>{if(event.cancelable)event.preventDefault();};
+    const gestures=["touchstart","touchmove","gesturestart","gesturechange"];
+    gestures.forEach(type=>element.addEventListener(type,isolate,{passive:false}));
+    return ()=>{
+      element.removeEventListener("wheel",wheel);
+      gestures.forEach(type=>element.removeEventListener(type,isolate));
+    };
   },[ready,busy]);
   function release(id:number){
-    pointers.current.delete(id);pinch.current.distance=0;
+    if(!pointers.current.delete(id))return;
+    pinch.current.distance=0;
     const remaining=Array.from(pointers.current.values())[0];
     drag.current=remaining?{px:remaining.x,py:remaining.y,x,y}:null;
   }
@@ -117,6 +125,7 @@ export function ImageCropDialog({file,aspect,maxBytes,onConfirm,onCancel}:{file:
         pointers.current.set(e.pointerId,{x:e.clientX,y:e.clientY});
         if(pointers.current.size===2)pinch.current={distance:separation(),zoom};
         drag.current={px:e.clientX,py:e.clientY,x,y};}}
+      onPointerUp={e=>release(e.pointerId)} onPointerCancel={e=>release(e.pointerId)}
       onLostPointerCapture={e=>release(e.pointerId)}
       onPointerMove={e=>{
         if(!pointers.current.has(e.pointerId))return;

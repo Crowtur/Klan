@@ -145,3 +145,9 @@ dialog.editor-modal.map-modal { width:min(850px,calc(100vw - 24px)); }
   box-sizing:border-box;width:var(--crop-width);height:44px;min-height:44px;
   margin:0;padding:0 6px;font:inherit;font-size:14px;border-radius:8px;
 }
+
+/* El lienzo delega los gestos al marco. El resto del modal conserva el desplazamiento normal. */
+.image-crop-modal .crop-preview, .image-crop-modal .crop-preview canvas {touch-action:none;user-select:none;-webkit-user-select:none}
+.image-crop-modal .crop-preview canvas {pointer-events:none}
+.map-city-row {display:flex;align-items:flex-end;gap:.5rem}
+.map-city-row label {flex:1;min-width:0}

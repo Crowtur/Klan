@@ -139,7 +139,7 @@ export async function PATCH(
 
     const data = body as Record<string, unknown>;
 
-    const allowedFields = ["name", "description", "slug","locationToken","clearCover","clearLogo","timeZone"];
+    const allowedFields = ["name", "description", "slug","locationToken","locationCity","clearCover","clearLogo","timeZone"];
 
     const invalidFields = Object.keys(data).filter(
       (field) => !allowedFields.includes(field)
@@ -166,9 +166,10 @@ export async function PATCH(
       if(data.timeZone!=="America/Guayaquil"&&data.timeZone!=="Pacific/Galapagos")return NextResponse.json({error:"Zona de Ecuador inválida"},{status:400});
       updateData.timeZone=data.timeZone;
     }
-    // La ciudad y el enlace proceden exclusivamente de la selección firmada por el servidor.
+    // Una corrección manual requiere la selección territorial firmada.
+    if (data.locationCity !== undefined && !data.locationToken) return NextResponse.json({error:"Elige la ubicación en el mapa"},{status:400});
     if (data.locationToken !== undefined) {
-      try { Object.assign(updateData, verifiedLocation(data.locationToken, user.id)); }
+      try { Object.assign(updateData, verifiedLocation(data.locationToken, user.id, data.locationCity)); }
       catch { return NextResponse.json({error:"La ubicación no es válida o ha caducado. Elígela nuevamente en el mapa."},{status:400}); }
     }
     if(data.clearCover===true) Object.assign(updateData,{coverUrl:null,coverFileKey:null});

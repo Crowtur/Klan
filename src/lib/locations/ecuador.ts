@@ -44,20 +44,32 @@
 
 export type Coordinates={latitude:number;longitude:number};
 export type AddressComponent={long_name:string;short_name:string;types:string[]};
-export type GeocodingResult={address_components:AddressComponent[]};
+export type GeocodingResult={types?:string[];address_components:AddressComponent[]};
 export const OUTSIDE_ECUADOR="Esta ubicación está fuera del Ecuador";
 /** El rectángulo sólo descarta puntos lejanos; la pertenencia final se valida con el país devuelto por Google. */
 export function possibleEcuador({latitude:lat,longitude:lng}:Coordinates) {
   return Number.isFinite(lat)&&Number.isFinite(lng)&&((lat>=-5.2&&lat<=1.8&&lng>=-81.3&&lng<=-75)||(lat>=-1.6&&lat<=1.9&&lng>=-92.2&&lng<=-89));
 }
-/** Busca la ciudad, nunca sustituye una ciudad ausente por una calle, provincia o país. */
-export function cityInEcuador(results:GeocodingResult[]) {
+// Algunas fuentes clasifican esta parroquia urbana de Quito como una localidad.
+export function municipality(name:string) {
+  return /^(?:el )?comité del pueblo$/iu.test(name.trim()) ? "Quito" : name.trim();
+}
+
+/** Busca primero una localidad identificada como ciudad y descarta componentes de barrio o parroquia. */
+export function cityInEcuador(results:GeocodingResult[],includeCanton=true) {
   const country=(r:GeocodingResult)=>r.address_components.find(c=>c.types.includes("country"))?.short_name;
   if(!results[0]||country(results[0])!=="EC")throw Error(OUTSIDE_ECUADOR);
-  for(const type of ['locality','postal_town'])for(const result of results){
-    if(country(result)!=="EC")continue;
-    const city=result.address_components.find(c=>c.types.includes(type))?.long_name?.trim();
-    if(city)return city;
+  const national=results.filter(r=>country(r)==="EC");
+  const sector=(t:string)=>t==="neighborhood"||t.startsWith("sublocality")||/^administrative_area_level_[3-9]$/.test(t);
+  const sectors=new Set(national.flatMap(r=>r.address_components.filter(c=>c.types.some(sector)).map(c=>c.long_name.trim().toLocaleLowerCase("es"))));
+  // Para elegir la ciudad más cercana, un cantón por sí solo no confirma la localidad del marcador.
+  for(const type of (includeCanton?["locality","postal_town","administrative_area_level_2"]:["locality","postal_town"])){
+    const ordered=[...national.filter(r=>r.types?.includes(type)),...national.filter(r=>!r.types?.includes(type))];
+    for(const result of ordered){
+      const name=result.address_components.find(c=>c.types.includes(type)&&!c.types.some(sector))?.long_name.trim();
+      if(name&&!sectors.has(name.toLocaleLowerCase("es")))return municipality(name.replace(/^cantón\s+/iu,""));
+    }
   }
-  throw Error("No se pudo identificar la ciudad. Elige un punto dentro de una ciudad.");
+  // Sin localidad directa, el servidor resuelve el punto con el catálogo nacional.
+  return "";
 }

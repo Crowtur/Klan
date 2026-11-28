@@ -286,7 +286,8 @@ export function Form({ fields, url, method = "POST", initial = {}, onDone, submi
     trailingAction?: ReactNode;
 }) {
     const [slug, setSlug] = useState(initial.slug || "");
-    const [locationToken, setLocationToken] = useState<string>();
+    // El punto firmado y la ciudad confirmada se envían juntos al guardar el círculo.
+    const [location, setLocation] = useState<{token:string;city:string}>();
     const [decision, setDecision] = useState(initial.status || "APPROVED");
     const [busy, setBusy] = useState(false), [error, setError] = useState("");
     async function send(e: FormEvent<HTMLFormElement>) {
@@ -298,7 +299,7 @@ export function Form({ fields, url, method = "POST", initial = {}, onDone, submi
         const body: Row = {};
         // FormData omite casillas desmarcadas y devuelve texto para números. La API espera booleanos y números reales.
         for (const f of fields) {
-            if (f.type === "location") { if (locationToken) body.locationToken = locationToken; continue; }
+            if (f.type === "location") { if (location) { body.locationToken = location.token; body.locationCity = location.city; } continue; }
             const v = fd.get(f.name);
             body[f.name] =
                 f.type === "checkbox"
@@ -315,7 +316,7 @@ export function Form({ fields, url, method = "POST", initial = {}, onDone, submi
         try {
             const d = await api(url, method, transform ? transform(body) : body);
             setError(d.message || "Guardado correctamente.");
-            setLocationToken(undefined);
+            setLocation(undefined);
             onDone?.(d);
         }
         catch (e) {
@@ -327,7 +328,7 @@ export function Form({ fields, url, method = "POST", initial = {}, onDone, submi
     }
     return (<form className="editor" onSubmit={send}>
       <fieldset disabled={busy}>
-        {fields.filter(f => f.name !== "rejectionReason" || decision === "REJECTED").map((f) => f.type==="location" ? <LocationPicker key={f.name} initial={initial} onChange={setLocationToken}/> : f.name==="icon" ? <fieldset key={f.name} className="icon-picker"><legend>{f.label}</legend>{facilityIcons.map(icon=><label key={icon.value} title={icon.label}>
+        {fields.filter(f => f.name !== "rejectionReason" || decision === "REJECTED").map((f) => f.type==="location" ? <LocationPicker key={f.name} initial={initial} onChange={setLocation}/> : f.name==="icon" ? <fieldset key={f.name} className="icon-picker"><legend>{f.label}</legend>{facilityIcons.map(icon=><label key={icon.value} title={icon.label}>
           <input type="radio" aria-label={icon.label} name="icon" value={icon.value} defaultChecked={icon.value===(initial.icon||"building")}/><FacilityIcon value={icon.value}/></label>)}</fieldset> : (<label key={f.name}>
             {f.label}
             {f.type === "textarea" ? (<textarea name={f.name} defaultValue={Array.isArray(initial[f.name]) ? initial[f.name].join("\n") : initial[f.name] ?? ""} required={f.required} maxLength={f.max}/>) : f.options ? (<select onChange={e => { if (f.name === "status")

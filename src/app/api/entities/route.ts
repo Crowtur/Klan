@@ -138,8 +138,10 @@ export async function POST(request: Request) {
     // Sólo se aceptan ubicaciones verificadas; los campos visibles no son una fuente de datos confiable.
     if ("address" in body || "googleMapsUrl" in body || "latitude" in body || "longitude" in body) return NextResponse.json({error:"Elige la ubicación en el mapa"},{status:400});
     let location = {};
+    // Una corrección manual requiere la selección territorial firmada.
+    if (body.locationCity !== undefined && !body.locationToken) return NextResponse.json({error:"Elige la ubicación en el mapa"},{status:400});
     if (body.locationToken !== undefined) {
-      try { location = verifiedLocation(body.locationToken, user.id); }
+      try { location = verifiedLocation(body.locationToken, user.id, body.locationCity); }
       catch { return NextResponse.json({error:"La ubicación no es válida o ha caducado. Elígela nuevamente en el mapa."},{status:400}); }
     }
     const existingEntity = await prisma.entity.findUnique({

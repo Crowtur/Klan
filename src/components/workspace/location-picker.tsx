@@ -48,21 +48,24 @@ import {OUTSIDE_ECUADOR,possibleEcuador,type Coordinates} from "@/lib/locations/
 type Selection=Coordinates&{address:string;googleMapsUrl:string;token:string};
 import type {Map as LeafletMap, Marker} from "leaflet";
 import country from "@/lib/locations/ecuador-map.json";
-/** El usuario elige un marcador; sólo la geocodificación validada por el backend puede completar ciudad y enlace. */
-export function LocationPicker({initial,onChange}:{initial:{address?:string;googleMapsUrl?:string;latitude?:number|null;longitude?:number|null};onChange:(token:string)=>void}) {
+import {cityCatalog,searchCities,type City} from "@/lib/locations/city-catalog";
+/** El punto validado conserva sus coordenadas aunque se edite directamente el nombre de ciudad. */
+export function LocationPicker({initial,onChange}:{initial:{address?:string;googleMapsUrl?:string;latitude?:number|null;longitude?:number|null};onChange:(selection:{token:string;city:string})=>void}) {
   const [open,setOpen]=useState(false),[mapReady,setMapReady]=useState(false),[error,setError]=useState(''),[busy,setBusy]=useState(false),[search,setSearch]=useState(''),[point,setPoint]=useState<Coordinates|null>(null),[verified,setVerified]=useState<Selection|null>(null),[display,setDisplay]=useState(initial);
+  const [city,setCity]=useState('');
+  const [options,setOptions]=useState<City[]>([]);
   const dialog=useRef<HTMLDialogElement>(null),canvas=useRef<HTMLDivElement>(null),map=useRef<LeafletMap|null>(null),marker=useRef<Marker|null>(null);
   useEffect(()=>{setDisplay(initial);},[initial.address,initial.googleMapsUrl,initial.latitude,initial.longitude]);
   useEffect(()=>{
     if(!open)return;
     dialog.current?.showModal();
     let live=true;
-    setError('');setVerified(null);setPoint(null);setMapReady(false);setBusy(false);
+    setOptions([]);setError('');setVerified(null);setPoint(null);setMapReady(false);setBusy(false);
     // El contorno y las ciudades se distribuyen con Klan y siguen visibles sin teselas externas.
     import('leaflet').then(L=>{
       if(!live||!canvas.current)return;
-      const center:[number,number]=[initial.latitude??-1.4,initial.longitude??-79];
-      const current=L.map(canvas.current).setView(center,initial.latitude!=null?14:6);
+      const center:[number,number]=[display.latitude??-1.4,display.longitude??-79];
+      const current=L.map(canvas.current).setView(center,display.latitude!=null?14:6);
       map.current=current;
       L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap contributors',maxZoom:19}).addTo(current);
       L.geoJSON({type:'Feature',properties:{},geometry:country.geometry} as GeoJSON.Feature,{interactive:false,style:{color:'#136336',weight:1,fillOpacity:.06}}).addTo(current);
@@ -71,8 +74,8 @@ export function LocationPicker({initial,onChange}:{initial:{address?:string;goog
       function choose(lat:number,lng:number){pin.setLatLng([lat,lng]);setPoint({latitude:lat,longitude:lng});}
       current.on('click',event=>choose(event.latlng.lat,event.latlng.lng));
       pin.on('dragend',()=>{const p=pin.getLatLng();choose(p.lat,p.lng);});
-      for(const city of country.cities)L.circleMarker([city.lat,city.lng],{radius:3,color:'#136336'}).bindTooltip(city.name).on('click',()=>choose(city.lat,city.lng)).addTo(current);
-      if(initial.latitude!=null&&initial.longitude!=null)choose(initial.latitude,initial.longitude);
+      for(const city of cityCatalog)L.circleMarker([city.lat,city.lng],{radius:3,color:'#136336'}).bindTooltip(city.name).on('click',()=>choose(city.lat,city.lng)).addTo(current);
+      if(display.latitude!=null&&display.longitude!=null)choose(display.latitude,display.longitude);
       setMapReady(true);
     }).catch(()=>{if(live)setError('No se pudo iniciar el selector. Cierra el mapa y vuelve a abrirlo.');});
     return()=>{live=false;map.current?.remove();map.current=null;marker.current=null;};
@@ -84,30 +87,38 @@ export function LocationPicker({initial,onChange}:{initial:{address?:string;goog
     const timer=setTimeout(()=>{
       fetch('/api/locations/resolve',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(point),signal:controller.signal})
         .then(async response=>{const data=await response.json();if(!response.ok)throw Error(data.message||'No se pudo comprobar la ubicación');return data.location as Selection;})
-        .then(location=>{if(!controller.signal.aborted)setVerified(location);})
+        .then(location=>{if(controller.signal.aborted)return;
+          // Al reabrir el mismo punto se conserva la ciudad ya confirmada.
+          const label=point.latitude===display.latitude&&point.longitude===display.longitude&&display.address ? display.address : location.address;
+          setVerified(location);setCity(label);})
         .catch(e=>{if(!controller.signal.aborted)setError(e.message);}).finally(()=>{if(!controller.signal.aborted)setBusy(false);});
     },350);
     return()=>{clearTimeout(timer);controller.abort();};
   },[point,open]);
   function close(){dialog.current?.close();setOpen(false);}
-  async function find(){
-    if(!map.current||!search.trim())return;setError('');
-    const normalize=(v:string)=>v.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
-    const query=normalize(search.trim());
-    const city=country.cities.find(c=>normalize(c.name)===query)||country.cities.find(c=>normalize(c.name).includes(query));
-    if(!city){setError('No se encontró la ciudad. Elige el punto directamente en el mapa.');return;}
-    map.current.setView([city.lat,city.lng],14);marker.current?.setLatLng([city.lat,city.lng]);
+  function selectCity(city:City){
+    setOptions([]);setError('');
+    map.current?.setView([city.lat,city.lng],14);marker.current?.setLatLng([city.lat,city.lng]);
     setPoint({latitude:city.lat,longitude:city.lng});
+  }
+  function find(){
+    const matches=searchCities(search);
+    setOptions(matches.length>1?matches:[]);
+    setError(matches.length?'':'No se encontró la ciudad. Elige el punto directamente en el mapa.');
+    if(matches.length===1)selectCity(matches[0]);
   }
   return <div className="location-picker"><span>Ubicación del círculo</span><button type="button" className="secondary" onClick={()=>setOpen(true)}>Ubicación</button>
     <div className="location-summary"><span>Ciudad: <strong>{display.address||'Sin ubicación seleccionada'}</strong></span>{display.googleMapsUrl&&<a href={display.googleMapsUrl} target="_blank" rel="noopener noreferrer">Ver punto en Google Maps ↗</a>}</div>
     {open&&<dialog ref={dialog} className="editor-modal map-modal" aria-label="Elegir ubicación en el mapa" onCancel={e=>{e.preventDefault();close();}} onClose={()=>setOpen(false)}>
       <header><h2>Elegir ubicación en el mapa</h2><button className="secondary" type="button" onClick={close} aria-label="Cerrar mapa">×</button></header>
-      <div className="map-search"><label>Buscar lugar o ciudad<input value={search} onChange={e=>setSearch(e.target.value)} onKeyDown={e=>{if(e.key==='Enter'){e.preventDefault();void find();}}} placeholder="Quito, Puerto Ayora…"/></label><button type="button" disabled={!mapReady||!search.trim()} onClick={()=>void find()}>Buscar</button></div>
+      <div className="map-search"><label>Buscar ciudad<input value={search} onChange={e=>{setOptions([]);setSearch(e.target.value);}} onKeyDown={e=>{if(e.key==='Enter'){e.preventDefault();void find();}}} placeholder="Quito, Puerto Ayora…"/></label><button type="button" disabled={!mapReady||!search.trim()} onClick={()=>void find()}>Buscar</button></div>
+      {options.length>0&&<ul aria-label="Ciudades encontradas">{options.map(option=><li key={option.province+option.name}><button type="button" className="secondary" onClick={()=>selectCity(option)}>{option.name}, {option.province}</button></li>)}</ul>}
       {!mapReady&&!error&&<p role="status">Cargando mapa…</p>}<div className="location-map" ref={canvas} aria-label="Mapa interactivo del Ecuador"/>
       <p>Haz clic en el mapa o arrastra el marcador para elegir el punto exacto.</p>
-      {busy&&<p role="status">Comprobando ubicación…</p>}{error&&<p role="alert">{error}</p>}{verified&&!error&&<p role="status">Ciudad: <strong>{verified.address}</strong></p>}
-      <div className="form-actions"><button type="button" disabled={!verified||busy||!!error} onClick={()=>{if(verified){setDisplay(verified);onChange(verified.token);close();}}}>Usar ubicación</button></div>
+      {busy&&<p role="status">Comprobando ubicación…</p>}{error&&<p role="alert">{error}</p>}{verified&&!error&&<div className="map-city-row">
+        <label>Ciudad<input value={city} maxLength={160} onChange={e=>setCity(e.target.value)} onKeyDown={e=>{if(e.key==="Enter")e.preventDefault();}}/></label>
+      </div>}
+      <div className="form-actions"><button type="button" disabled={!verified||busy||!!error||!city.trim()} onClick={()=>{if(verified){setDisplay({...verified,address:city.trim()});onChange({token:verified.token,city:city.trim()});close();}}}>Usar ubicación</button></div>
     </dialog>}
   </div>;
 }
